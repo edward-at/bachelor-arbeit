@@ -1,0 +1,12 @@
+
+2026-05-05T19:58:57.654659
+  Input: 182,315 tokens
+  Output: 5,527 tokens
+  Searches: 13
+  Cost: $0.7599
+
+2026-05-06T07:22:17.132531
+  Input: 20,868,913 tokens
+  Output: 441,162 tokens
+  Searches: 794
+  Cost: $77.1642
