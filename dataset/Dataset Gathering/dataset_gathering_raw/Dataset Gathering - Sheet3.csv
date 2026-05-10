@@ -1,0 +1,161 @@
+,,,,,,,,
+,Dataset,Year,Size,Temporal,Sensing domain,Tasks,Real/Synthetic,Reference_Link
+,ETH Ped,2007,"2,293 frames",✓,onboard,pedestrian detection,real,https://scholar.google.com/scholar?q=Depth+and+appearance+for+mobile+scene+analysis
+,TUD-Brussels,2009,"1,600 frames",×,onboard,(3D) OD,real,https://scholar.google.com/scholar?q=Multi-cue+onboard+pedestrian+detection
+,Collective activity,2009,44 short videos,✓,others,human activity recognition,real,https://scholar.google.com/scholar?q=What+are+they+doing%3F%3A+Collective+activity+classification+using+spatio-temporal+relationship+among+people
+,San Francisco Landmark,2011,150K panoramic images,×,others,landmark identification,real,https://scholar.google.com/scholar?q=City-scale+landmark+identification+on+mobile+devices
+,Daimler Stereo Ped,2011,"21,790 frames",✓,onboard,pedestrian detection,real,https://scholar.google.com/scholar?q=A+new+benchmark+for+vision-based+cyclist+detection
+,BelgiumTS,2011,13K traffic sign annotations,×,onboard,traffic sign detection,real,https://scholar.google.com/scholar?q=Multi-view+traffic+sign+detection%2C+recognition%2C+and+3d+localisation
+,Stanford Tack,2011,14K tracks,✓,onboard,classification,real,https://scholar.google.com/scholar?q=Towards+3d+object+recognition+via+classification+of+arbitrary+object+tracks
+,TME Motorway,2012,30K frames,✓,onboard,"OD, OT",real,https://scholar.google.com/scholar?q=A+system+for+real-time+detection+and+tracking+of+vehicles+from+a+single+car-mounted+camera
+,MSLU,2013,36.8 km distances,✓,onboard,SLAM,real,https://scholar.google.com/scholar?q=The+m%C2%B4alaga+urban+dataset%3A+High-rate+stereo+and+lidar+in+a+realistic+urban+scenario
+,SydneyUrbanObject,2013,588 object scans,×,onboard,classification,real,https://scholar.google.com/scholar?q=Unsupervised+feature+learning+for+classification+of+outdoor+3d+scans
+,Ground Truth SitXel,2013,"78,500 frames",✓,onboard,stereo confidence,real,https://scholar.google.com/scholar?q=Exploiting+the+power+of+stereo+confidences
+,NYC3DCars,2013,2K images,×,onboard,OD,real,https://scholar.google.com/scholar?q=Nyc3dcars%3A+A+dataset+of+3d+vehicles+in+geographic+context
+,AMUSE,2013,"117,440 frames",✓,onboard,SLAM,real,https://scholar.google.com/scholar?q=A+multi-sensor+traffic+scene+dataset+with+omnidirectional+video
+,Daimler Ped,2013,"12,485 frames",✓,onboard,pedestrian path prediction,real,https://scholar.google.com/scholar?q=Pedestrian+path+prediction+with+recursive+bayesian+filters%3A+A+comparative+study
+,LISA,2014,"6,610 frames",✓,onboard,traffic sign detection,real,https://scholar.google.com/scholar?q=Traffic+sign+detection+for+us+roads%3A+Remaining+challenges+and+a+case+for+tracking
+,Paris-rue-Madame,2014,643 objects,×,onboard,"OD, SS",real,https://scholar.google.com/scholar?q=Paris-ruemadame+database%3A+a+3d+mobile+laser+scanner+dataset+for+benchmarking+urban+detection%2C+segmentation+and+classification+methods
+,TRANCOS,2015,1.2K images,×,V2X,onboard number estimation,real,https://scholar.google.com/scholar?q=Extremely+overlapping+vehicle+counting
+,FlyingThings3D,2015,"26,066 frames",✓,others,scene flow estimation,synthetic,https://scholar.google.com/scholar?q=A+large+dataset+to+train+convolutional+networks+for+disparity%2C+optical+flow%2C+and+scene+flow+estimation
+,Ua-detrac,2015,140K frames,✓,V2X,"OD, MOT",real,https://scholar.google.com/scholar?q=Ua-detrac%3A+A+new+benchmark+and+protocol+for+multi-object+detection+and+tracking
+,NCLT,2015,34.9 hours,✓,onboard,odometry,real,https://scholar.google.com/scholar?q=University+of+michigan+north+campus+long-term+vision+and+lidar+dataset
+,CCSAD,2015,96K frames,✓,onboard,scene understanding,real,https://scholar.google.com/scholar?q=Towards+ubiquitous+autonomous+driving%3A+The+ccsad+dataset
+,KAIST MPD,2015,95K color-thermal pair frames,×,onboard,pedestrian detection,real,https://scholar.google.com/scholar?q=Multispectral+pedestrian+detection%3A+Benchmark+dataset+and+baseline
+,SAP,2016,19K frames,×,drone,"OD, OT",real,https://cs.stanford.edu/
+,LostAndFound,2016,"2,104 frames",✓,onboard,obstacle detection,real,https://scholar.google.com/scholar?q=Lost+and+found%3A+detecting+small+road+hazards+for+self-driving+vehicles.+in+2016+ieee
+,UAH-Driveset,2016,500 mins,✓,onboard,"lane detection, detection",real,https://scholar.google.com/scholar?q=Need+data+for+driver+behaviour+analysis%3F+presenting+the+public+uah-driveset
+,CURE-TSR,2017,2.2M annotated images,×,onboard,traffic sign detection,real,https://arxiv.org/abs/1712.02463
+,TuSimple,2017,"6,408 frames",×,onboard,"lane detection, velocity estimation",real,https://github.com/tusimple/tusimple-benchmark
+,TRoM,2017,712 frames,×,onboard,road marking detection,real,https://scholar.google.com/scholar?q=Benchmark+for+road+marking+detection%3A+Dataset+specification+and+performance+baseline
+,NEXET,2017,"91,190 frames",×,onboard,OD,real,https://scholar.google.com/scholar?q=Nexet%E2%80%94the+largest+and+most+diverse+road+dataset+in+the+world
+,DIML,2017,470 videos,✓,onboard,lane detection,real,https://dimlrgbd.github.io/
+,Bosch STL,2017,"13,334 images",✓,onboard traffic,light detection and classification,real,https://scholar.google.com/scholar?q=A+deep+learning+approach+to+traffic+lights%3A+Detection%2C+tracking%2C+and+classification
+,Complex Urban,2017,around 190km paths,✓,onboard,SLAM,real,https://scholar.google.com/scholar?q=Complex+urban+dataset+with+multi-level+sensors+from+highly+diverse+urban+environments
+,DDD20,2017,51 hours event frames,✓,onboard,end-to-end driving,real,https://scholar.google.com/scholar?q=Ddd20+endto-end+event+camera+driving+dataset%3A+Fusing+frames+and+events+with+deep+learning+for+improved+steering+prediction
+,PedX,2018,5K images,✓,onboard,pedestrian detection and tracking,real,https://scholar.google.com/scholar?q=Pedx%3A+Benchmark+dataset+for+metric+3-d+pose+estimation+of+pedestrians+in+complex+urban+intersections
+,LiVi-Set,2018,10K frames,✓,onboard,driving behavior prediction,real,https://scholar.google.com/scholar?q=Lidar-video+driving+dataset%3A+Learning+driving+policies+effectively
+,Syncapes,2018,25K images,×,onboard,"OD, SS",synthetic,https://arxiv.org/abs/1810.08705
+,NVSEC,2018,around 28 km distances,✓,others,SLAM,real,https://scholar.google.com/scholar?q=The+multivehicle+stereo+event+camera+dataset%3A+An+event+camera+dataset+for+3d+perception
+,Aachen Day-Night,2018,"4,328 images, 1.65M points",✓,onboard,visual localization,real,https://scholar.google.com/scholar?q=Benchmarking+6dof+outdoor+visual+localization+in+changing+conditions
+,CADP,2018,"1,416 scenes",×,V2X,traffic accident analysis,real,https://scholar.google.com/scholar?q=Cadp%3A+A+novel+dataset+for+cctv+traffic+camera+based+accident+analysis
+,TAF-BW,2018,2 scenarios,✓,V2X,"MOT, V2X communication",real,https://scholar.google.com/scholar?q=Towards+large+scale+urban+traffic+reference+data%3A+Smart+infrastructure+in+the+test+area+autonomous+driving+baden-w%C2%A8urttemberg
+,comma2k19,2018,2M images,×,onboard,"pose estimation, end-to-end driving",real,https://arxiv.org/abs/1812.05752
+,nighttime drive,2018,35K,×,onboard,SS,real,https://scholar.google.com/scholar?q=Dark+model+adaptation%3A+Semantic+image+segmentation+from+daytime+to+nighttime
+,VEIS,2018,"61,305 frames",×,onboard,"OD, SS",synthetic,https://scholar.google.com/scholar?q=Effective+use+of+synthetic+data+for+urban+scene+semantic+segmentation
+,Paris-Lille-3D,2018,"2,479 frames",×,onboard,"3D SS, classification",real,https://scholar.google.com/scholar?q=Paris-lille-3d%3A+A+large+and+high-quality+ground-truth+urban+point+cloud+dataset+for+automatic+segmentation+and+classification
+,NightOwis,2018,56K frames,✓,onboard,"pedestrian detection, tracking",real,https://scholar.google.com/scholar?q=Nightowls%3A+A+pedestrians+at+night+dataset
+,EuroCity Persons,2018,"47,300 frames",×,onboard,OD,real,https://arxiv.org/abs/1805.07193
+,RANUS,2018,4K frames,×,onboard,"SS, scene understanding",real,https://scholar.google.com/scholar?q=Ranus%3A+Rgb+and+nir+urban+scene+dataset+for+deep+scene+parsing
+,SynthCity,2019,367.9M points in 30 scans,×,onboard,"(3D) OD, (3D) SS",synthetic,https://arxiv.org/abs/1907.04758
+,D2-City,2019,700K annotated frames,✓,onboard,"OD, MOT",real,https://arxiv.org/abs/1904.01975
+,Caltech Lanes,2019,"1,224 frames",×,onboard,lane detection,real,https://scholar.google.com/scholar?q=Real+time+detection+of+lane+markers+in+urban+streets
+,Mcity,2019,"1,7500 frames",✓,onboard,SS,real,https://arxiv.org/abs/1912.06258
+,DET,2019,"5,424 event-based camera images",×,onboard,lane detection,real,https://scholar.google.com/scholar?q=Det%3A+A+high-resolution+dvs+dataset+for+lane+extraction
+,PreSIL,2019,50K frames,✓,onboard,"OD, 3D SS",synthetic,https://scholar.google.com/scholar?q=Precise+synthetic+image+and+lidar+%28presil%29+dataset+for+autonomous+vehicle+perception
+,H3D,2019,"27,721 frames",✓,onboard,"(3D) OD, MOT",real,https://scholar.google.com/scholar?q=The+h3d+dataset+for+full-surround+3d+multi-object+detection+and+tracking+in+crowded+urban+scenes
+,LLAMAS,2019,100K frames,✓,onboard,lane segmentation,real,https://scholar.google.com/scholar?q=Unsupervised+labeled+lane+markers+using+maps
+,MIT DriveSeg,2019,5K frames,×,onboard,SS,real,https://scholar.google.com/scholar?q=Value+of+temporal+dynamics+information+in+driving+scene+segmentation
+,Astyx,2019,500 radar frames,×,onboard,3D OD,real,https://scholar.google.com/scholar?q=Automotive+radar+dataset+for+deep+learning+based+3d+object+detection
+,UNDD,2019,7.2K frames,✓,onboard,SS,real,https://scholar.google.com/scholar?q=What%E2%80%99s+there+in+the+dark
+,Boxy,2019,200K frames,✓,onboard,OD,real,https://scholar.google.com/scholar?q=Boxy+vehicle+detection+in+large+images
+,RUGD,2019,37K frames,✓,others,SS,real,https://scholar.google.com/scholar?q=A+rugd+dataset+for+autonomous+navigation+and+visual+perception+in+unstructured+outdoor+environments
+,ApolloCar3D,2019,"5,277 driving images",×,onboard,3D instance understanding,real,https://scholar.google.com/scholar?q=Apollocar3d%3A+A+large+3d+car+instance+understanding+benchmark+for+autonomous+driving
+,HEV,2019,230 video clips,✓,onboard,object localization,real,https://scholar.google.com/scholar?q=Egocentric+vision-based+future+vehicle+localization+for+intelligent+driving+assistance+systems
+,HAD,2019,"5,675 video clips",✓,onboard,end-to-end driving,real,https://scholar.google.com/scholar?q=Grounding+human-to-vehicle+advice+for+self-driving+vehicles
+,CARLA-100,2019,100 hours driving,✓,onboard,"path planning, behavior cloning",synthetic,https://scholar.google.com/scholar?q=Exploring+the+limitations+of+behavior+cloning+for+autonomous+driving
+,Brno Urban,2019,375.7 km,✓,onboard,recognition,real,https://scholar.google.com/scholar?q=Brno+urban+dataset-the+new+data+for+self-driving+agents+and+mapping+tasks
+,VERI-Wild,2019,"416,314 images",✓,V2X,onboard re-identification,real,https://scholar.google.com/scholar?q=Veri-wild%3A+A+large+dataset+and+a+new+method+for+vehicle+re-identification+in+the+wild
+,CityFlow,2019,200K bounding boxes,✓,V2X,"OD, MOT, re-identification",real,https://scholar.google.com/scholar?q=Cityflow%3A+A+city-scale+benchmark+for+multi-target+multi-camera+vehicle+tracking+and+reidentification
+,VLMV,2020,306K frames,✓,V2X,lane merge,real,https://scholar.google.com/scholar?q=Vehicle+lane+merge+visual+benchmark
+,Small Obstacles,2020,3K frames,×,onboard,small obstacle segmentation,real,https://scholar.google.com/scholar?q=Lidar+guided+small+obstacle+segmentation
+,Cirrus,2020,"6,285 frames",✓,onboard,(3D) OD,real,https://scholar.google.com/scholar?q=Cirrus%3A+A+long-range+bi-pattern+lidar+dataset
+,KITTI InstanceMotSeg,2020,"12,919 frames",✓,onboard,moving instance segmentation,real,https://scholar.google.com/scholar?q=Monocular+instance+motion+segmentation+for+autonomous+driving%3A+Kitti+instancemotseg+dataset+and+multi-task+baseline
+,A*3D,2020,"39,179 point cloud frames",×,onboard,(3D) OD,real,https://scholar.google.com/scholar?q=A+3d+dataset%3A+Towards+autonomous+driving+in+challenging+environments
+,Toronto-3D,2020,4 scenarios,×,onboard,3D SS,real,https://scholar.google.com/scholar?q=Toronto-3d%3A+A+large-scale+mobile+lidar+dataset+for+semantic+segmentation+of+urban+roadways
+,MIT-AVT,2020,1.15M 10s video clips,✓,onboard,"SS, anomaly detection",real,https://scholar.google.com/scholar?q=Mit-avt+clustered+driving+scene+dataset%3A+Evaluating+perception+systems+in+real-world+naturalistic+driving+scenarios
+,CADC,2020,56K,×,onboard,"(3D) OD, OT",real,https://scholar.google.com/scholar?q=Canadian+adverse+driving+conditions+dataset
+,SemanticPOSS,2020,"2,988 point cloud frames",✓,onboard,3D SS,synthetic,https://scholar.google.com/scholar?q=Semanticposs%3A+A+point+cloud+dataset+with+large+quantity+of+dynamic+instances
+,IDDA,2020,1M frames,×,onboard,segmentation,synthetic,https://scholar.google.com/scholar?q=Idda%3A+A+largescale+multi-domain+dataset+for+autonomous+driving
+,CARRADA,2020,"7,193 radar frames",✓,onboard,SS,real,https://scholar.google.com/scholar?q=Carrada+dataset%3A+Camera+and+automotive+radar+with+range-angle-doppler+annotations
+,Titan,2020,"75,262 frames",✓,onboard,"OD, action recognition",real,https://scholar.google.com/scholar?q=Titan%3A+Future+forecast+using+action+priors
+,NightCity,2020,"4,297 frames",×,onboard,nighttime SS,real,https://scholar.google.com/scholar?q=Boosting+night-time+scene+parsing+with+learnable+frequency
+,PePScenes,2020,40K frames,✓,onboard,"(3D) OD, pedestrian action prediction",real,https://arxiv.org/abs/2012.07773
+,DDAD,2020,"21,200 frames",×,onboard,depth estimation,real,https://scholar.google.com/scholar?q=3d+packing+for+self-supervised+monocular+depth+estimation
+,MulRan,2020,41.2km paths,✓,onboard,place recognition,real,https://scholar.google.com/scholar?q=Mulran%3A+Multimodal+range+dataset+for+urban+place+recognition
+,Oxford Radar RobotCar,2020,240K scans,✓,onboard,odometry,real,https://scholar.google.com/scholar?q=The+oxford+radar+robotcar+dataset%3A+A+radar+extension+to+the+oxford+robotcar+dataset
+,OTOH,2020,170K scenes,✓,drone,"trajectory prediction, planning",real,https://scholar.google.com/scholar?q=One+thousand+and+one+hours%3A+Self-driving+motion+prediction+dataset
+,DA4AD,2020,9 sequences,✓,onboard,visual localization,real,https://scholar.google.com/scholar?q=Da4ad%3A+End-to-end+deep+attention-based+visual+localization+for+autonomous+driving
+,CPIS,2020,10K frames,×,V2X,cooperative 3D OD,synthetic,https://scholar.google.com/scholar?q=Cooperative+perception+for+3d+object+detection+in+driving+scenarios+using+infrastructure+sensors
+,EU LTD,2020,around 37 hours,✓,onboard,odometry,real,https://scholar.google.com/scholar?q=Eu+long-term+dataset+with+multiple+sensors+for+autonomous+driving
+,Newer College,2020,"290M points, 2300 seconds",✓,others,SLAM,real,https://scholar.google.com/scholar?q=The+newer+college+dataset%3A+Handheld+lidar%2C+inertial+and+vision+with+ground+truth
+,CCD,2020,4.5K videos,✓,onboard,accident prediction,real,https://scholar.google.com/scholar?q=Uncertainty-based+traffic+accident+anticipation+with+spatio-temporal+relational+learning
+,LIBRE,2020,40 frames,×,onboard,LiDAR performance benchmark,real,https://scholar.google.com/scholar?q=Libre%3A+The+multiple+3d+lidar+dataset
+,Gated2Depth,2020,"17,686 frames",✓,onboard,depth estimation,real,https://scholar.google.com/scholar?q=Gated2depth%3A+Real-time+dense+lidar+from+gated+images
+,TCGR,2020,"839,350 frames",✓,others,traffic control gesture recognition,real,https://scholar.google.com/scholar?q=Traffic+control+gesture+recognition+for+autonomous+vehicles
+,4Seasons,2021,350km recordings,✓,onboard,SLAM,real,https://scholar.google.com/scholar?q=4seasons%3A+A+cross-season+dataset+for+multiweather+slam+in+autonomous+driving
+,PVDN,2021,"59,746 frames",✓,onboard,"nighttime OD, OT",real,https://scholar.google.com/scholar?q=A+dataset+for+provident+vehicle+detection+at+night
+,ACDC,2021,"4,006 images",×,onboard,SS on adverse conditions,real,https://scholar.google.com/scholar?q=Acdc%3A+The+adverse+conditions+dataset+with+correspondences+for+semantic+driving+scene+understanding
+,DRIV100,2021,100K frames,×,onboard,domain adaptation SS,real,https://arxiv.org/abs/2102.00150
+,NEOLIX,2021,30K frames,✓,onboard,"3D OD, OT",real,https://arxiv.org/abs/2011.13528
+,IPS3000+,2021,"14,198 frames",✓,V2X,3D OD,real,https://arxiv.org/abs/2106.02781
+,AUTOMATUM,2021,30 hours,✓,drone,trajectory prediction,real,https://scholar.google.com/scholar?q=Automatum+data%3A+Drone-based+highway+dataset+for+the+development+and+validation+of+automated+driving+software+for+research+and+commercial+applications
+,DurLAR,2021,100K frames,✓,onboard,depth estimation,real,https://scholar.google.com/scholar?q=Durlar%3A+A+high-fidelity+128-channel+lidar+dataset+with+panoramic+ambient+and+reflectivity+imagery+for+multi-modal+autonomous+driving+applications
+,Reasonable-Crowd,2021,92 scenarios,✓,onboard,driving behavior prediction,synthetic,https://scholar.google.com/scholar?q=The+reasonable+crowd%3A+Towards+evidence-based+and+interpretable+models+of+driving+behavior
+,MOTSynth,2021,768 driving sequences,✓,onboard,Pedestrian detection and tracking,synthetic,https://scholar.google.com/scholar?q=Motsynth%3A+How+can+synthetic+data+help+pedestrian+detection+and+tracking%3F
+,MAVD,2021,"113,283 images",✓,onboard,OD and OT with sound,real,https://scholar.google.com/scholar?q=There+is+more+than+meets+the+eye%3A+Self-supervised+multi-object+detection+and+tracking+with+sound+by+distilling+multimodal+knowledge
+,Multifog KITTI,2021,15K frames,×,onboard,3D OD,synthetic,https://scholar.google.com/scholar?q=3d+object+detection+with+sls-fusion+network+in+foggy+weather+conditions
+,Comap,2021,"4,391 frames",✓,V2X,3D OD,synthetic,https://scholar.google.com/scholar?q=Comap%3A+A+synthetic+dataset+for+collective+multi-agent+perception+of+autonomous+driving
+,R3,2021,369 scenes,×,onboard,out-of-distribution detection,real,https://scholar.google.com/scholar?q=Towards+defensive+autonomous+driving%3A+Collecting+and+probing+driving+demonstrations+of+mixed+qualities
+,WIBAM,2021,"33,092 frames",✓,V2X,3D OD,real,https://arxiv.org/abs/2110.10966
+,CeyMo,2021,"2,887 frames",×,onboard,road marking detection,real,https://scholar.google.com/scholar?q=Ceymo%3A+see+more+on+roads-a+novel+benchmark+dataset+for+road+marking+detection
+,RaidaR,2021,"58,542 rainy street scenes",×,onboard,SS,real,https://scholar.google.com/scholar?q=Raidar%3A+A+rich+annotated+image+dataset+of+rainy+street+scenes
+,Fishyscapes,2021,"1,030 frames",×,onboard,"SS, anomaly detection",real,https://scholar.google.com/scholar?q=The+fishyscapes+benchmark%3A+Measuring+blind+spots+in+semantic+segmentation
+,RadarScenes,2021,40K radar frames,✓,onboard,"OD, classification",real,https://scholar.google.com/scholar?q=Radarscenes%3A+A+real-world+radar+point+cloud+data+set+for+automotive+applications
+,ROAD,2021,122K frames,✓,onboard,"OD, SS",real,https://scholar.google.com/scholar?q=Road%3A+The+road+event+awareness+dataset+for+autonomous+driving
+,All-in-One Drive,2021,100K,✓,onboard,"(3D) OD, (3D) SS, trajectory prediction",real,https://scholar.google.com/scholar?q=Allin-one+drive%3A+A+comprehensive+perception+dataset+with+high-density+long-range+point+clouds
+,PandaSet,2021,"8,240 frames",✓,onboard,"(3D) OD, SS, OT",real,https://scholar.google.com/scholar?q=Pandaset%3A+Advanced+sensor+suite+dataset+for+autonomous+driving
+,SODA10M,2021,20K labeled images,✓,onboard,OD,real,https://arxiv.org/abs/2106.11118
+,PixSet,2021,29K point cloud frames,×,onboard,(3D) OD,real,https://scholar.google.com/scholar?q=Pixset%3A+An+opportunity+for+3d+computer+vision+to+go+beyond+point+clouds+with+a+full-waveform+lidar+dataset
+,RoadObstacle21,2021,327 scenes,×,onboard,anomaly segmentation,synthetic,https://arxiv.org/abs/2104.14812
+,VIL-100,2021,10K frames,×,onboard,lane detection,real,https://scholar.google.com/scholar?q=Vil-100%3A+A+new+dataset+and+a+baseline+model+for+video+instance+lane+detection
+,OpenMPD,2021,15K frames,×,onboard (3D),"OD, 3D OT, semantic segmentation",real,https://scholar.google.com/scholar?q=Openmpd%3A+An+open+multimodal+perception+dataset+for+autonomous+6+driving
+,WADS,2021,1K point cloud frames,✓,onboard,SS,real,https://arxiv.org/abs/2109.07078
+,CCTSDB 2021,2021,"16,356 frames",×,onboard,traffic sign detection,real,https://scholar.google.com/scholar?q=Cctsdb+2021%3A+a+more+comprehensive+traffic+sign+detection+benchmark
+,SemanticUSL,2021,1.2K frames,×,onboard,domain adaptation 3D SS,real,https://scholar.google.com/scholar?q=Lidarnet%3A+A+boundary-aware+domain+adaptation+model+for+point+cloud+semantic+segmentation
+,CARLANE,2022,118K frames,✓,onboard,lane detection,synthetic,https://arxiv.org/abs/2206.08083
+,CrashD,2022,"15,340 scenes",×,onboard,3D OD,synthetic,https://scholar.google.com/scholar?q=3d-vfield%3A+Adversarial+augmentation+of+point+clouds+for+domain+generalization+in+3d+object+detection
+,CODD,2022,108 sequences,✓,V2X,multi-agent SLAM,synthetic,https://scholar.google.com/scholar?q=Fast+and+robust+registration+of+partially+overlapping+point+clouds
+,CarlaScenes,2022,7 sequences,✓,onboard,"(3D) SS, SLAM, depth estimation",synthetic,https://scholar.google.com/scholar?q=Carlascenes%3A+A+synthetic+dataset+for+odometry+in+autonomous+driving
+,OPV2V,2022,"11,464 frames",×,V2X,onboard-to-onboard perception,synthetic,https://scholar.google.com/scholar?q=Opv2v%3A+An+open+benchmark+dataset+and+fusion+pipeline+for+perception+with+vehicle-tovehicle+communication
+,CARLA-WildLife,2022,26 videos,✓,onboard,out-of-distribution tracking,synthetic,https://scholar.google.com/scholar?q=Two+video+data+sets+for+tracking+and+retrieval+of+out+of+distribution+objects
+,SOS,2022,20 videos,✓,onboard,out-of-distribution tracking,real,https://scholar.google.com/scholar?q=Two+video+data+sets+for+tracking+and+retrieval+of+out+of+distribution+objects
+,RoadSaW,2022,720K frames,✓,onboard,Road surface and wetness estimation,real,https://scholar.google.com/scholar?q=Roadsaw%3A+A+large-scale+dataset+for+camera-based+road+surface+and+wetness+estimation
+,I see you,2022,"170 sequences, 340 trajectories",✓,V2X,OD,real,https://arxiv.org/abs/2211.09342
+,ASAP,2022,1.2M images,✓,onboard,online 3D OD,real,https://scholar.google.com/scholar?q=Are+we+ready+for+vision-centric+driving+streaming+perception%3F+the+asap+benchmark
+,Amodal Cityscapes,2022,5K frames,×,onboard,amodal SS,real,https://scholar.google.com/scholar?q=Amodal+cityscapes%3A+a+new+dataset%2C+its+generation%2C+and+an+amodal+semantic+segmentation+challenge+baseline
+,SynWoodScape,2022,80K frames,×,onboard,"(3D) OD, segmentation",synthetic,https://scholar.google.com/scholar?q=Synwoodscape%3A+Synthetic+surround-view+fisheye+camera+dataset+for+autonomous+driving
+,TJ4RadSet,2022,"7,757 frames",✓,onboard,"OD, OT",real,https://scholar.google.com/scholar?q=Tj4dradset%3A+A+4d+radar+dataset+for+autonomous+driving
+,CODA,2022,"1,500 frames",×,onboard,corner case detection,real,https://scholar.google.com/scholar?q=Coda%3A+A+real-world+road+corner+case+dataset+for+object+detection+in+autonomous+driving
+,LiDAR Snowfall,2022,"7,385 point cloud frames",✓,onboard,3D OD,synthetic,https://scholar.google.com/scholar?q=Lidar+snowfall+simulation+for+robust+3d+object+detection
+,MUAD,2022,10.4K frames,✓,onboard,"OD. SS, depth estimation",synthetic,https://arxiv.org/abs/2203.01437
+,AUTOCASTSIM,2022,52K frames,✓,V2X,"(3D) OD, OT, SS",real,https://scholar.google.com/scholar?q=Coopernaut%3A+Endto-end+driving+with+cooperative+perception+for+networked+vehicles
+,CARTI,2022,11K frames,✓,V2X,cooperative perception,synthetic,https://scholar.google.com/scholar?q=Pillargrid%3A+Deep+learning-based+cooperative+perception+for+3d+object+detection+from+onboard-roadside+lidar
+,K-Lane,2022,"15,382 frames",×,onboard,lane detection,real,https://scholar.google.com/scholar?q=K-lane%3A+Lidar+lane+dataset+and+benchmark+for+urban+roads+and+highways
+,Ithaca365,2022,7K frames,×,onboard,"3D OD, SS, depth estimation",real,https://scholar.google.com/scholar?q=Ithaca365%3A+Dataset+and+driving+perception+under+repeated+and+challenging+weather+conditions
+,GLARE,2022,"2,157 frames",×,onboard,traffic sign detection,real,https://scholar.google.com/scholar?q=Glare%3A+A+dataset+for+traffic+sign+detection+in+sun+glare
+,SUPS,2023,5K frames,✓,onboard,"SS, depth estimation, SLAM",synthetic,https://scholar.google.com/scholar?q=Sups%3A+A+simulated+underground+parking+scenario+dataset+for+autonomous+driving
+,Boreas,2023,"7,111 frames",✓,onboard,"(3D) OD, localization",real,https://scholar.google.com/scholar?q=Boreas%3A+A+multi-season+autonomous+driving+dataset
+,Robo3D,2023,476K frames,✓,onboard,"(3D) OD, 3D SS",real,https://scholar.google.com/scholar?q=Robo3d%3A+Towards+robust+and+reliable+3d+perception+against+corruptions
+,ZOD,2023,100K frames,✓,onboard,"(3D) OD, segmentation",real,https://scholar.google.com/scholar?q=Zenseact+open+dataset%3A+A+large-scale+and+diverse+multimodal+dataset+for+autonomous+driving
+,K-Radar,2023,35K radar frames,×,onboard,"3D OD, OT",real,https://scholar.google.com/scholar?q=K-radar%3A+4d+radar+object+detection+for+autonomous+driving+in+various+weather+conditions
+,aiMotive,2023,"26,583 frames",✓,onboard,"3D OD, MOT",real,https://arxiv.org/abs/2211.09445
+,UrbanLaneGraph,2023,"around 5,220 km lane spans",✓,drone,lane graph estimation,real,https://scholar.google.com/scholar?q=Learning+and+aggregating+lane+graphs+for+urban+automated+driving
+,WEDGE,2023,"3,360 frames",×,others,"OD, classification",synthetic,https://scholar.google.com/scholar?q=Wedge%3A+A+multi-weather+autonomous+driving+dataset+built+from+generative+visionlanguage+models
+,OpenLane-V2,2023,466K images,✓,onboard,"lane detection, scene understanding",real,https://scholar.google.com/scholar?q=Openlane-v2%3A+A+topology+reasoning+benchmark+for+unified+3d+hd+mapping
+,V2X-Seq (perception),2023,15K frames,✓,V2X,cooperative perception,real,https://scholar.google.com/scholar?q=V2x-seq%3A+A+large-scale+sequential+dataset+for+vehicle-infrastructure+cooperative+perception+and+forecasting
+,SSCBENCH,2023,"66,913 frames",×,onboard,semantic scene completion,real,https://arxiv.org/abs/2306.09001
+,RoadSC,2023,"90,759 images",×,onboard,road snow coverage estimation,real,https://scholar.google.com/scholar?q=Camera-based+road+snow+coverage+estimation
+,V2X-Real,2024,"171K images, 33K LiDAR point clouds",-,V2X,3D OD,real,https://arxiv.org/abs/2403.16034
+,RCooper,2024,"50K images, 30K LiDAR point clouds",✓,V2X,"3D OD, OT",real,https://arxiv.org/abs/2403.10145
+,FLIR,-,"26,442 thermal frames",✓,onboard,thermal image OD,real,https://www.flir.com/oem/adas/adas-dataset-form/

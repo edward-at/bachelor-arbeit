@@ -1,0 +1,16 @@
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,,,,,,,,,,,
+,,Dataset,Year,Scenes,Frames,Camera,Lidar,Type,Space,Inst.,Track,Paper
+,,Link,2008,4,1224/1224,,✗,,PV,✓,✗,Link
+,,VPG,2017,-,20K/20K,,✗,,PV,✗,-,Link
+,,TUsimple,2017,6.4K,6.4K/128K,,✗,,PV,✓,✗,Link
+,,CULane,2018,-,133K/133K,,✗,,PV,✓,-,Link
+,,ApolloScape,2018,235,115K/115K,,✓,,PV,✗,✗,Link
+,,LLAMAS,2019,14,79K/100K,Front-view Image,✗,Laneline,PV,✓,✗,Link
+,,3D Synthetic,2020,-,10K/10K,,✗,,PV,✓,-,Link
+,,CurveLanes,2020,-,150K/150K,,✗,,PV,✓,-,Link
+,,VIL-100,2021,100,10K/10K,,✗,,PV,✓,✗,Link
+,,OpenLane-V1,2022,1K,200K/200K,,✗,,3D,✓,✓,Link
+,,ONCE-3DLane,2022,-,211K/211K,,✗,,3D,✓,-,Link
+,,OpenLane-V2,2023,2K,72K/72K,Multi-view Image,✗,"Lane Centerline, Lane Segment",3D,✓,✓,Link
