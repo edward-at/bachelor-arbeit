@@ -1,0 +1,10 @@
+,Dataset,Frames,Monocular_Camera,Stereo_Camera,LiDAR,Radar,2D_Det,3D_Det,MOT,Seg,Depth,Flow,Pose,Pred
+,VKITTI,17K,Yes,No,No,No,Yes,No,Yes,Yes,Yes,Yes,No,No
+,VIPER,250K,Yes,No,No,No,Yes,Yes,Yes,Yes,No,Yes,Yes,No
+,PerSIL,50K,Yes,No,Yes,No,Yes,Yes,Yes,Yes,No,No,No,No
+,ParallelEye,40K,Yes,No,No,No,Yes,No,Yes,Yes,Yes,Yes,No,No
+,VKITTI2,17K,Yes,Yes,No,No,Yes,No,Yes,Yes,Yes,Yes,No,No
+,SHIFT,2.5M,Yes,Yes,Yes,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+,V2X-Sim,10K,Yes,Yes,No,No,Yes,Yes,No,Yes,Yes,No,No,No
+,AIODrive,100K,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,No,No,Yes
+,OPV2V,11K,Yes,No,Yes,No,No,Yes,No,Yes,No,No,No,Yes

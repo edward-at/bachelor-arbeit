@@ -1,0 +1,498 @@
+Dataset_ID,Dataset
+3d_synthetic,3D Synthetic
+3dhd_cityscenes,3DHD CityScenes
+4seasons,4Seasons
+a2d2,A2D2
+a9,A9
+a_3d,A*3D
+a_parametric_top_view_representation_of_complex_road_scenes,A Parametric Top-View Representation of Complex Road Scenes
+aachen_day_night,Aachen Day-Night
+acdc,ACDC
+aimotive,aiMotive
+aiodrive,AIODrive
+all_in_one_drive,All-in-One Drive
+amodal_cityscapes,Amodal Cityscapes
+amuse,AMUSE
+apollo_daoxianglake,Apollo-DaoxiangLake
+apollo_open_platform,Apollo Open Platform
+apollo_southbay,Apollo-SouthBay
+apollocar3d,ApolloCar3D
+apolloscape,Apolloscape
+apolloscape,ApolloScape
+ard_16,ARD-16
+argoverse,Argoverse
+argoverse_1_stereo,Argoverse 1 Stereo
+argoverse_2_lidar,Argoverse 2 Lidar
+argoverse_2_map_change,Argoverse 2 Map Change
+argoverse_2_motion_forecasting,Argoverse 2 Motion Forecasting
+argoverse_2_sensor,Argoverse 2 Sensor
+argoverse_3d_tracking,Argoverse 3D Tracking
+argoverse_motion_forecasting,Argoverse Motion Forecasting
+argoverse_v1,Argoverse V1
+argoverse_v2,Argoverse V2
+asap,ASAP
+astyx,Astyx
+astyx_hires_2019,Astyx HiRes 2019
+augkitti,AugKITTI
+autocastsim,AUTOCASTSIM
+automatum,AUTOMATUM
+automatum_open_highway,Automatum (Open Highway)
+autonomous_platform_inertial,Autonomous Platform Inertial
+baai_vanjee,BAAI-VANJEE
+bay_area,Bay Area
+bdd100k,BDD100k
+bdd100k_aps,BDD100K-APS
+bdd_x,BDD-X
+belgium_traffic_sign,Belgium Traffic Sign
+belgiumts,BelgiumTS
+berkeley_deepdrive,Berkeley DeepDrive
+beyond_pascal,Beyond PASCAL
+blvd,BLVD
+boreas,Boreas
+bosch_small_traffic_lights,Bosch Small Traffic Lights
+bosch_small_traffic_lights_dataset,Bosch Small Traffic Lights Dataset
+bosch_stl,Bosch STL
+bosch_tl,Bosch TL
+boxcars116k,BoxCars116k
+boxy,Boxy
+brain4cars,Brain4Cars
+brno_urban,Brno Urban
+brno_urban,Brno-Urban
+cadc,CADC
+cadp,CADP
+caltech_lanes,Caltech Lanes
+caltech_pedestria,Caltech Pedestria
+caltech_pedestrian,Caltech Pedestrian
+camvid,CamVid
+car_crash_ccd,Car Crash (CCD)
+carla_100,CARLA-100
+carla_64,CARLA-64
+carla_densely_annotated_driving_dataset,[CARLA] Densely Annotated Driving Dataset
+carla_gear_2d_object_detection,CARLA-GEAR 2D Object Detection
+carla_gear_monocular_depth_estimation,CARLA-GEAR Monocular Depth Estimation
+carla_gear_semantic_segmentation,CARLA-GEAR Semantic Segmentation
+carla_gear_stereo_3d_object_detection,CARLA-GEAR Stereo 3D Object Detection
+carla_object_detection_dataset,Carla-Object-Detection-Dataset
+carla_real_traffic_scenarios,CARLA Real Traffic Scenarios
+carla_training_data,carla-training-data
+carla_wildlife,CARLA-WildLife
+carla_wildlife_cwl,CARLA-WildLife (CWL)
+carlane,CARLANE
+carlascenes,CarlaScenes
+carrada,CARRADA
+cars,Cars
+carti,CARTI
+ccd,CCD
+ccsad,CCSAD
+cctsdb_2021,CCTSDB 2021
+ceymo,CeyMo
+cheddar_gorge,Cheddar Gorge
+cirrus,Cirrus
+cityflow,CityFlow
+citypersons,CityPersons
+cityscapes,CityScapes
+cityscapes,Cityscapes
+cityscapes_3d,Cityscapes 3D
+cityscapes_dvps,Cityscapes-DVPS
+cmu,CMU
+coda,CODA
+coda2022,CODA2022
+codd,CODD
+collective_activity,Collective activity
+coloradar,ColoRadar
+comap,Comap
+comma10k,comma10k
+comma2k19,comma2k19
+comma2k19,Comma2k19
+comma2k19_ld,Comma2k19 LD
+comma_ai,comma.ai
+comma_ai,Comma.ai
+commasteeringcontrol,commaSteeringControl
+commavq,commavq
+complex_urban,Complex Urban
+cooperative_driving_codd,Cooperative Driving (CODD)
+cooperative_localization_using_carla_sumo_artery_simulators,Cooperative Localization using CARLA-SUMO-ARTERY Simulators
+cpis,CPIS
+crashd,CrashD
+crosswalk_change_dataset,Crosswalk Change Dataset
+cruw,CRUW
+culane,CULane
+cure_tsd,CURE-TSD
+cure_tsr,CURE-TSR
+curvelanes,CurveLanes
+d2_city,D2-City
+d_2_city,D^2 City
+da4ad,DA4AD
+daimler_ped,Daimler Ped
+daimler_pedestrian,Daimler Pedestrian
+daimler_pedestrian_path_prediction_benchmark,Daimler Pedestrian Path Prediction Benchmark
+daimler_pedestrian_segmentation_benchmark,Daimler Pedestrian Segmentation Benchmark
+daimler_stereo_ped,Daimler Stereo Ped
+daimler_stereo_pedestrian_detection_benchmark,Daimler Stereo Pedestrian Detection Benchmark
+daimler_urban,Daimler Urban
+daimler_urban_segmentation,Daimler Urban Segmentation
+dair_v2x_c,DAIR-V2X-C
+danger_vkitti,DANGER-vKITTI
+danger_vkitti2,DANGER-vKITTI2
+davis,DAVIS
+dawn,DAWN
+dbnet,DBNet
+ddad,DDAD
+ddd17,DDD17
+ddd20,DDD20
+ddd20_davis_driving_2020,DDD20: DAVIS Driving 2020
+ddd_17,DDD 17
+deepaccident,DeepAccident
+dense,Dense
+det,DET
+dgl_mots,DGL-MOTS
+diml,DIML
+diplecs,DIPLECS
+diplecs_autonomous_driving,DIPLECS Autonomous Driving
+dolphins,DOLPHINS
+dr_eye_ve,DR(eye)VE
+dr_eye_ve,Dr(eye)ve
+driv100,DRIV100
+drivelm,DriveLM
+driveseg_manual,DriveSeg (MANUAL)
+driveseg_semi_auto,DriveSeg (Semi-auto)
+driveu_traffic_light,DriveU Traffic Light
+drivingstereo,DrivingStereo
+dsiod,DSIOD
+durlar,DurLAR
+ecp,ECP
+eisats,EISATS
+elektra,Elektra
+elektra,ELEKTRA
+endeavour,Endeavour
+eposh,EPOSH
+eth_ped,ETH Ped
+eth_pedestrian,ETH Pedestrian
+eu_long_term,EU Long-term
+eu_ltd,EU LTD
+eurocity_persons,EuroCity Persons
+exid,exiD
+fallen_person_detection_with_driving_scenes_fpd_set,Fallen Person detection with Driving scenes (FPD-set)
+fishyscapes,Fishyscapes
+five_roundabouts,Five Roundabouts
+flir,FLIR
+flir_thermal,FLIR Thermal
+flying_things,Flying Things
+flyingthings3d,FlyingThings3D
+foggy_cityscapes,Foggy Cityscapes
+ford,Ford
+ford_autonomous_vehicle,Ford Autonomous Vehicle
+ford_campus,Ford CAMPUS
+frida,FRIDA
+gated2depth,Gated2Depth
+gated2gated,Gated2Gated
+german_traffic_sign,German Traffic Sign
+ghent_vru,Ghent VRU
+ghost,Ghost
+gida,GIDA
+glare,GLARE
+ground_challenge,Ground-Challenge
+ground_truth_sitxel,Ground Truth SitXel
+ground_truth_stixel,Ground Truth Stixel
+grounded,GROUNDED
+gta5,GTA5
+gta_v_dataset,GTA-V dataset
+gtsdb,GTSDB
+gtsrb,GTSRB
+h3d,H3D
+had,HAD
+hci_challenging_stereo,HCI Challenging Stereo
+hd1k,HD1K
+hdbd,HDBD
+hdd,HDD
+hdik,HDIK
+hev,HEV
+hev_i,HEV-I
+highd,HighD
+highd,highD
+highway_work_zones,Highway Work Zones
+highway_workzones,HighWay Workzones
+hsd,HSD
+i_see_you,I see you
+idd,IDD
+idda,IDDA
+illumination_changes_in_a_day,Illumination Changes in a day
+imptc,IMPTC
+ind,inD
+india_driving,India Driving
+indian_vehicle_dataset,Indian Vehicle Dataset
+interaction,Interaction
+interaction,INTERACTION
+ips3000plus,IPS3000+
+ips300plus,IPS300+
+ithaca365,Ithaca365
+jaad,JAAD
+k_lane,K-Lane
+k_radar,K-Radar
+kaist_mpd,KAIST MPD
+kaist_multi_spectral,KAIST Multi-Spectral
+kaist_multi_spectral_day_night,KAIST Multi-Spectral Day/Night
+kaist_urban,KAIST Urban
+karlsruhe_labeled_objects,Karlsruhe Labeled Objects
+karlsruhe_stereo,Karlsruhe Stereo
+kitti,KITTI
+kitti_360,KITTI-360
+kitti_360_aps,KITTI-360-APS
+kitti_360_panopticbev,KITTI-360 PanopticBEV
+kitti_carla,KITTI-CARLA
+kitti_instancemotseg,KITTI InstanceMotSeg
+kul_belgium_traffic_sign,KUL Belgium Traffic Sign
+lane_detection_for_carla_driving_simulator,Lane Detection for Carla Driving Simulator
+libre,LIBRE
+lidar_cs,LiDAR-CS
+lidar_snowfall,LiDAR Snowfall
+lidar_video_driving,LiDAR-Video Driving
+lisa,LISA
+lisa_amazon_mlsl_vehicle_attributes_lava,LISA Amazon-MLSL Vehicle Attributes (LAVA)
+lisa_traffic_light,LISA Traffic Light
+lisa_traffic_sign,LISA Traffic Sign
+livi_set,LiVi-Set
+llamas,Llamas
+llamas,LLAMAS
+loki,LOKI
+lost_and_found,Lost and Found
+lost_and_found,Lost & Found
+lostandfound,LostAndFound
+lucoop,LUCOOP
+lumpi,LUMPI
+lyft_level5_perception,Lyft Level5 Perception
+lyft_level5_prediction,Lyft Level5 Prediction
+malaga,Malaga
+malaga_stereo_and_laser_urban,Malaga Stereo and Laser Urban
+mapillary,Mapillary
+mapillary_vistas,Mapillary Vistas
+mavad,MAVAD
+mavd,MAVD
+mavd_multimodal_audio_visual_detection,MAVD Multimodal Audio-Visual Detection
+mcity,Mcity
+mcity_data_collection,MCity Data Collection
+meteor,METEOR
+micc_sri,MICC-SRI
+mit_avt,MIT-AVT
+mit_avt_clustered_driving_scene,MIT-AVT Clustered Driving Scene
+mit_driveseg,MIT DriveSeg
+mona_the_munich_motion_dataset_of_natural_driving,MONA: The Munich Motion Dataset of Natural Driving
+motsynth,MOTSynth
+mpi_sintel,MPI Sintel
+mslu,MSLU
+mtsd,MTSD
+muad,MUAD
+muiran,MuIRan
+mulran,MulRan
+mulran,Mulran
+multi_vehicle_stereo_event_camera,Multi Vehicle Stereo Event Camera
+multifog_kitti,Multifog KITTI
+multiple_uncertainties_for_autonomous_driving_muad,Multiple Uncertainties for Autonomous Driving (MUAD)
+multispectral_object_detection,Multispectral Object Detection
+nclt,NCLT
+neolix,NEOLIX
+newer_college,Newer College
+nexet,NEXET
+ngsim,NGSIM
+nightcity,NightCity
+nightowis,NightOwis
+nightowls,NightOwls
+nighttime_drive,nighttime drive
+nighttime_driving,Nighttime Driving
+nocrash,NoCrash
+nuimages,nuImages
+nuplan,nuPlan
+nuscenes,nuScenes
+nuscenes_panopticbev,nuScenes PanopticBEV
+nvsec,NVSEC
+nyc3dcars,NYC3DCars
+once,ONCE
+once_3dlane,ONCE-3DLane
+one_thousand_and_one_hours,One Thousand and One Hours
+opendd,openDD
+openlane_v1,OpenLane-V1
+openlane_v2,OpenLane-V2
+openmpd,OpenMPD
+openscene,OpenScene
+opv2v,OPV2V
+otoh,OTOH
+oxford,Oxford
+oxford_radar_robot_car,Oxford Radar Robot Car
+oxford_radar_robotcar,Oxford Radar RobotCar
+oxford_robot_car,Oxford Robot Car
+oxford_robotcar,Oxford RobotCar
+pandaset,PandaSet
+paralleleye,ParallelEye
+paris_carla_3d,Paris-CARLA-3D
+paris_lille_3d,Paris-Lille-3D
+paris_rue_madame,Paris-rue-Madame
+pascal_wd,Pascal-WD
+pedx,PedX
+pepscenes,PePScenes
+pepscenes,PepScenes
+persil,PerSIL
+pesotif,PeSOTIF
+pie,PIE
+pixset,PixSet
+pointclouddenoising,PointCloudDeNoising
+pointillism,Pointillism
+polysync,PolySync
+pp4av,PP4AV
+presil,PreSIL
+prevention,PREVENTION
+provident_vehicle_detection_at_night_pvdn,Provident Vehicle Detection at Night (PVDN)
+pvdn,PVDN
+r3,R3
+r3_driving,R3 Driving
+r_u_maad,R-U-MAAD
+radarscenes,RadarScenes
+raddet,RADDet
+radial,RADial
+radiate,RADIATE
+radical,RaDiCaL
+raidar,RaidaR
+raincouver,Raincouver
+ranus,RANUS
+rcooper,RCooper
+rdd2020,RDD2020
+realistic_vehicle_trajectories_and_driving_parameters_from_carla_autonomous_driving_simulator,Realistic Vehicle Trajectories and Driving Parameters from CARLA Autonomous Driving Simulator
+reasonable_crowd,Reasonable Crowd
+reasonable_crowd,Reasonable-Crowd
+rellis_3d,RELLIS-3D
+road,ROAD
+road_damage,Road Damage
+road_scene_graph,Road Scene Graph
+roadanomaly21,RoadAnomaly21
+roadobstacle21,RoadObstacle21
+roadsaw,RoadSaW
+roadsc,RoadSC
+robo3d,Robo3D
+romanian_european_union_dataset_of_license_plates,Romanian (European Union) Dataset of License Plates
+rope3d,Rope3D
+round,rounD
+rugd,RUGD
+rugd_robot_unstructured_ground_driving,RUGD: Robot Unstructured Ground Driving
+san_francisco_landmark,San Francisco Landmark
+sap,SAP
+scendd,SceNDD
+scorp,SCORP
+scribblekitti,ScribbleKITTI
+seasonal_variation,Seasonal Variation
+seeingthroughfog,SeeingThroughFog
+semantic_kitti,Semantic KITTI
+semantickitti,SemanticKITTI
+semanticposs,SemanticPOSS
+semanticusl,SemanticUSL
+semkitti_dvps,SemKITTI-DVPS
+shift,SHIFT
+small_obstacle,Small Obstacle
+small_obstacles,Small Obstacles
+soda10m,SODA10M
+sos,SOS
+sscbench,SSCBENCH
+stanford_drone,Stanford Drone
+stanford_tack,Stanford Tack
+stanford_track,Stanford Track
+stanford_track_collection,Stanford Track Collection
+stixel,Stixel
+street_hazards,Street Hazards
+street_learn,Street Learn
+street_obstacle_sequences_sos,Street Obstacle Sequences (SOS)
+streetlearn,StreetLearn
+sups,SUPS
+surat_trajectory_data,Surat Trajectory Data
+sydney_urban,Sydney Urban
+sydneyurbanobject,SydneyUrbanObject
+syncapes,Syncapes
+synscapes,Synscapes
+synthcity,SynthCity
+synthetic_crosswalks,Synthetic Crosswalks
+synthetic_discrepancy,Synthetic Discrepancy
+synthetic_fire_hydrants,Synthetic Fire Hydrants
+synthia,SYNTHIA
+synthia,Synthia
+synwoodscape,SynWoodScape
+taf_bw,TAF-BW
+talk2car,Talk2Car
+talk2nav,Talk2Nav
+tas_nir,TAS-NIR
+tcgr,TCGR
+thi_license_plate_dataset,THI License Plate Dataset
+thi_synthetic_automotive_dataset,THI Synthetic Automotive Dataset
+titan,Titan
+titan,TITAN
+tj4dradset,TJ4DRadSet
+tj4radset,TJ4RadSet
+tme_motorway,TME Motorway
+toronto_3d,Toronto-3D
+toronto_3d,Toronto 3D
+toronto_city,Toronto City
+trafficnet,TrafficNet
+trancos,TRANCOS
+trom,TRoM
+tsinghua_daimler_cyclist_detection,Tsinghua Daimler Cyclist Detection
+tt100k,TT100K
+tti_core,TTI Core
+tud_brussels,TUD-Brussels
+tud_brussels,TUD Brussels
+tud_brussels_pedestrian,TUD Brussels Pedestrian
+tum_city,TUM City
+tumtraf_i,TUMTraf-I
+tumtraf_v2x,TumTraf-V2X
+tusimple,TuSimple
+tusimple,TUsimple
+ua_detrac,Ua-detrac
+uah,UAH
+uah_driveset,UAH-Driveset
+uah_driveset,UAH-DriveSet
+udacity,Udacity
+udrive,UDrive
+undd,UNDD
+unid,uniD
+unsupervised_llamas,Unsupervised Llamas
+uoftped50,UofTPed50
+upct,UPCT
+urbanlanegraph,UrbanLaneGraph
+urbanloco,UrbanLoco
+usyd_campus,USyd Campus
+utbm_eu_ltd,UTBM EU LTD
+utbm_robotcar,UTBM Robotcar
+v2i_carla,V2I-CARLA
+v2v4real,V2V4Real
+v2x_real,V2X-Real
+v2x_seq,V2X-Seq
+v2x_seq_perception,V2X-Seq (perception)
+v2x_seq_spd,V2X-Seq(SPD)
+v2x_sim,V2X-Sim
+v2x_sim_1_0,V2X-Sim 1.0
+v2x_sim_2_0,V2X-Sim 2.0
+v2xset,V2XSet
+veis,VEIS
+veri_wild,VERI-Wild
+view_of_delft,View-of-Delft
+vil_100,VIL-100
+viper,VIPER
+vistas_np,Vistas-NP
+vitro,VITRO
+vkitti,VKITTI
+vkitti2,VKITTI2
+vlmv,VLMV
+vlmv_vehicle_lane_merge_visual_benchmark,VLMV - Vehicle Lane Merge Visual Benchmark
+vpg,VPG
+vpgnet,VPGNet
+wads,WADS
+waymo,Waymo
+waymo_block_nerf,Waymo Block-NeRF
+waymo_open_motion,Waymo Open Motion
+waymo_open_perception,Waymo Open Perception
+wedge,WEDGE
+wibam,WIBAM
+wilddash,WildDash
+wilddash_2,WildDash 2
+woodscape,WoodScape
+woodscape,Woodscape
+wuppertal_obstacle_sequences_wos,Wuppertal Obstacle Sequences (WOS)
+wz_traffic,WZ-traffic
+zendar,Zendar
+zenseact_open,Zenseact Open
+zod,ZOD

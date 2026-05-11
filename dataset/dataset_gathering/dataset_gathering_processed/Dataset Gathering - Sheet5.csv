@@ -1,0 +1,285 @@
+Dataset_ID,Dataset,Raw_Dataset_Name,Source_Table,Citations,Sensor_Types,Benchmark,Annotation,Location,Provides_Raw_Data,Related_Paper
+carla_densely_annotated_driving_dataset,[CARLA] Densely Annotated Driving Dataset,[CARLA] Densely Annotated Driving Dataset,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+3dhd_cityscenes,3DHD CityScenes,3DHD CityScenes,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://ieeexplore.ieee.org/document/9921866
+4seasons,4Seasons,4Seasons,Dataset Gathering - Sheet5.csv,46,"camera, imu/rtk-gnss",globally consistent reference poses,-,-,Yes,https://arxiv.org/pdf/2009.06364.pdf
+a_parametric_top_view_representation_of_complex_road_scenes,A Parametric Top-View Representation of Complex Road Scenes,A Parametric Top-View Representation of Complex Road Scenes,Dataset Gathering - Sheet5.csv,39,camera,-,Semantic and BEV annotations,"Karlsruhe, Germany (KITTI); Boston, USA and Singapore (nuScenes)",-,https://arxiv.org/pdf/1812.06152.pdf
+a_3d,A*3D,A*3D,Dataset Gathering - Sheet5.csv,109,"camera, lidar",3d object detection,3d bounding boxes,Singapore,-,https://arxiv.org/pdf/1909.07541.pdf
+a2d2,A2D2,A2D2,Dataset Gathering - Sheet5.csv,241,"camera, lidar, gps/imu",-,"semantic segmentation, point cloud segmentation, instance segmentation, 3d bounding boxes",Three cities in the south of Germany,Yes,https://arxiv.org/pdf/2004.06320.pdf
+a9,A9,A9,Dataset Gathering - Sheet5.csv,27,"camera, lidar",-,3d bounding boxes,"Providentia++ test field near Munich, Germany",-,https://arxiv.org/pdf/2204.06527.pdf
+aimotive,aiMotive,aiMotive,Dataset Gathering - Sheet5.csv,8,"camera, lidar, radar, gnss",-,3d bounding boxes,"USA (California), Austria and Hungary",-,https://arxiv.org/pdf/2211.09445.pdf
+aiodrive,AIODrive,AIODrive,Dataset Gathering - Sheet5.csv,-,"camera, lidar, radar, gps/imu","3d object detection, trajectory forecasting","2d/3d bounding boxes, object category and attributes, 2d-3d semantic, instance and panoptic segmentation",CARLA environment,-,https://www.xinshuoweng.com/papers/AIODrive/arXiv.pdf
+amodal_cityscapes,Amodal Cityscapes,Amodal Cityscapes,Dataset Gathering - Sheet5.csv,8,camera,amodal semantic segmentation method,semantic segmentation and amodal semantic segmentation,-,-,https://arxiv.org/pdf/2206.00527.pdf
+amuse,AMUSE,AMUSE,Dataset Gathering - Sheet5.csv,5,"camera, height, gps/imu, accelerometer",-,-,Sweden,-,http://liu.diva-portal.org/smash/get/diva2:623885/FULLTEXT01.pdf
+apollo_daoxianglake,Apollo-DaoxiangLake,Apollo-DaoxiangLake,Dataset Gathering - Sheet5.csv,2,-,-,-,-,-,https://arxiv.org/abs/2003.03026
+apollo_southbay,Apollo-SouthBay,Apollo-SouthBay,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://ieeexplore.ieee.org/abstract/document/8954371/
+apolloscape,ApolloScape,ApolloScape,Dataset Gathering - Sheet5.csv,427,"camera, lidar, imu/gnss","2d image parsing, 3d car instance understanding, landmark segmentation, self-localization, trajectory prediction, 3d detection, 3d tracking, stereo","high density 3d point cloud map, per-pixel, per-frame semantic image label, lane mark label semantic instance segmentation, geo-tagged","Beijing, Shanghai and Shenzhen, China",Yes,https://arxiv.org/pdf/1803.06184.pdf
+ard_16,ARD-16,ARD-16,Dataset Gathering - Sheet5.csv,5,-,-,-,-,-,https://arxiv.org/abs/2105.12774
+argoverse_1_stereo,Argoverse 1 Stereo,Argoverse 1 Stereo,Dataset Gathering - Sheet5.csv,914,"camera, lidar",-,3d bounding boxes,"Miami and Pittsburgh, USA",-,https://arxiv.org/pdf/1911.02620.pdf
+argoverse_2_lidar,Argoverse 2 Lidar,Argoverse 2 Lidar,Dataset Gathering - Sheet5.csv,239,"camera, lidar, gps",-,-,"Austin, Detroit, Miami, Palo Alto, Pittsburgh, and Washington D.C, USA",Yes,https://arxiv.org/abs/2301.00493
+argoverse_2_map_change,Argoverse 2 Map Change,Argoverse 2 Map Change,Dataset Gathering - Sheet5.csv,239,"camera, lidar, gps",-,3D lane boundaries,"Austin, Detroit, Miami, Palo Alto, Pittsburgh and Washington, D.C, USA",Yes,https://arxiv.org/abs/2301.00493
+argoverse_2_motion_forecasting,Argoverse 2 Motion Forecasting,Argoverse 2 Motion Forecasting,Dataset Gathering - Sheet5.csv,239,"camera, lidar, gps",-,trajectory tracking information,"Pittsburgh and Miami, USA",Yes,https://arxiv.org/abs/2301.00493
+argoverse_2_sensor,Argoverse 2 Sensor,Argoverse 2 Sensor,Dataset Gathering - Sheet5.csv,239,"camera, lidar, gps",-,3d cuboids/bounding boxes around objects,"Austin, Detroit, Miami, Palo Alto, Pittsburgh, and Washington D.C, USA",Yes,https://arxiv.org/abs/2301.00493
+argoverse_3d_tracking,Argoverse 3D Tracking,Argoverse 3D Tracking,Dataset Gathering - Sheet5.csv,914,"camera, lidar, gps",tracking,"semantic vector map, rasterized map, 3d bounding boxes","Miami and Pittsburgh, USA",Yes,https://arxiv.org/pdf/1911.02620.pdf
+argoverse_motion_forecasting,Argoverse Motion Forecasting,Argoverse Motion Forecasting,Dataset Gathering - Sheet5.csv,914,"camera, lidar, gps",forecasting,"semantic vector map, rasterized map, trajectories","Miami and Pittsburgh, USA",No,https://arxiv.org/pdf/1911.02620.pdf
+astyx,Astyx,Astyx,Dataset Gathering - Sheet5.csv,-,"camera, lidar, radar",-,3d bounding boxes,-,-,https://ieeexplore.ieee.org/document/8904734
+astyx_hires_2019,Astyx HiRes 2019,Astyx HiRes 2019,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+augkitti,AugKITTI,AugKITTI,Dataset Gathering - Sheet5.csv,2,-,-,-,-,-,https://arxiv.org/pdf/2203.00214.pdf
+automatum_open_highway,Automatum (Open Highway),Automatum (Open Highway),Dataset Gathering - Sheet5.csv,9,camera,-,2d bounding box,Germany,-,https://automatumdata.blob.core.windows.net/opendataset/IV21_Automatum.Data.eng.pdf
+autonomous_platform_inertial,Autonomous Platform Inertial,Autonomous Platform Inertial,Dataset Gathering - Sheet5.csv,12,-,-,-,-,-,https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9684368
+bay_area,Bay Area,Bay Area,Dataset Gathering - Sheet5.csv,27,"camera, imu/gps",-,-,"California bay area and Pittsburgh, USA",Yes,https://ieeexplore.ieee.org/document/6856605
+bdd100k,BDD100k,BDD100k,Dataset Gathering - Sheet5.csv,"1,309","camera, gps/imu","object detection, instance segmentation, multiple object tracking, segmentation tracking, semantic segmentation, lane marking, drivable area, image tagging, imitation learning, domain adaption","bounding boxes, instance segmentation, semantic segmentation, box tracking, semantic tracking, drivable area","New York, Berkeley, San Francisco and Bay Area, USA",Yes,https://arxiv.org/pdf/1805.04687.pdf
+bdd100k_aps,BDD100K-APS,BDD100K-APS,Dataset Gathering - Sheet5.csv,27,camera,Amodal panoptic segmentation,Amodal panoptic segmentation,"New York, Berkeley, San Francisco and Bay Area, USA",-,https://arxiv.org/abs/2202.11542
+beyond_pascal,Beyond PASCAL,Beyond PASCAL,Dataset Gathering - Sheet5.csv,740,camera,"anomaly detection, 3D object detection and pose estimation",label landmarks of the CAD model on the 2D image,-,-,https://ieeexplore.ieee.org/document/6836101
+blvd,BLVD,BLVD,Dataset Gathering - Sheet5.csv,50,"camera, lidar, gps/imu","dynamic 4D (3D+temporal) tracking, 5D (4D+interactive) interactive event recognition and intention prediction","5D semantics, 3D bounding boxes, 4D object IDs, 5D interactive event and 5D intention","Changshu, Jiangsu Province, China",-,https://arxiv.org/abs/1903.06405
+boreas,Boreas,Boreas,Dataset Gathering - Sheet5.csv,51,-,-,-,-,-,https://arxiv.org/pdf/2203.10168.pdf
+bosch_small_traffic_lights_dataset,Bosch Small Traffic Lights Dataset,Bosch Small Traffic Lights Dataset,Dataset Gathering - Sheet5.csv,201,camera,-,"bounding boxes, state",-,Yes,https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7989163
+bosch_tl,Bosch TL,Bosch TL,Dataset Gathering - Sheet5.csv,201,camera,-,2d bounding boxes,"El Camino Real in the San Francisco Bay Area, California",-,https://ieeexplore.ieee.org/document/7989163
+boxcars116k,BoxCars116k,BoxCars116k,Dataset Gathering - Sheet5.csv,113,camera,-,2d/3d bounding boxes,"Brno, Czech Republic",-,https://arxiv.org/abs/1703.00686
+boxy,Boxy,Boxy,Dataset Gathering - Sheet5.csv,27,camera,"bounding box, polygon, and real-time detections",2d boxes or 3d cuboids for vehicles,"San Francisco Bay Area, California, USA",-,https://boxy-dataset.com/static/boxy/boxy_preview.pdf
+brain4cars,Brain4Cars,Brain4Cars,Dataset Gathering - Sheet5.csv,14,"camera, speed logger, gps",-,"driving events (lane changes, turns, driving straight)",USA,-,https://arxiv.org/abs/1504.02789
+cadc,CADC,CADC,Dataset Gathering - Sheet5.csv,136,"cameras, lidar, gps",-,2d/3d bounding boxes,"Waterloo region in Ontorio, Canada",-,https://arxiv.org/pdf/2001.10117.pdf
+cadp,CADP,CADP,Dataset Gathering - Sheet5.csv,71,camera,-,Object detectiona and accident forecasting,Videos sampled from YouTube,-,https://arxiv.org/abs/1809.05782
+caltech_lanes,Caltech Lanes,Caltech Lanes,Dataset Gathering - Sheet5.csv,796,camera,-,2d splines for lane markings,"Pasadena, California, USA",-,https://arxiv.org/abs/1411.7113
+caltech_pedestrian,Caltech Pedestrian,Caltech Pedestrian,Dataset Gathering - Sheet5.csv,"1,369",camera,pedestrian detection,bounding boxes,"Loa Angeles, USA",Yes,https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5206631
+camvid,CamVid,CamVid,Dataset Gathering - Sheet5.csv,"1,193",camera,-,semantic segmentation,United Kingdom,Yes,[suspicious link removed]
+car_crash_ccd,Car Crash (CCD),Car Crash (CCD),Dataset Gathering - Sheet5.csv,1,-,-,-,-,-,https://arxiv.org/abs/2209.02438
+carla_real_traffic_scenarios,CARLA Real Traffic Scenarios,CARLA Real Traffic Scenarios,Dataset Gathering - Sheet5.csv,12,-,-,-,-,-,https://arxiv.org/abs/2012.11329
+carla_64,CARLA-64,CARLA-64,Dataset Gathering - Sheet5.csv,5,-,-,-,-,-,https://arxiv.org/abs/2105.12774
+carla_gear_2d_object_detection,CARLA-GEAR 2D Object Detection,CARLA-GEAR 2D Object Detection,Dataset Gathering - Sheet5.csv,2,-,-,-,-,-,https://arxiv.org/abs/2206.04365
+carla_gear_monocular_depth_estimation,CARLA-GEAR Monocular Depth Estimation,CARLA-GEAR Monocular Depth Estimation,Dataset Gathering - Sheet5.csv,2,-,-,-,-,-,https://arxiv.org/abs/2206.04365
+carla_gear_semantic_segmentation,CARLA-GEAR Semantic Segmentation,CARLA-GEAR Semantic Segmentation,Dataset Gathering - Sheet5.csv,2,-,-,-,-,-,https://arxiv.org/abs/2206.04365
+carla_gear_stereo_3d_object_detection,CARLA-GEAR Stereo 3D Object Detection,CARLA-GEAR Stereo 3D Object Detection,Dataset Gathering - Sheet5.csv,2,-,-,-,-,-,https://arxiv.org/abs/2206.04365
+carla_object_detection_dataset,Carla-Object-Detection-Dataset,Carla-Object-Detection-Dataset,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+carla_training_data,carla-training-data,carla-training-data,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+carla_wildlife_cwl,CARLA-WildLife (CWL),CARLA-WildLife (CWL),Dataset Gathering - Sheet5.csv,7,camera,-,semantic segmentation of out of distribution object labels,CARLA,-,https://arxiv.org/pdf/2210.02074.pdf
+carlascenes,CarlaScenes,CarlaScenes,Dataset Gathering - Sheet5.csv,5,"camera, lidar, gps/imu",odometry methods in autonomous driving,semantic annotation at the instance level for both image and lidar data,CARLA,-,https://openaccess.thecvf.com/content/CVPR2022W/WAD/papers/Kloukiniotis_CarlaScenes_A_Synthetic_Dataset_for_Odometry_in_Autonomous_Driving_CVPRW_2022_paper.pdf
+carrada,CARRADA,CARRADA,Dataset Gathering - Sheet5.csv,80,"camera, radar",-,range-angle Doppler annotations,-,-,https://arxiv.org/pdf/2005.01456.pdf
+cars,Cars,Cars,Dataset Gathering - Sheet5.csv,"2,709",camera,-,"car make, model, year",Sourced from internet,-,https://ieeexplore.ieee.org/document/6755945
+ccsad,CCSAD,CCSAD,Dataset Gathering - Sheet5.csv,28,"camera, imu/gps",-,-,Mexico,Yes,https://link.springer.com/content/pdf/10.1007/978-3-319-23192-1_49.pdf
+cheddar_gorge,Cheddar Gorge,Cheddar Gorge,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+citypersons,CityPersons,CityPersons,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+cityscapes,Cityscapes,Cityscapes,Dataset Gathering - Sheet5.csv,"9,282",-,-,-,-,-,https://arxiv.org/abs/1604.01685
+cityscapes_3d,Cityscapes 3D,Cityscapes 3D,Dataset Gathering - Sheet5.csv,42,"camera, gps, thermometer","pixel-level semantic labeling, instance-level semantic labeling, panoptic semantic sabeling 3d vehicle detection","dense semantic segmentation, instance segmentation for vehicles & people, 3d bounding boxes",50 cities in Germany and neighboring countries,Yes,https://arxiv.org/pdf/2006.07864.pdf
+cityscapes_dvps,Cityscapes-DVPS,Cityscapes-DVPS,Dataset Gathering - Sheet5.csv,102,camera,-,"panoptic segmentation, monocular depth",-,Yes,https://arxiv.org/pdf/2012.05258
+coda,CODA,CODA,Dataset Gathering - Sheet5.csv,37,camera,"anomaly detection, object detection","Image domain tags (i.e., periods and weather conditions) and 2D bounding boxes",-,-,https://arxiv.org/pdf/2203.07724.pdf
+coda2022,CODA2022,CODA2022,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+comma_ai,comma.ai,comma.ai,Dataset Gathering - Sheet5.csv,211,camera,-,-,-,-,https://arxiv.org/pdf/1608.01230
+comma10k,comma10k,comma10k,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+comma2k19,Comma2k19,Comma2k19,Dataset Gathering - Sheet5.csv,53,"camera, radar, gnss/imu",-,-,"California's 280 highway, USA",Yes,https://arxiv.org/abs/1812.05752
+comma2k19_ld,Comma2k19 LD,Comma2k19 LD,Dataset Gathering - Sheet5.csv,6,-,-,-,-,-,https://arxiv.org/abs/2203.16851
+commasteeringcontrol,commaSteeringControl,commaSteeringControl,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+commavq,commavq,commavq,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+complex_urban,Complex Urban,Complex Urban,Dataset Gathering - Sheet5.csv,170,"camera, lidar, gps/imu, altimeter",-,-,South Korea,Yes,https://journals.sagepub.com/doi/pdf/10.1177/0278364919843996
+cooperative_driving_codd,Cooperative Driving (CODD),Cooperative Driving (CODD),Dataset Gathering - Sheet5.csv,26,lidar,-,3d bounding boxes,CARLA environment,-,https://arxiv.org/pdf/2112.09922.pdf
+cooperative_localization_using_carla_sumo_artery_simulators,Cooperative Localization using CARLA-SUMO-ARTERY Simulators,Cooperative Localization using CARLA-SUMO-ARTERY Simulators,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+crashd,CrashD,CrashD,Dataset Gathering - Sheet5.csv,34,"camera, lidar",-,Class labels for damage types,BeamNG simulator,-,https://arxiv.org/abs/2112.04764
+crosswalk_change_dataset,Crosswalk Change Dataset,Crosswalk Change Dataset,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://www.ri.cmu.edu/publications/towards-hd-map-updates-with-crosswalk-change-detection-from-vehicle-mounted-cameras/
+culane,CULane,CULane,Dataset Gathering - Sheet5.csv,679,camera,-,traffic lanes with cubic splines,"Beijing, China",-,https://arxiv.org/abs/1712.06080
+cure_tsd,CURE-TSD,CURE-TSD,Dataset Gathering - Sheet5.csv,51,camera,-,object class labels,Belgium,-,https://arxiv.org/abs/1908.11262
+cure_tsr,CURE-TSR,CURE-TSR,Dataset Gathering - Sheet5.csv,58,camera,Traffic Sign Detection,object class labels,Belgium and Unreal Engine 4,-,https://arxiv.org/pdf/1712.02463.pdf
+d_2_city,D^2 City,D^2 City,Dataset Gathering - Sheet5.csv,51,camera,-,2d bounding boxes and inter-frame tracking labels,5 Chinese cities,-,https://arxiv.org/abs/1904.01975
+daimler_pedestrian_path_prediction_benchmark,Daimler Pedestrian Path Prediction Benchmark,Daimler Pedestrian Path Prediction Benchmark,Dataset Gathering - Sheet5.csv,31,camera,Pedestrian Path Prediction,2d bounding box with class labels,-,-,https://link.springer.com/chapter/10.1007/978-3-642-40602-7_18
+daimler_pedestrian_segmentation_benchmark,Daimler Pedestrian Segmentation Benchmark,Daimler Pedestrian Segmentation Benchmark,Dataset Gathering - Sheet5.csv,38,camera,Pedestrian Segmentation,semantic segmentation,-,-,http://www.gavrila.net/Publications/bmvc13.pdf
+daimler_stereo_pedestrian_detection_benchmark,Daimler Stereo Pedestrian Detection Benchmark,Daimler Stereo Pedestrian Detection Benchmark,Dataset Gathering - Sheet5.csv,86,camera,Stereo Pedestrian Detection,2d bounding box,-,-,http://www.gavrila.net/iv11.pdf
+daimler_urban_segmentation,Daimler Urban Segmentation,Daimler Urban Segmentation,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+danger_vkitti,DANGER-vKITTI,DANGER-vKITTI,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://openreview.net/pdf?id=ZjN2AuXgu1
+danger_vkitti2,DANGER-vKITTI2,DANGER-vKITTI2,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://openreview.net/pdf?id=ZjN2AuXgu1
+dbnet,DBNet,DBNet,Dataset Gathering - Sheet5.csv,104,"lidar, camera, steering angle meter, gps",Driving policy prediction,-,-,Yes,https://ieeexplore.ieee.org/document/8578713
+ddad,DDAD,DDAD,Dataset Gathering - Sheet5.csv,447,"camera, lidar",-,-,"USA (Ann Arbor, San Francisco Bay Area, Detroit, Cambridge and Massachusetts), Japan (Tokyo and Odaiba)",-,https://arxiv.org/pdf/1905.02693.pdf
+ddd_17,DDD 17,DDD 17,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+ddd20_davis_driving_2020,DDD20: DAVIS Driving 2020,DDD20: DAVIS Driving 2020,Dataset Gathering - Sheet5.csv,50,camera,-,-,"Various states of USA, Switzerland and Germany",Yes,https://arxiv.org/pdf/2005.08605.pdf
+dgl_mots,DGL-MOTS,DGL-MOTS,Dataset Gathering - Sheet5.csv,17,camera,-,pixel-level mask and temporal tracking label across frames for objects,USA,Yes,https://arxiv.org/pdf/2110.07790.pdf
+diplecs_autonomous_driving,DIPLECS Autonomous Driving,DIPLECS Autonomous Driving,Dataset Gathering - Sheet5.csv,35,"camera, steering angle meter, eye tracker",-,-,Sweden and United Kingdom,-,https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=7293673
+dr_eye_ve,DR(eye)VE,DR(eye)VE,Dataset Gathering - Sheet5.csv,189,"camera, eye tracker",-,"Gaze Maps, GPS, Speed and Course",-,-,https://arxiv.org/pdf/1705.03854.pdf
+driv100,DRIV100,DRIV100,Dataset Gathering - Sheet5.csv,2,camera,Domain adaptation techniques on in-the-wild road-scene videos collected from the Internet,pixel level semantic segmentation,Random videos from YouTube,-,https://arxiv.org/pdf/2102.00150.pdf
+driveseg_manual,DriveSeg (MANUAL),DriveSeg (MANUAL),Dataset Gathering - Sheet5.csv,12,camera,-,semantic segmentation,-,-,https://arxiv.org/abs/1904.00758
+driveseg_semi_auto,DriveSeg (Semi-auto),DriveSeg (Semi-auto),Dataset Gathering - Sheet5.csv,12,camera,-,pixel-wise semantic annotation,-,-,https://arxiv.org/abs/1904.00758
+driveu_traffic_light,DriveU Traffic Light,DriveU Traffic Light,Dataset Gathering - Sheet5.csv,37,camera,-,2d bounding boxes,10 cities across Germany,-,https://ieeexplore.ieee.org/document/8460737
+dsiod,DSIOD,DSIOD,Dataset Gathering - Sheet5.csv,4,-,-,-,-,-,https://arxiv.org/abs/2110.02892
+eisats,EISATS,EISATS,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+elektra,ELEKTRA,ELEKTRA,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+eposh,EPOSH,EPOSH,Dataset Gathering - Sheet5.csv,-,camera,-,-,"San Francisco Bay Area, USA",-,-
+eth_pedestrian,ETH Pedestrian,ETH Pedestrian,Dataset Gathering - Sheet5.csv,734,camera,-,2d/3d bounding boxes,-,Yes,https://ieeexplore.ieee.org/document/4587581
+eurocity_persons,EuroCity Persons,EuroCity Persons,Dataset Gathering - Sheet5.csv,191,camera,object detection,2d bounding boxes,12 countries and 31 cities across Europe,-,https://arxiv.org/pdf/1805.07193.pdf
+exid,exiD,exiD,Dataset Gathering - Sheet5.csv,25,camera,-,"2d bounding boxes for objects, trajectory tracking information",Germany,-,https://ieeexplore.ieee.org/document/9827305
+fallen_person_detection_with_driving_scenes_fpd_set,Fallen Person detection with Driving scenes (FPD-set),Fallen Person detection with Driving scenes (FPD-set),Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://www.sciencedirect.com/science/article/abs/pii/S0957417422022606
+fishyscapes,Fishyscapes,Fishyscapes,Dataset Gathering - Sheet5.csv,105,camera,"anomaly detection, semantic segmentation",semantic segmentation,-,No,https://arxiv.org/pdf/1904.03215.pdf
+five_roundabouts,Five Roundabouts,Five Roundabouts,Dataset Gathering - Sheet5.csv,140,lidar,-,trajectory tracking information,"Sydney, Australia",-,https://arxiv.org/abs/1807.09995
+flir_thermal,FLIR Thermal,FLIR Thermal,Dataset Gathering - Sheet5.csv,-,camera,-,2d bounding box with class labels,-,-,-
+ford_autonomous_vehicle,Ford Autonomous Vehicle,Ford Autonomous Vehicle,Dataset Gathering - Sheet5.csv,85,"camera, lidar, gps/imu",-,"3d point cloud maps, ground reflectivity map","Michigan, USA",TRUE,https://arxiv.org/abs/2003.07969
+ford_campus,Ford CAMPUS,Ford CAMPUS,Dataset Gathering - Sheet5.csv,317,"camera, lidar, gps/imu","SLAM, iterative closest point (ICP), and 3D object detection and recognition",-,"Dearborn Michigan, USA",-,https://journals.sagepub.com/doi/pdf/10.1177/0278364911400640
+gated2depth,Gated2Depth,Gated2Depth,Dataset Gathering - Sheet5.csv,43,"camera, lidar",-,-,"Germany, Denmark and Sweden",-,https://arxiv.org/pdf/1902.04997.pdf
+gated2gated,Gated2Gated,Gated2Gated,Dataset Gathering - Sheet5.csv,5,"camera, radar, lidar, imu, weather sensor",-,-,"Germany, Sweden, Denmark and Finland",-,https://arxiv.org/pdf/2112.02416.pdf
+glare,GLARE,GLARE,Dataset Gathering - Sheet5.csv,6,-,-,-,-,Yes,https://arxiv.org/pdf/2209.08716.pdf
+ground_truth_stixel,Ground Truth Stixel,Ground Truth Stixel,Dataset Gathering - Sheet5.csv,100,"camera, radar",-,stixel measurements,-,-,http://wwwlehre.dhbw-stuttgart.de/~sgehrig/stixelGroundTruthDataset/stixel.pdf
+ground_challenge,Ground-Challenge,Ground-Challenge,Dataset Gathering - Sheet5.csv,1,-,-,-,-,-,https://arxiv.org/abs/2307.03890
+grounded,GROUNDED,GROUNDED,Dataset Gathering - Sheet5.csv,3,"camera, lidar, gps/imu, odometer, radar","Localization in weather, Multi-lane mapping",-,"Massachusetts, USA",-,http://www.roboticsproceedings.org/rss17/p080.pdf
+gta5,GTA5,GTA5,Dataset Gathering - Sheet5.csv,"1,662",camera,-,semantic segmentation of different classes,Game: Grand Theft Auto 5,-,https://arxiv.org/pdf/1608.02192.pdf
+gtsdb,GTSDB,GTSDB,Dataset Gathering - Sheet5.csv,748,camera,Traffic Sign Detection,2d bounding box,"Bochum, Germany",-,https://ieeexplore.ieee.org/document/6706807
+gtsrb,GTSRB,GTSRB,Dataset Gathering - Sheet5.csv,933,camera,Traffic Sign Recognition,2d bounding box,Germany,-,https://www.ini.rub.de/upload/file/1470692848_f03494010c16c36bab9e/StallkampEtAl_GTSRB_IJCNN2011.pdf
+h3d,H3D,H3D,Dataset Gathering - Sheet5.csv,188,"camera, lidar, gps/imu",-,3d bounding boxes,"San Francisco Bay Area, USA",Yes,https://arxiv.org/pdf/1903.01568.pdf
+had,HAD,HAD,Dataset Gathering - Sheet5.csv,54,camera,-,Human voice describing action and attention of the driver seperately,"San Francisco Bay Area, USA",-,https://arxiv.org/abs/1911.06978
+hci_challenging_stereo,HCI Challenging Stereo,HCI Challenging Stereo,Dataset Gathering - Sheet5.csv,74,camera,-,-,-,-,https://www.spiedigitallibrary.org/journals/Optical-Engineering/volume-51/issue-2/021107/Outdoor-stereo-camera-system-for-the-generation-of-real-world/10.1117/1.OE.51.2.021107.short?SSO=1
+hd1k,HD1K,HD1K,Dataset Gathering - Sheet5.csv,117,"lidar, camera, gps/imu","stereo, optical flow, single image depth prediction, object detection, and semantic segmentation",depth and optical flow,-,-,http://hci-benchmark.iwr.uni-heidelberg.de/media/publications//kondermann2016.pdf
+hdbd,HDBD,HDBD,Dataset Gathering - Sheet5.csv,5,"camera, eye tracker",-,"semantic segmentation of images, driver gaze map, vehice speed, throtle and steering data",Unreal Engine,-,https://ieeexplore.ieee.org/document/9747779
+hdd,HDD,HDD,Dataset Gathering - Sheet5.csv,220,"camera, lidar, gps/imu, can",-,driver behaviour label,"San Francisco Bay Area, USA",-,https://arxiv.org/abs/1811.02307
+hev_i,HEV-I,HEV-I,Dataset Gathering - Sheet5.csv,91,camera,-,location and tracking information of objects for predicting future ego-motion,"San Francisco Bay Area, USA",-,https://arxiv.org/pdf/1809.07408.pdf
+highd,highD,highD,Dataset Gathering - Sheet5.csv,633,camera,-,2d bounding boxes with vehicle speed and id,"Cologne, Germany",-,https://arxiv.org/ftp/arxiv/papers/1810/1810.05642.pdf
+highway_work_zones,Highway Work Zones,Highway Work Zones,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+hsd,HSD,HSD,Dataset Gathering - Sheet5.csv,17,camera,-,"road places, road types, weather, and road surface conditions","San Francisco Bay area, USA",Yes,https://arxiv.org/pdf/1905.12708.pdf
+i_see_you,I see you,I see you,Dataset Gathering - Sheet5.csv,2,-,-,-,-,-,https://arxiv.org/abs/2211.09342
+idda,IDDA,IDDA,Dataset Gathering - Sheet5.csv,35,"camera, depth sensor, semantic segmentation sensor",semantic segmentation,semantic segmentation,CARLA,Yes,https://arxiv.org/pdf/2004.08298.pdf
+illumination_changes_in_a_day,Illumination Changes in a day,Illumination Changes in a day,Dataset Gathering - Sheet5.csv,27,"camera, imu/gps",-,-,"California bay area and Pittsburgh, USA",Yes,https://ieeexplore.ieee.org/document/6856605
+imptc,IMPTC,IMPTC,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+ind,inD,inD,Dataset Gathering - Sheet5.csv,222,camera,-,"2d bounding box for objects, trajectory information","Aachen, Germany",-,https://arxiv.org/pdf/1911.07602.pdf
+india_driving,India Driving,India Driving,Dataset Gathering - Sheet5.csv,237,camera,"Pixel-Level Semantic Segmentation Task, Instance-Level Semantic Segmentation Task",semantic segmentation,"Bangalore and Hyderabad, India",Yes,https://arxiv.org/abs/1811.10200
+indian_vehicle_dataset,Indian Vehicle Dataset,Indian Vehicle Dataset,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+interaction,INTERACTION,INTERACTION,Dataset Gathering - Sheet5.csv,325,camera,motion prediction,"2d bounding boxes, semantic map, motion/trajectories","USA, China, Germany and Bulgaria",Yes,https://arxiv.org/pdf/1910.03088.pdf
+ips300plus,IPS300+,IPS300+,Dataset Gathering - Sheet5.csv,11,"camera, lidar, gps",-,3d bounding boxes,China,Yes,https://arxiv.org/abs/2106.02781
+ithaca365,Ithaca365,Ithaca365,Dataset Gathering - Sheet5.csv,22,"camera, lidar",-,"Amodal road labelling, Amodal instance segmentation",-,Yes,https://arxiv.org/abs/2208.01166
+jaad,JAAD,JAAD,Dataset Gathering - Sheet5.csv,206,camera,-,"2d bounding boxes, behavioral tags, contextual tags",North America and Europe,-,https://openaccess.thecvf.com/content_ICCV_2017_workshops/papers/w3/Rasouli_Are_They_Going_ICCV_2017_paper.pdf
+k_lane,K-Lane,K-Lane,Dataset Gathering - Sheet5.csv,12,"camera, lidar",-,lane markings and segmntation,-,Yes,https://arxiv.org/abs/2110.11048
+k_radar,K-Radar,K-Radar,Dataset Gathering - Sheet5.csv,27,"camera, lidar, radar, gps/imu",-,"Annotated 3d bounding boxes with doppler, range, azimuth, and elevation dimensions","Dae-jeon city and Gang-won province, South Korea",-,https://arxiv.org/abs/2206.08171
+kaist_multi_spectral_day_night,KAIST Multi-Spectral Day/Night,KAIST Multi-Spectral Day/Night,Dataset Gathering - Sheet5.csv,211,"camera, lidar, gps/imu, thermal camera","object detection, vision sensor enhancement, depth estimation, multi-spectral colorization","dense depth map, bounding boxes",-,Yes,https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8293689
+kitti,KITTI,KITTI,Dataset Gathering - Sheet5.csv,"6,840","camera, lidar, gps/imu","stereo, optical flow, visual odometry, slam, 3d object detection, 3d object tracking",3d bounding boxes,"Karlsruhe, Germany",Yes,http://www.cvlibs.net/publications/Geiger2013IJRR.pdf
+kitti_360,KITTI-360,KITTI-360,Dataset Gathering - Sheet5.csv,159,"camera, lidar, gps/imu",-,semantic instance segmentation,"Karlsruhe, Germany",Yes,https://arxiv.org/abs/1511.03240
+kitti_360_panopticbev,KITTI-360 PanopticBEV,KITTI-360 PanopticBEV,Dataset Gathering - Sheet5.csv,42,"camera, lidar",-,panoptic segmentation,"Karlsruhe, Germany",-,https://arxiv.org/abs/2108.03227
+kitti_360_aps,KITTI-360-APS,KITTI-360-APS,Dataset Gathering - Sheet5.csv,27,camera,Amodal panoptic segmentation,Amodal panoptic segmentation,"Karlsruhe, Germany",-,https://arxiv.org/abs/2202.11542
+kitti_carla,KITTI-CARLA,KITTI-CARLA,Dataset Gathering - Sheet5.csv,26,-,-,-,-,-,https://arxiv.org/abs/2109.00892
+kul_belgium_traffic_sign,KUL Belgium Traffic Sign,KUL Belgium Traffic Sign,Dataset Gathering - Sheet5.csv,-,camera,-,2d bounding box with labels,Belgium,Yes,https://ieeexplore.ieee.org/document/5403121
+lane_detection_for_carla_driving_simulator,Lane Detection for Carla Driving Simulator,Lane Detection for Carla Driving Simulator,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+libre,LIBRE,LIBRE,Dataset Gathering - Sheet5.csv,72,"camera, lidar, odometry, gps/imu",Lidar sensors,-,"Nagoya, Japan",-,https://arxiv.org/pdf/2003.06129.pdf
+lidar_cs,LiDAR-CS,LiDAR-CS,Dataset Gathering - Sheet5.csv,7,-,-,-,-,-,https://arxiv.org/abs/2301.12515
+lidar_video_driving,LiDAR-Video Driving,LiDAR-Video Driving,Dataset Gathering - Sheet5.csv,104,"camera, lidar, accelerometer, steering angle meter",driver behaviour,-,-,-,https://openaccess.thecvf.com/content_cvpr_2018/papers/Chen_LiDAR-Video_Driving_Dataset_CVPR_2018_paper.pdf
+lisa_amazon_mlsl_vehicle_attributes_lava,LISA Amazon-MLSL Vehicle Attributes (LAVA),LISA Amazon-MLSL Vehicle Attributes (LAVA),Dataset Gathering - Sheet5.csv,9,-,-,-,-,-,https://arxiv.org/pdf/2112.00942.pdf
+lisa_traffic_light,LISA Traffic Light,LISA Traffic Light,Dataset Gathering - Sheet5.csv,199,camera,-,2d bounding boxes with the description of state of traffic light,"San Diego, California, USA",-,https://ieeexplore.ieee.org/document/7398055
+lisa_traffic_sign,LISA Traffic Sign,LISA Traffic Sign,Dataset Gathering - Sheet5.csv,612,camera,-,2d bounding boxes with description,USA,-,https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=6335478&casa_token=iD5J89e1Y0MAAAAA:OKU-qJJPvSmZk1wJGlPb4G3Z7SF12nHZdr7mEV03pwgl2Q8ASZlH7T2zbo5n65e4yBniT_S5jQfn&tag=1
+loki,LOKI,LOKI,Dataset Gathering - Sheet5.csv,40,"camera, lidar, gps",driver intention and vehicle trajectory prediction,"2d/3d bounding boxes, driver intention labels, environmental labels, contextual labels","Tokyo, Japan",-,https://arxiv.org/pdf/2108.08236.pdf
+lostandfound,LostAndFound,LostAndFound,Dataset Gathering - Sheet5.csv,140,camera,anomaly detection,semantic segmentation,-,Yes,https://arxiv.org/pdf/1609.04653.pdf
+lucoop,LUCOOP,LUCOOP,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+lumpi,LUMPI,LUMPI,Dataset Gathering - Sheet5.csv,9,"camera, lidar",-,2d/3d bounding boxes with class labels,"Hanover, Germany",-,https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=9827157
+lyft_level5_perception,Lyft Level5 Perception,Lyft Level5 Perception,Dataset Gathering - Sheet5.csv,232,"camera, lidar",-,"3d bounding boxes, rasterised road geometry","Palo Alto, USA",Yes,https://arxiv.org/abs/2006.14480
+lyft_level5_prediction,Lyft Level5 Prediction,Lyft Level5 Prediction,Dataset Gathering - Sheet5.csv,232,"camera, lidar, radar",-,"semantic map ""annotations"", trajectories","Palo Alto, USA",No,https://arxiv.org/abs/2006.14480
+malaga_stereo_and_laser_urban,Malaga Stereo and Laser Urban,Malaga Stereo and Laser Urban,Dataset Gathering - Sheet5.csv,239,"camera, lidar, gps/imu",-,-,"MÃ¡laga, Spain",-,https://journals.sagepub.com/doi/10.1177/0278364913507326
+mapillary_vistas,Mapillary Vistas,Mapillary Vistas,Dataset Gathering - Sheet5.csv,"1,008",camera,semantic image segmentation and instance-specific image segmentation,instance specific object annotations,"Europe, North and South America, Asia, Africa and Oceania",-,https://ieeexplore.ieee.org/document/8237796
+mavad,MAVAD,MAVAD,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://arxiv.org/abs/2305.15084
+mavd_multimodal_audio_visual_detection,MAVD Multimodal Audio-Visual Detection,MAVD Multimodal Audio-Visual Detection,Dataset Gathering - Sheet5.csv,62,"camera, lidar, microphone, gps/imu",-,2d bounding boxes,"Freiburg im Breisgau and nearby towns, Germany",-,https://arxiv.org/pdf/2103.01353.pdf
+mcity_data_collection,MCity Data Collection,MCity Data Collection,Dataset Gathering - Sheet5.csv,16,"camera, lidar, radar, gps/imu",-,"semantic segmentation of objects, traffic lights, traffic signs, lanes","Ann Arbor, USA",Yes,https://arxiv.org/pdf/1912.06258.pdf
+micc_sri,MICC-SRI,MICC-SRI,Dataset Gathering - Sheet5.csv,11,-,-,-,-,-,https://arxiv.org/abs/1805.11746
+mit_avt_clustered_driving_scene,MIT-AVT Clustered Driving Scene,MIT-AVT Clustered Driving Scene,Dataset Gathering - Sheet5.csv,6,"camera, imu, gps",-,"Seasons, Weather, Lanes, Illuminnation, Simplified Road Type, Others",Many states across the USA,Yes,https://ieeexplore.ieee.org/abstract/document/9304677/
+mona_the_munich_motion_dataset_of_natural_driving,MONA: The Munich Motion Dataset of Natural Driving,MONA: The Munich Motion Dataset of Natural Driving,Dataset Gathering - Sheet5.csv,8,camera,-,trajectory information,"Munich, Germany",Yes,https://ieeexplore.ieee.org/document/9922263
+motsynth,MOTSynth,MOTSynth,Dataset Gathering - Sheet5.csv,73,camera,-,"bounding boxes and pose, segmentation masks, depth maps",Grand Theft Auto V game,-,https://arxiv.org/pdf/2108.09518.pdf
+mtsd,MTSD,MTSD,Dataset Gathering - Sheet5.csv,50,camera,-,2d bounding boxes and sign classification,"Europe, North and South America, Asia, Africa and Oceania",-,https://arxiv.org/abs/1909.04422
+muiran,MuIRan,MuIRan,Dataset Gathering - Sheet5.csv,150,"lidar, radar, gps/imu",-,trajectory information,South Korea,Yes,https://ieeexplore.ieee.org/document/9197298
+multi_vehicle_stereo_event_camera,Multi Vehicle Stereo Event Camera,Multi Vehicle Stereo Event Camera,Dataset Gathering - Sheet5.csv,322,"camera, lidar, VI-Sensor, gps",-,ground truth pose,-,-,https://arxiv.org/abs/1801.10202
+multiple_uncertainties_for_autonomous_driving_muad,Multiple Uncertainties for Autonomous Driving (MUAD),Multiple Uncertainties for Autonomous Driving (MUAD),Dataset Gathering - Sheet5.csv,14,-,-,-,-,-,https://arxiv.org/abs/2203.01437
+multispectral_object_detection,Multispectral Object Detection,Multispectral Object Detection,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+nclt,NCLT,NCLT,Dataset Gathering - Sheet5.csv,341,"camera, lidar, gps/imu",-,-,"University of Michigan North Campus, USA",Yes,http://robots.engin.umich.edu/publications/ncarlevaris-2015a.pdf
+nexet,NEXET,NEXET,Dataset Gathering - Sheet5.csv,-,camera,-,2d bounding box,77 countries,-,https://blog.getnexar.com/https-medium-com-itayklein-intro-nexet-50e9b596d0e5
+nightowls,NightOwls,NightOwls,Dataset Gathering - Sheet5.csv,70,camera,"pedestrian detection, object detection","bounding boxes, attributes, temporal tracking annotations",Several cities across Europe,Yes,https://www.robots.ox.ac.uk/~vgg/publications/2018/Neumann18b/neumann18b.pdf
+nighttime_driving,Nighttime Driving,Nighttime Driving,Dataset Gathering - Sheet5.csv,194,camera,-,pixellevel semantic annotations,Switzerland,-,https://arxiv.org/abs/1810.02575
+nocrash,NoCrash,NoCrash,Dataset Gathering - Sheet5.csv,363,camera,autonomous driving and crashes,-,CARLA environment,-,https://arxiv.org/pdf/1904.08980.pdf
+nuimages,nuImages,nuImages,Dataset Gathering - Sheet5.csv,"3,284","camera, lidar, radar, gps/imu",-,"instance masks, 2d bounding boxes, semantic segmentation masks, attribute annotations","Boston, USA and Singapore",Yes,https://arxiv.org/pdf/1903.11027.pdf
+nuplan,nuPlan,nuPlan,Dataset Gathering - Sheet5.csv,99,"camera, lidar, gps/imu",autonomous vehicle planning,2d/3d bounding boxes,"Boston, Pittsburgh, Las Vegas and Singapore",-,https://arxiv.org/abs/2106.11810
+nuscenes,nuScenes,nuScenes,Dataset Gathering - Sheet5.csv,"3,284","camera, lidar, radar, gps/imu","3d object detection, tracking, trajectory (prediction), lidar segmentation, panoptic segmentation & tracking","semantic category, attributes, 3d bounding boxes","Boston, USA and Singapore",Yes,https://arxiv.org/pdf/1903.11027.pdf
+nuscenes_panopticbev,nuScenes PanopticBEV,nuScenes PanopticBEV,Dataset Gathering - Sheet5.csv,42,"camera, lidar",-,panoptic segmentation,"Boston, USA and Singapore",-,https://arxiv.org/abs/2108.03227
+once,ONCE,ONCE,Dataset Gathering - Sheet5.csv,151,"camera, lidar",3d object detection,2d/3d bounding boxes,China,-,https://arxiv.org/pdf/2106.11037.pdf
+one_thousand_and_one_hours,One Thousand and One Hours,One Thousand and One Hours,Dataset Gathering - Sheet5.csv,232,"camera, lidar, radar",-,trajectories,"Palo Alto, California, USA",-,https://arxiv.org/pdf/2006.14480.pdf
+opendd,openDD,openDD,Dataset Gathering - Sheet5.csv,28,camera,trajectory predictions,"2d bounding boxes, trajectories","Wolfsburg and Ingolstadt, Germany",Yes,https://arxiv.org/pdf/2007.08463.pdf
+openlane_v2,OpenLane-V2,OpenLane-V2,Dataset Gathering - Sheet5.csv,6,-,-,-,-,-,https://arxiv.org/abs/2304.10440
+openmpd,OpenMPD,OpenMPD,Dataset Gathering - Sheet5.csv,14,"camera, lidar",-,"2d/3d bounding boxes, 2d/3d semantic segmentation","Beijing, China",Yes,https://ieeexplore.ieee.org/document/9682587
+oxford_radar_robot_car,Oxford Radar Robot Car,Oxford Radar Robot Car,Dataset Gathering - Sheet5.csv,274,"camera, lidar, radar, gps/imu",-,ground truth data,Oxford,Yes,https://arxiv.org/pdf/1909.01300.pdf
+oxford_robot_car,Oxford Robot Car,Oxford Robot Car,Dataset Gathering - Sheet5.csv,"1,229","camera, lidar, ins/gps",-,-,"Oxford, UK",Yes,https://journals.sagepub.com/doi/10.1177/0278364916679498
+pandaset,PandaSet,PandaSet,Dataset Gathering - Sheet5.csv,99,"camera, lidar, gps/imu",-,"3d bounding boxes, attributes, point cloud segmentation","San Francisco and El Camina Real, USA",Yes,https://arxiv.org/abs/2112.12610
+paris_carla_3d,Paris-CARLA-3D,Paris-CARLA-3D,Dataset Gathering - Sheet5.csv,34,-,-,-,-,-,https://arxiv.org/abs/2111.11348
+pascal_wd,Pascal-WD,Pascal-WD,Dataset Gathering - Sheet5.csv,71,-,-,-,-,-,https://arxiv.org/abs/1908.01098
+pepscenes,PepScenes,PepScenes,Dataset Gathering - Sheet5.csv,8,"camera, lidar, radar, gps/imu",-,2d/3d bounding boxes and behavioral annotation,"Boston, USA and Singapore",Yes,https://arxiv.org/pdf/2012.07773.pdf
+pesotif,PeSOTIF,PeSOTIF,Dataset Gathering - Sheet5.csv,2,-,-,-,-,-,https://arxiv.org/abs/2211.03402
+pie,PIE,PIE,Dataset Gathering - Sheet5.csv,181,"camera, gps",-,"2d bounding boxes for pedestrians with occlusion flages, text labels for pedestrian actions, crossing intention confidence scores, gps data and vehicle informatiom for every frame","Toronto, Canada",Yes,https://openaccess.thecvf.com/content_ICCV_2019/papers/Rasouli_PIE_A_Large-Scale_Dataset_and_Models_for_Pedestrian_Intention_Estimation_ICCV_2019_paper.pdf
+pointclouddenoising,PointCloudDeNoising,PointCloudDeNoising,Dataset Gathering - Sheet5.csv,92,lidar,-,pointwise annotations,CEREMA's climatic chamber,-,https://arxiv.org/abs/1912.03874
+polysync,PolySync,PolySync,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+pp4av,PP4AV,PP4AV,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://openaccess.thecvf.com/content/WACV2023/papers/Trinh_PP4AV_A_Benchmarking_Dataset_for_Privacy-Preserving_Autonomous_Driving_WACV_2023_paper.pdf
+prevention,PREVENTION,PREVENTION,Dataset Gathering - Sheet5.csv,36,"camera, lidar, radar, gps/imu",-,"bounding box, trajectory information, lane markings, object classification","Madrid, Spain",Yes,https://ieeexplore.ieee.org/document/8917433
+provident_vehicle_detection_at_night_pvdn,Provident Vehicle Detection at Night (PVDN),Provident Vehicle Detection at Night (PVDN),Dataset Gathering - Sheet5.csv,4,camera,object detection,bounding boxes for oncoming vehicles and their light projections/reflections,-,-,https://arxiv.org/pdf/2105.13236.pdf
+r_u_maad,R-U-MAAD,R-U-MAAD,Dataset Gathering - Sheet5.csv,4,-,Unsupervised Anomaly Detection in Multi-Agent Trajectories,-,-,-,https://arxiv.org/pdf/2209.01838.pdf
+r3_driving,R3 Driving,R3 Driving,Dataset Gathering - Sheet5.csv,1,"camera, lidar, gps/imu",-,-,"Gwanak (Seoul), Siheung, and Incheon, Korea",-,https://arxiv.org/pdf/2109.07995.pdf
+radarscenes,RadarScenes,RadarScenes,Dataset Gathering - Sheet5.csv,65,"camera, radar, odometry",-,point-wise,-,Yes,https://arxiv.org/pdf/2104.02493.pdf
+radiate,RADIATE,RADIATE,Dataset Gathering - Sheet5.csv,121,"camera, lidar, radar, gps/imu",-,2d bounding boxes,-,Yes,https://arxiv.org/pdf/2010.09076.pdf
+raincouver,Raincouver,Raincouver,Dataset Gathering - Sheet5.csv,39,camera,-,semantic segmentation,"Vancouver, Canada",-,https://ieeexplore.ieee.org/document/7970170
+ranus,RANUS,RANUS,Dataset Gathering - Sheet5.csv,29,camera,-,pixel level semantic segmentation masks,-,-,https://joonyoung-cv.github.io/assets/paper/18_ral_ranus.pdf
+rdd2020,RDD2020,RDD2020,Dataset Gathering - Sheet5.csv,-,camera,-,2d bounding boxes,"India, Japan and Czech Republic",-,https://www.sciencedirect.com/science/article/pii/S2352340921004170#bib0001
+realistic_vehicle_trajectories_and_driving_parameters_from_carla_autonomous_driving_simulator,Realistic Vehicle Trajectories and Driving Parameters from CARLA Autonomous Driving Simulator,Realistic Vehicle Trajectories and Driving Parameters from CARLA Autonomous Driving Simulator,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+rellis_3d,RELLIS-3D,RELLIS-3D,Dataset Gathering - Sheet5.csv,108,"camera, lidar, gps/imu",-,semantic segmentation of 2d image and 3d point clouds,Rellis Campus of Texas A&M University,-,https://arxiv.org/pdf/2011.12954.pdf
+road,ROAD,ROAD,Dataset Gathering - Sheet5.csv,43,camera,"agent detection, action detection and road event detection","2d/3d bounding boxes, action label and location labels","Oxford, UK",-,https://arxiv.org/abs/2102.11585
+road_damage,Road Damage,Road Damage,Dataset Gathering - Sheet5.csv,540,camera,-,2d bounding box with class labels,Japan,-,https://arxiv.org/pdf/1801.09454.pdf
+road_scene_graph,Road Scene Graph,Road Scene Graph,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+roadanomaly21,RoadAnomaly21,RoadAnomaly21,Dataset Gathering - Sheet5.csv,79,camera,anomaly detection,semantic segmentation,-,Yes,https://arxiv.org/pdf/2104.14812.pdf
+roadobstacle21,RoadObstacle21,RoadObstacle21,Dataset Gathering - Sheet5.csv,79,camera,anomaly detection,semantic segmentation,-,Yes,https://arxiv.org/pdf/2104.14812.pdf
+roadsaw,RoadSaW,RoadSaW,Dataset Gathering - Sheet5.csv,6,"camera, MARWIS",-,"road surface wetness labels, surface types",test track near Hannover/Germany,-,https://openaccess.thecvf.com/content/CVPR2022W/WAD/papers/Cordes_RoadSaW_A_Large-Scale_Dataset_for_Camera-Based_Road_Surface_and_Wetness_CVPRW_2022_paper.pdf
+romanian_european_union_dataset_of_license_plates,Romanian (European Union) Dataset of License Plates,Romanian (European Union) Dataset of License Plates,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+rope3d,Rope3D,Rope3D,Dataset Gathering - Sheet5.csv,38,"camera, lidar",-,"2D and 3D bounding boxes of the obstacle objects as well as their category attributes, occlusions, and truncated states",China,-,https://arxiv.org/pdf/2203.13608.pdf
+round,rounD,rounD,Dataset Gathering - Sheet5.csv,86,camera,-,"2d bounding boxes for objects, trajectory tracking information","Aachen and Alsdorf, Germany",-,https://ieeexplore.ieee.org/document/9294728
+rugd_robot_unstructured_ground_driving,RUGD: Robot Unstructured Ground Driving,RUGD: Robot Unstructured Ground Driving,Dataset Gathering - Sheet5.csv,96,"camera, lidar, gps/imu",semantic segmentation,-,-,-,http://rugd.vision/pdfs/RUGD_IROS2019.pdf
+scendd,SceNDD,SceNDD,Dataset Gathering - Sheet5.csv,3,-,-,-,-,-,https://arxiv.org/abs/2212.12436
+scribblekitti,ScribbleKITTI,ScribbleKITTI,Dataset Gathering - Sheet5.csv,38,lidar,-,2d/3d semantic segmentation,"Karlsruhe, Germany",-,https://arxiv.org/abs/2203.08537
+seasonal_variation,Seasonal Variation,Seasonal Variation,Dataset Gathering - Sheet5.csv,27,"camera, imu/gps",-,-,"California bay area and Pittsburgh, USA",Yes,https://ieeexplore.ieee.org/document/6856605
+seeingthroughfog,SeeingThroughFog,SeeingThroughFog,Dataset Gathering - Sheet5.csv,36,"camera, radar, lidar, imu, weather sensor",-,weather of scenes in frames,"Germany, Sweden, Denmark and Finland",-,https://arxiv.org/abs/1902.08913
+semantic_kitti,Semantic KITTI,Semantic KITTI,Dataset Gathering - Sheet5.csv,15,lidar,"semantic segmentation, panoptic segmentation, 4D panoptic segmentation, moving object segmentation, semantic scene completion",semantic segmentation,"Karlsruhe, Germany",No,https://arxiv.org/abs/1904.01416.pdf
+semanticposs,SemanticPOSS,SemanticPOSS,Dataset Gathering - Sheet5.csv,101,"camera, lidar, gps/imu",-,2d/3d bounding boxes,"Peking University, China",Yes,https://arxiv.org/abs/2002.09147
+semanticusl,SemanticUSL,SemanticUSL,Dataset Gathering - Sheet5.csv,12,lidar,-,semantic segmentation,"Texas A&M University, USA",-,https://arxiv.org/pdf/2003.01174.pdf
+semkitti_dvps,SemKITTI-DVPS,SemKITTI-DVPS,Dataset Gathering - Sheet5.csv,102,camera,-,"panoptic segmentation, monocular depth","Karlsruhe, Germany",Yes,https://arxiv.org/pdf/2012.05258
+shift,SHIFT,SHIFT,Dataset Gathering - Sheet5.csv,60,"camera, lidar, gps/imu",-,"2d/3d bounding boxes, optical flow, depth maps, instance segmentation and semantic segmentation",CARLA,-,https://arxiv.org/abs/2206.08367
+small_obstacle,Small Obstacle,Small Obstacle,Dataset Gathering - Sheet5.csv,16,"camera, lidar",-,pixel wise semantic segmentation,India,-,https://arxiv.org/pdf/2003.05970.pdf
+soda10m,SODA10M,SODA10M,Dataset Gathering - Sheet5.csv,31,camera,self-supervised learning for dataset labelling,"Image tags (i.e., weather conditions, location scenes, periods) for all images and 2D bounding boxes",32 cities across China,Yes,https://arxiv.org/pdf/2106.11118.pdf
+stanford_drone,Stanford Drone,Stanford Drone,Dataset Gathering - Sheet5.csv,632,camera,-,2d bounding boxes for objects,"Stanford campus, USA",-,https://link.springer.com/chapter/10.1007/978-3-319-46484-8_33
+stanford_track_collection,Stanford Track Collection,Stanford Track Collection,Dataset Gathering - Sheet5.csv,183,"lidar, gps/imu",-,-,-,-,https://cs.stanford.edu/people/teichman/papers/icra2011.pdf
+street_hazards,Street Hazards,Street Hazards,Dataset Gathering - Sheet5.csv,241,camera,Anamoly object segmentation,semantic segmentation of anamolies,Carla,-,https://arxiv.org/pdf/1911.11132.pdf
+street_learn,Street Learn,Street Learn,Dataset Gathering - Sheet5.csv,44,camera,-,-,"Manhattan and Pittsburgh, USA",-,https://arxiv.org/pdf/1903.01292.pdf
+street_obstacle_sequences_sos,Street Obstacle Sequences (SOS),Street Obstacle Sequences (SOS),Dataset Gathering - Sheet5.csv,7,camera,-,semantic segmentation of out of distribution object label,-,-,https://arxiv.org/pdf/2210.02074.pdf
+surat_trajectory_data,Surat Trajectory Data,Surat Trajectory Data,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+synscapes,Synscapes,Synscapes,Dataset Gathering - Sheet5.csv,143,camera,-,"2d bounding boxes, 3d bounding boxes, occlusion, truncation, semantic segmentation,instance segmentation, depth segmentation, scene metadata",-,-,https://arxiv.org/abs/1810.08705
+synthetic_crosswalks,Synthetic Crosswalks,Synthetic Crosswalks,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://ieeexplore.ieee.org/document/9564932
+synthetic_discrepancy,Synthetic Discrepancy,Synthetic Discrepancy,Dataset Gathering - Sheet5.csv,124,camera,-,bounding box and semantic segmentation,-,-,https://arxiv.org/abs/1904.07595
+synthetic_fire_hydrants,Synthetic Fire Hydrants,Synthetic Fire Hydrants,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://ieeexplore.ieee.org/document/9564932
+synthia,Synthia,Synthia,Dataset Gathering - Sheet5.csv,"1,880",camera,-,semantic segmentation,Unity development platform,-,https://www.cv-foundation.org/openaccess/content_cvpr_2016/papers/Ros_The_SYNTHIA_Dataset_CVPR_2016_paper.pdf
+taf_bw,TAF-BW,TAF-BW,Dataset Gathering - Sheet5.csv,18,camera,-,tracking id and bounding box,"Karlsruhe, Germany",-,https://www.researchgate.net/profile/Tobias-Fleck/publication/327449884_Towards_Large_Scale_Urban_Traffic_Reference_Data_Smart_Infrastructure_in_the_Test_Area_Autonomous_Driving_Baden-Wurttemberg/links/5bbcbddd299bf1049b785126/Towards-Large-Scale-Urban-Traffic-Reference-Data-Smart-Infrastructure-in-the-Test-Area-Autonomous-Driving-Baden-Wuerttemberg.pdf
+talk2car,Talk2Car,Talk2Car,Dataset Gathering - Sheet5.csv,59,"camera, lidar, radar, gps/imu",find bounding box for objects based on user commands in natural language,bounding box and command in natural language related to the bounding box,Boston and Singapore,-,https://arxiv.org/pdf/1909.10838.pdf
+thi_license_plate_dataset,THI License Plate Dataset,THI License Plate Dataset,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://ieeexplore.ieee.org/document/9294240
+thi_synthetic_automotive_dataset,THI Synthetic Automotive Dataset,THI Synthetic Automotive Dataset,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+titan,TITAN,TITAN,Dataset Gathering - Sheet5.csv,84,camera,-,"2d bounding boxes for vehicles and pedestrians, pedestrian/vehicles action attributes and trajectory information","Tokyo, Japan",-,https://arxiv.org/pdf/2003.13886.pdf
+tj4dradset,TJ4DRadSet,TJ4DRadSet,Dataset Gathering - Sheet5.csv,36,-,-,-,-,-,https://arxiv.org/abs/2204.13483
+tme_motorway,TME Motorway,TME Motorway,Dataset Gathering - Sheet5.csv,141,"camera, lidar",-,bounding boxes around vehicles,Northern Italy,-,http://cmp.felk.cvut.cz/data/motorway/paper/itsc2012.pdf
+toronto_3d,Toronto 3D,Toronto 3D,Dataset Gathering - Sheet5.csv,119,"camera, lidar, gps",-,object class labels,"Toronto, Canada",-,https://arxiv.org/abs/2003.08284
+toronto_city,Toronto City,Toronto City,Dataset Gathering - Sheet5.csv,168,"camera, lidar",-,semantic segmentation of certain classes,"Toronto, Canada",-,https://arxiv.org/abs/1612.00423
+trom,TRoM,TRoM,Dataset Gathering - Sheet5.csv,17,"camera, gps",Road marking detection,Pixel level road markings,"Beijing, China",-,https://ieeexplore.ieee.org/document/8317749
+tsinghua_daimler_cyclist_detection,Tsinghua Daimler Cyclist Detection,Tsinghua Daimler Cyclist Detection,Dataset Gathering - Sheet5.csv,99,camera,cyclist detection,2d bounding boxes,"Beijing, China",-,https://ieeexplore.ieee.org/document/7535515
+tt100k,TT100K,TT100K,Dataset Gathering - Sheet5.csv,578,camera,traffic-sign detection and classification,2d bounding boxes and class labels,China,-,http://cg.cs.tsinghua.edu.cn/traffic-sign/0682.pdf
+tti_core,TTI Core,TTI Core,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,http://ceur-ws.org/Vol-1486/paper_9.pdf
+tud_brussels,TUD Brussels,TUD Brussels,Dataset Gathering - Sheet5.csv,428,camera,-,2d bounding boxes for pedestrians,-,-,https://ieeexplore.ieee.org/document/5206638
+tusimple,TuSimple,TuSimple,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+uah_driveset,UAH-DriveSet,UAH-DriveSet,Dataset Gathering - Sheet5.csv,133,"camera, gps",-,-,-,Yes,http://www.robesafe.uah.es/personal/eduardo.romera/pdfs/Romera16itsc.pdf
+udacity,Udacity,Udacity,Dataset Gathering - Sheet5.csv,-,"camera, lidar, gps/imu",-,2d bounding boxes,-,TRUE,-
+udrive,UDrive,UDrive,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+unid,uniD,uniD,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+unsupervised_llamas,Unsupervised Llamas,Unsupervised Llamas,Dataset Gathering - Sheet5.csv,54,camera,"binary lane marker segmentation, lane-dependent pixel-level segmentation and lane border regression",dashed lane markings,-,-,https://unsupervised-llamas.com/static/llamas/llamas_preview.pdf
+uoftped50,UofTPed50,UofTPed50,Dataset Gathering - Sheet5.csv,18,-,-,-,-,-,https://arxiv.org/abs/1905.08758
+upct,UPCT,UPCT,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://www.mdpi.com/1424-8220/23/4/2009
+urbanlanegraph,UrbanLaneGraph,UrbanLaneGraph,Dataset Gathering - Sheet5.csv,9,-,-,-,-,-,https://arxiv.org/abs/2302.06175
+usyd_campus,USyd Campus,USyd Campus,Dataset Gathering - Sheet5.csv,16,"camera, lidar, gps, imu, wheel encoders",-,"Semantic Segmentation, Road class label","Sydney, Australia",-,https://ieeexplore.ieee.org/document/9109704
+utbm_eu_ltd,UTBM EU LTD,UTBM EU LTD,Dataset Gathering - Sheet5.csv,62,"camera, lidar, radar, gps/imu",lidar odometry,-,"MontbÃ©liard, France",Yes,https://arxiv.org/pdf/1909.03330.pdf
+v2i_carla,V2I-CARLA,V2I-CARLA,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,https://ieeexplore.ieee.org/document/9733359
+v2v4real,V2V4Real,V2V4Real,Dataset Gathering - Sheet5.csv,36,-,-,-,-,-,https://arxiv.org/abs/2303.07601
+v2x_seq,V2X-Seq,V2X-Seq,Dataset Gathering - Sheet5.csv,17,-,-,-,-,-,https://arxiv.org/abs/2305.05938
+vistas_np,Vistas-NP,Vistas-NP,Dataset Gathering - Sheet5.csv,29,-,-,-,-,-,https://arxiv.org/abs/2011.11094
+vitro,VITRO,VITRO,Dataset Gathering - Sheet5.csv,-,-,-,-,-,-,-
+vlmv_vehicle_lane_merge_visual_benchmark,VLMV - Vehicle Lane Merge Visual Benchmark,VLMV - Vehicle Lane Merge Visual Benchmark,Dataset Gathering - Sheet5.csv,2,"camera, gps","Lane merging visual and Trajectory Planning, 3d object detection, 3d object tracking","ground truth 3D reference positions from GNSS modules, speed, acceleration, heading",test track near Paris/France,-,https://ieeexplore.ieee.org/document/9412960
+vpgnet,VPGNet,VPGNet,Dataset Gathering - Sheet5.csv,343,camera,-,"lane and road markings, vanishing point","Seoul, South Korea",-,https://arxiv.org/abs/1710.06288
+waymo_block_nerf,Waymo Block-NeRF,Waymo Block-NeRF,Dataset Gathering - Sheet5.csv,365,-,-,-,-,-,https://arxiv.org/abs/2202.05263
+waymo_open_motion,Waymo Open Motion,Waymo Open Motion,Dataset Gathering - Sheet5.csv,284,"camera, lidar","motion prediction, interaction prediction","3d bounding boxes, 3d hd map information","San Francisco, Mountain View, Los Angeles, Detroit, Seattle and Phoenix, USA",No,https://arxiv.org/pdf/2104.10133.pdf
+waymo_open_perception,Waymo Open Perception,Waymo Open Perception,Dataset Gathering - Sheet5.csv,"1,675","camera, lidar","2d detection, 3d detection, 2d tracking, 3d tracking","3d bounding boxes (lidar), 2d bounding boxes (camera)","San Francisco, Mountain View, Los Angeles, Detroit, Seattle and Phoenix, USA",Yes,https://arxiv.org/pdf/1912.04838.pdf
+wilddash,WildDash,WildDash,Dataset Gathering - Sheet5.csv,145,camera,"semantic segmentation, instance segmentation, panoptic segmentation","semantic segmentation, instance segmentation",All over the world,Yes,https://openaccess.thecvf.com/content_ECCV_2018/papers/Oliver_Zendel_WildDash_-_Creating_ECCV_2018_paper.pdf
+wilddash_2,WildDash 2,WildDash 2,Dataset Gathering - Sheet5.csv,23,camera,"semantic, panoptic and instance segmentation","semantic, panoptic and instance segmentation",All over the world,Yes,https://openaccess.thecvf.com/content/CVPR2022/papers/Zendel_Unifying_Panoptic_Segmentation_for_Autonomous_Driving_CVPR_2022_paper.pdf
+woodscape,WoodScape,WoodScape,Dataset Gathering - Sheet5.csv,186,"camera, lidar, gps/imu, odometer",-,"semantic segmentation, monocular depth estimation, 2D & 3D bounding boxes, visual odometry, visual SLAM, motion segmentation, soiling detection and end-to-end driving (driving controls)","USA, Europe, and China",-,https://arxiv.org/pdf/1905.01489.pdf
+wuppertal_obstacle_sequences_wos,Wuppertal Obstacle Sequences (WOS),Wuppertal Obstacle Sequences (WOS),Dataset Gathering - Sheet5.csv,7,camera,-,semantic segmentation of out of distribution object labels,-,Yes,https://arxiv.org/pdf/2210.02074.pdf
+wz_traffic,WZ-traffic,WZ-traffic,Dataset Gathering - Sheet5.csv,-,camera,-,location category,-,-,https://link.springer.com/article/10.1007/s41066-019-00182-6
+zenseact_open,Zenseact Open,Zenseact Open,Dataset Gathering - Sheet5.csv,10,-,-,-,-,-,https://arxiv.org/abs/2305.02008

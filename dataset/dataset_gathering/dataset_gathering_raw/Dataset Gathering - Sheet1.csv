@@ -1,0 +1,70 @@
+,,,,,,,,,,,
+,,,,,,,,,,,
+Shortname,Link,Year,Pose,Map,IMU,GPS,Labels,2D Lidar,3D Lidar,Mono,Stereo
+KAIST Day/Night,https://sites.google.com/view/multispectral/home,2018,Yes,No,Yes,Yes,Yes,No,Yes,Yes,No
+Complex Urban,http://irap.kaist.ac.kr/dataset/,2018,Yes,Yes,Yes,Yes,No,Yes,Yes,No,No
+Multi Vech Event,https://daniilidis-group.github.io/mvsec/,2018,Yes,No,Yes,Yes,No,No,Yes,No,Yes
+Cityscape,https://www.cityscapes-dataset.com/,2016,Yes,No,No,Yes,Yes,No,No,Yes,No
+Oxford-robotcar,http://robotcar-dataset.robots.ox.ac.uk,2016,Yes,No,Yes,Yes,No,No,Yes,Yes,Yes
+MPO-Japan,http://robotics.ait.kyushu-u.ac.jp/kurazume_lab/research-e.php?content=db,2016,No,No,Yes,Yes,No,No,Yes,Yes,No
+CCSAD,http://aplicaciones.cimat.mx/Personal/jbhayet/ccsad-dataset,2015,No,No,Yes,Yes,No,No,No,No,Yes
+MRPT-Malaga,https://www.mrpt.org/robotics_datasets,2014,No,No,Yes,Yes,No,Yes,Yes,No,Yes
+KITTI,http://www.cvlibs.net/datasets/kitti/index.php,2013,Yes,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+SeqSLAM,https://wiki.qut.edu.au/display/cyphy/Open+datasets+and+software,2012,No,No,No,No,Yes,No,No,Yes,No
+Ford Campus,http://robots.engin.umich.edu/SoftwareData/Ford,2011,Yes,No,Yes,Yes,No,Yes,Yes,Yes,No
+San francisco,https://sites.google.com/site/chenmodavid/datasets,2011,Yes,No,Yes,Yes,Yes,No,Yes,Yes,No
+Annotated-laser,http://any.csie.ntu.edu.tw/data,2011,Yes,No,No,No,Yes,Yes,No,Yes,No
+MIT-DARPA-Urban,http://grandchallenge.mit.edu/wiki/index.php?title=PublicData,2010,Yes,No,Yes,Yes,Yes,Yes,Yes,Yes,No
+St Lucia Stereo,http://asrl.utias.utoronto.ca/~mdw/uqstluciadataset.html,2010,No,No,Yes,Yes,No,No,No,No,Yes
+St Lucia Multiple Times,https://wiki.qut.edu.au/display/cyphy/St+Lucia+Multiple+Times+of+Day,2010,No,No,No,Yes,No,No,No,Yes,No
+FABMAP,http://www.robots.ox.ac.uk/~mobile/IJRR_2008_Dataset/,2008,No,No,No,Yes,No,No,No,Yes,No
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,,,,,,,,,,,
+,https://sites.google.com/view/awesome-slam-datasets/,,,,,,,,,,

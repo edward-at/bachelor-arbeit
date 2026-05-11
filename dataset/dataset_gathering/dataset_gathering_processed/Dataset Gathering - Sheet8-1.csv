@@ -1,0 +1,10 @@
+Dataset_ID,Dataset,Raw_Dataset_Name,Source_Table,Frames,Mono_Camera,Stereo_Camera,LiDAR,Radar,OD_2D,OD_3D,MOT,Segmentation,Depth,Flow,Pose,Prediction
+vkitti,VKITTI,VKITTI,Dataset Gathering - Sheet8-1.csv,17K,Yes,No,No,No,Yes,No,Yes,Yes,Yes,Yes,No,No
+viper,VIPER,VIPER,Dataset Gathering - Sheet8-1.csv,250K,Yes,No,No,No,Yes,Yes,Yes,Yes,No,Yes,Yes,No
+persil,PerSIL,PerSIL,Dataset Gathering - Sheet8-1.csv,50K,Yes,No,Yes,No,Yes,Yes,Yes,Yes,No,No,No,No
+paralleleye,ParallelEye,ParallelEye,Dataset Gathering - Sheet8-1.csv,40K,Yes,No,No,No,Yes,No,Yes,Yes,Yes,Yes,No,No
+vkitti2,VKITTI2,VKITTI2,Dataset Gathering - Sheet8-1.csv,17K,Yes,Yes,No,No,Yes,No,Yes,Yes,Yes,Yes,No,No
+shift,SHIFT,SHIFT,Dataset Gathering - Sheet8-1.csv,2.5M,Yes,Yes,Yes,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+v2x_sim,V2X-Sim,V2X-Sim,Dataset Gathering - Sheet8-1.csv,10K,Yes,Yes,No,No,Yes,Yes,No,Yes,Yes,No,No,No
+aiodrive,AIODrive,AIODrive,Dataset Gathering - Sheet8-1.csv,100K,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,Yes,No,No,Yes
+opv2v,OPV2V,OPV2V,Dataset Gathering - Sheet8-1.csv,11K,Yes,No,Yes,No,No,Yes,No,Yes,No,No,No,Yes

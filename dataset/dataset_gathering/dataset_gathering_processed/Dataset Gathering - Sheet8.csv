@@ -1,0 +1,10 @@
+Dataset_ID,Dataset,Raw_Dataset_Name,Source_Table,Frames,Tasks
+frida,FRIDA,FRIDA,Dataset Gathering - Sheet8.csv,90,Depth estimation
+mpi_sintel,MPI Sintel,MPI Sintel,Dataset Gathering - Sheet8.csv,1K,Optical flow estimation
+flying_things,Flying Things,Flying Things,Dataset Gathering - Sheet8.csv,25K,Optical flow estimation
+gta_v_dataset,GTA-V dataset,GTA-V dataset,Dataset Gathering - Sheet8.csv,25K,Semantic segmentation
+synthia,SYNTHIA,SYNTHIA,Dataset Gathering - Sheet8.csv,213K,Semantic segmentation
+veis,VEIS,VEIS,Dataset Gathering - Sheet8.csv,61K,Instance segmentation
+foggy_cityscapes,Foggy Cityscapes,Foggy Cityscapes,Dataset Gathering - Sheet8.csv,20K,Semantic segmentation
+idda,IDDA,IDDA,Dataset Gathering - Sheet8.csv,1M,Semantic segmentation
+carlascenes,CarlaScenes,CarlaScenes,Dataset Gathering - Sheet8.csv,-,Odometry

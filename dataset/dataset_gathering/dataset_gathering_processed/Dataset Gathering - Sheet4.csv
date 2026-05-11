@@ -1,0 +1,26 @@
+Dataset_ID,Dataset,Raw_Dataset_Name,Source_Table,Year
+nuscenes,nuScenes,nuScenes,Dataset Gathering - Sheet4.csv,2020
+pixset,PixSet,PixSet,Dataset Gathering - Sheet4.csv,2021
+radarscenes,RadarScenes,RadarScenes,Dataset Gathering - Sheet4.csv,2021
+pointillism,Pointillism,Pointillism,Dataset Gathering - Sheet4.csv,2020
+zendar,Zendar,Zendar,Dataset Gathering - Sheet4.csv,2020
+dense,Dense,Dense,Dataset Gathering - Sheet4.csv,2020
+radiate,RADIATE,RADIATE,Dataset Gathering - Sheet4.csv,2020
+carrada,CARRADA,CARRADA,Dataset Gathering - Sheet4.csv,2020
+raddet,RADDet,RADDet,Dataset Gathering - Sheet4.csv,2021
+cruw,CRUW,CRUW,Dataset Gathering - Sheet4.csv,2021
+radical,RaDiCaL,RaDiCaL,Dataset Gathering - Sheet4.csv,2021
+ghent_vru,Ghent VRU,Ghent VRU,Dataset Gathering - Sheet4.csv,2020
+astyx,Astyx,Astyx,Dataset Gathering - Sheet4.csv,2019
+view_of_delft,View-of-Delft,View-of-Delft,Dataset Gathering - Sheet4.csv,2022
+radial,RADial,RADial,Dataset Gathering - Sheet4.csv,2021
+tj4dradset,TJ4DRadSet,TJ4DRadSet,Dataset Gathering - Sheet4.csv,2022
+oxford,Oxford,Oxford,Dataset Gathering - Sheet4.csv,2020
+mulran,Mulran,Mulran,Dataset Gathering - Sheet4.csv,2020
+boreas,Boreas,Boreas,Dataset Gathering - Sheet4.csv,2022
+eu_long_term,EU Long-term,EU Long-term,Dataset Gathering - Sheet4.csv,2020
+endeavour,Endeavour,Endeavour,Dataset Gathering - Sheet4.csv,2021
+coloradar,ColoRadar,ColoRadar,Dataset Gathering - Sheet4.csv,2021
+prevention,PREVENTION,PREVENTION,Dataset Gathering - Sheet4.csv,2019
+scorp,SCORP,SCORP,Dataset Gathering - Sheet4.csv,2020
+ghost,Ghost,Ghost,Dataset Gathering - Sheet4.csv,2021
