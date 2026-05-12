@@ -1,1 +1,54 @@
 ﻿raw_name,canonical_name,merge_decision,note
+3D Lanes,Gen-LaneNet,merge,user manual decision: merge lane-name variants into Gen-LaneNet
+3D Synthetic,Gen-LaneNet,merge,user manual decision: merge lane-name variants into Gen-LaneNet
+3D-LaneNet,Gen-LaneNet,merge,user manual decision: merge lane-name variants into Gen-LaneNet
+Apollo,ApolloScape,merge,user manual decision
+Apollo Open Platform,ApolloScape,merge,user manual decision
+Argoverse V1,Argoverse 1,merge,version naming variant
+Argoverse V2,Argoverse 2,merge,version naming variant
+BDD00K,BDD100K,merge,likely typo of BDD100K
+Berkeley DeepDrive,BDD100K,merge,full-name variant of BDD100K
+BelgiumTS,Belgium Traffic Sign,merge,abbreviation/name variant
+Bosch STL,Bosch Small Traffic Lights,merge,abbreviation/name variant
+Brno-Urban,Brno Urban,merge,hyphenation variant
+Caltech,Caltech Lane,merge,user manual decision
+Caltech Lanes,Caltech Lane,merge,plural/name variant
+CityScape,CityScapes,merge,capitalization/singular-plural variant
+CityScapes,CityScapes,merge,capitalization variant
+Comap,COMAP,merge,capitalization variant
+comma 2k19,comma2k19,merge,spacing/capitalization variant
+Comma-LD,comma2k19,merge,user manual decision
+Comma2k19LD,comma2k19,merge,user manual decision
+Daimler,Daimler Pedestrian,merge,user manual decision
+Daimler Ped,Daimler Pedestrian,merge,abbreviation variant
+Daimler Stereo Ped,Daimler Pedestrian,merge,user manual decision
+Daimler Urban,Daimler Pedestrian,merge,user manual decision
+ECP,EuroCity Persons,merge,abbreviation/name variant
+ETH Ped,ETH Pedestrian,merge,abbreviation variant
+Ford,Ford Multi-AV Seasonal Dataset,merge,user manual decision
+GTA-V,GTA-V dataset,merge,name variant
+HighWay Workzones,Highway Driving,merge,user manual decision
+KAIST MPD,KAIST Multi-Spectral,merge,abbreviation variant for KAIST multispectral pedestrian dataset
+Lost & Found,Lost and Found,merge,symbol/name variant
+LostAndFound,Lost and Found,merge,spacing variant
+Lyft-L5,Lyft Level 5,merge,name abbreviation variant
+Lyft-Pre,Lyft Level 5,merge,user manual decision
+Mapillary,Mapillary Traffic Sign,merge,user manual decision
+MIT DriveSeg,DriveSeg,merge,name/source variant
+MOTS,MOTSynth,merge,user manual decision
+NightOwis,NightOwls,merge,typo variant
+ONCE-3DLane,ONCE-3DLanes,merge,singular-plural variant
+OpenLane-V1,OpenLane,merge,version-name variant
+Oxford,Oxford RobotCar,merge,user manual decision
+Reasonable-Crowd,Reasonable Crowd,merge,hyphenation variant
+Sim-V2X,V2X-Sim 1.0,merge,user manual decision
+V2X Sim 1.0,V2X-Sim 1.0,merge,spacing/hyphenation variant
+V2X-Sim,V2X-Sim 1.0,merge,user manual decision
+V2X Sim 2.0,V2X-Sim 2.0,merge,spacing/hyphenation variant
+Stanford Tack,Stanford Track,merge,likely typo
+SydneyUrbanObject,Sydney Urban,merge,name variant
+TUD-Brussels,TUD Brussels Pedestrian,merge,hyphenation/name variant
+UAH,UAH-Driveset,merge,abbreviation/name variant
+Ua-detrac,UA-DETRAC,merge,capitalization variant
+VIL100,VIL-100,merge,hyphenation variant
+VKITTI,Virtual KITTI,merge,abbreviation variant

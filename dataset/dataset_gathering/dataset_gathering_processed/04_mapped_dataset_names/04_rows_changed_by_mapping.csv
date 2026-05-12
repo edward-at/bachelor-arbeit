@@ -1,0 +1,56 @@
+﻿source_file,source_row_number,dataset,year,real_synthetic,reference_link,camera,lidar,imu,gps_gnss,can_bus,event_camera,radar,paper,monocular_camera,stereo_camera,ego_pose,dataset_original,dataset_match_key,canonical_dataset,mapping_applied
+Dataset Gathering - ADD Review.csv,5,BDD00K,,,,,,,,,,,,,,,BDD00K,bdd00k,BDD100K,Yes
+Dataset Gathering - ADD Review.csv,11,Apollo,,,,,,,,,,,,,,,Apollo,apollo,ApolloScape,Yes
+Dataset Gathering - ADD Review.csv,13,Oxford,,,,,,,,,,,,,,,Oxford,oxford,Oxford RobotCar,Yes
+Dataset Gathering - ADD Review.csv,14,CityScape,,,,,,,,,,,,,,,CityScape,cityscape,CityScapes,Yes
+Dataset Gathering - ADD Review.csv,15,Lyft-Pre,,,,,,,,,,,,,,,Lyft-Pre,lyft-pre,Lyft Level 5,Yes
+Dataset Gathering - ADD Review.csv,16,Lyft-L5,,,,,,,,,,,,,,,Lyft-L5,lyft-l5,Lyft Level 5,Yes
+Dataset Gathering - ADD Review.csv,21,comma 2k19,,,,,,,,,,,,,,,comma 2k19,comma 2k19,comma2k19,Yes
+Dataset Gathering - ADD Review.csv,31,Caltech,,,,,,,,,,,,,,,Caltech,caltech,Caltech Lane,Yes
+Dataset Gathering - ADD Review.csv,34,Comma-LD,,,,,,,,,,,,,,,Comma-LD,comma-ld,comma2k19,Yes
+Dataset Gathering - ADD Review.csv,39,MOTS,,,,,,,,,,,,,,,MOTS,mots,MOTSynth,Yes
+Dataset Gathering - ADD Review.csv,42,Mapillary,,,,,,,,,,,,,,,Mapillary,mapillary,Mapillary Traffic Sign,Yes
+Dataset Gathering - ADD Review.csv,51,GTA-V,,,,,,,,,,,,,,,GTA-V,gta-v,GTA-V dataset,Yes
+Dataset Gathering - ADD Review.csv,53,Sim-V2X,,,,,,,,,,,,,,,Sim-V2X,sim-v2x,V2X-Sim 1.0,Yes
+Dataset Gathering - ADD Review.csv,57,3D-LaneNet,,,,,,,,,,,,,,,3D-LaneNet,3d-lanenet,Gen-LaneNet,Yes
+Dataset Gathering - ADD Survey.csv,13,BelgiumTS,2011,real,https://btsd.ethz.ch/shareddata/,,,,,,,,,,,,BelgiumTS,belgiumts,Belgium Traffic Sign,Yes
+Dataset Gathering - ADD Survey.csv,15,Bosch STL,2017,real,https://hci.iwr.uni-heidelberg.de/content/bosch-small-traffic-lights-dataset,,,,,,,,,,,,Bosch STL,bosch stl,Bosch Small Traffic Lights,Yes
+Dataset Gathering - ADD Survey.csv,20,Caltech Lanes,2019,real,https://www.mohamedaly.info/datasets/caltech-lanes,,,,,,,,,,,,Caltech Lanes,caltech lanes,Caltech Lane,Yes
+Dataset Gathering - ADD Survey.csv,35,Comap,2021,synthetic,https://isprs-archives.copernicus.org/articles/XLIII-B2-2021/255/2021/,,,,,,,,,,,,Comap,comap,COMAP,Yes
+Dataset Gathering - ADD Survey.csv,43,Daimler Ped,2013,real,https://www.gavrila.net/Datasets/Daimler_Pedestrian_Benchmark_D/daimler_pedestrian_benchmark_d.html,,,,,,,,,,,,Daimler Ped,daimler ped,Daimler Pedestrian,Yes
+Dataset Gathering - ADD Survey.csv,44,Daimler Stereo Ped,2011,real,https://www.gavrila.net/Datasets/Daimler_Pedestrian_Benchmark_D/Daimler_Stereo_Ped__Detection_/daimler_stereo_ped__detection_.html,,,,,,,,,,,,Daimler Stereo Ped,daimler stereo ped,Daimler Pedestrian,Yes
+Dataset Gathering - ADD Survey.csv,51,ETH Ped,2007,real,https://data.vision.ee.ethz.ch/cvl/aess/dataset/,,,,,,,,,,,,ETH Ped,eth ped,ETH Pedestrian,Yes
+Dataset Gathering - ADD Survey.csv,68,KAIST MPD,2015,real,https://openaccess.thecvf.com/content_cvpr_2015/html/Hwang_Multispectral_Pedestrian_Detection_2015_CVPR_paper.html,,,,,,,,,,,,KAIST MPD,kaist mpd,KAIST Multi-Spectral,Yes
+Dataset Gathering - ADD Survey.csv,75,LostAndFound,2016,real,https://arxiv.org/abs/1609.04653,,,,,,,,,,,,LostAndFound,lostandfound,Lost and Found,Yes
+Dataset Gathering - ADD Survey.csv,78,MIT DriveSeg,2019,real,https://ieeexplore.ieee.org/document/9361244,,,,,,,,,,,,MIT DriveSeg,mit driveseg,DriveSeg,Yes
+Dataset Gathering - ADD Survey.csv,89,NightOwis,2018,real,https://link.springer.com/chapter/10.1007/978-3-030-20893-6_42,,,,,,,,,,,,NightOwis,nightowis,NightOwls,Yes
+Dataset Gathering - ADD Survey.csv,109,Reasonable-Crowd,2021,synthetic,https://arxiv.org/abs/2107.13507,,,,,,,,,,,,Reasonable-Crowd,reasonable-crowd,Reasonable Crowd,Yes
+Dataset Gathering - ADD Survey.csv,121,Stanford Tack,2011,real,https://ieeexplore.ieee.org/document/5980212,,,,,,,,,,,,Stanford Tack,stanford tack,Stanford Track,Yes
+Dataset Gathering - ADD Survey.csv,123,SydneyUrbanObject,2013,real,https://www.acfr.usyd.edu.au/papers/Deuge_Quadros_Hung_Douillard_ACRA2013.pdf,,,,,,,,,,,,SydneyUrbanObject,sydneyurbanobject,Sydney Urban,Yes
+Dataset Gathering - ADD Survey.csv,134,TUD-Brussels,2009,real,https://data.vision.ee.ethz.ch/cvl/aess/dataset/,,,,,,,,,,,,TUD-Brussels,tud-brussels,TUD Brussels Pedestrian,Yes
+Dataset Gathering - ADD Survey.csv,136,Ua-detrac,2015,real,https://arxiv.org/abs/1511.04136,,,,,,,,,,,,Ua-detrac,ua-detrac,UA-DETRAC,Yes
+Dataset Gathering - Additional_ AD Virtual Test.csv,2,Apollo Open Platform,2018,,,,,,,,,,,,,,Apollo Open Platform,apollo open platform,ApolloScape,Yes
+Dataset Gathering - Additional_ AD Virtual Test.csv,6,Berkeley DeepDrive,2017,,,,,,,,,,,,,,Berkeley DeepDrive,berkeley deepdrive,BDD100K,Yes
+Dataset Gathering - Additional_ AD Virtual Test.csv,14,CityScapes,2016,,,,,,,,,,,,,,CityScapes,cityscapes,CityScapes,Yes
+Dataset Gathering - Additional_ AD Virtual Test.csv,20,Daimler Urban,2013,,,,,,,,,,,,,,Daimler Urban,daimler urban,Daimler Pedestrian,Yes
+Dataset Gathering - Additional_ AD Virtual Test.csv,25,ECP,2018,,,,,,,,,,,,,,ECP,ecp,EuroCity Persons,Yes
+Dataset Gathering - Additional_ AD Virtual Test.csv,30,Ford,2009,,,,,,,,,,,,,,Ford,ford,Ford Multi-AV Seasonal Dataset,Yes
+Dataset Gathering - Additional_ AD Virtual Test.csv,36,HighWay Workzones,2015,,,,,,,,,,,,,,HighWay Workzones,highway workzones,Highway Driving,Yes
+Dataset Gathering - Additional_ AD Virtual Test.csv,47,Lost & Found,2016,,,,,,,,,,,,,,Lost & Found,lost & found,Lost and Found,Yes
+Dataset Gathering - Additional_ AD Virtual Test.csv,67,UAH,2016,,,,,,,,,,,,,,UAH,uah,UAH-Driveset,Yes
+Dataset Gathering - Additional_ OpenDrive.csv,14,Brno-Urban,2019,,,Yes,Yes,Yes,Yes,,,,https://arxiv.org/abs/1909.06897.pdf,,,,Brno-Urban,brno-urban,Brno Urban,Yes
+Dataset Gathering - Additional_ OpenDrive.csv,15,Argoverse V1,2019,,,Yes,Yes,,,,,,https://arxiv.org/pdf/1911.02620.pdf,,,,Argoverse V1,argoverse v1,Argoverse 1,Yes
+Dataset Gathering - Additional_ OpenDrive.csv,16,Argoverse V2,2022,,,Yes,Yes,,,,,,https://arxiv.org/pdf/2301.00493.pdf,,,,Argoverse V2,argoverse v2,Argoverse 2,Yes
+Dataset Gathering - Additional_ OpenDrive.csv,31,Cityscapes,2016,,,Yes,No,,,,,,https://arxiv.org/abs/1604.01685,,,,Cityscapes,cityscapes,CityScapes,Yes
+Dataset Gathering - Additional_ OpenDrive.csv,45,Mapillary,2016,,,Yes,No,,,,,,https://openaccess.thecvf.com/content_ICCV_2017/papers/Neuhold_The_Mapillary_Vistas_ICCV_2017_paper.pdf,,,,Mapillary,mapillary,Mapillary Traffic Sign,Yes
+Dataset Gathering - Additional_ OpenDrive.csv,51,3D Synthetic,2020,,,No,No,,,,,,https://arxiv.org/abs/2003.10656.pdf,,,,3D Synthetic,3d synthetic,Gen-LaneNet,Yes
+Dataset Gathering - Additional_ OpenDrive.csv,54,OpenLane-V1,2022,,,No,No,,,,,,https://arxiv.org/abs/2203.11089.pdf,,,,OpenLane-V1,openlane-v1,OpenLane,Yes
+Dataset Gathering - Additional_ OpenDrive.csv,55,ONCE-3DLane,2022,,,No,No,,,,,,https://openaccess.thecvf.com/content/CVPR2022/papers/Yan_ONCE-3DLanes_Building_Monocular_3D_Lane_Detection_CVPR_2022_paper.pdf,,,,ONCE-3DLane,once-3dlane,ONCE-3DLanes,Yes
+Dataset Gathering - Lane Detection.csv,7,VIL100,,,,,,,,,,,,,,,VIL100,vil100,VIL-100,Yes
+Dataset Gathering - Lane Detection.csv,20,3D Lanes,,,,,,,,,,,,,,,3D Lanes,3d lanes,Gen-LaneNet,Yes
+Dataset Gathering - Lane Detection.csv,23,Comma2k19LD,,,,,,,,,,,,,,,Comma2k19LD,comma2k19ld,comma2k19,Yes
+Dataset Gathering - Perception Review.csv,6,V2X Sim 1.0,,,,,,,,,,,,,,,V2X Sim 1.0,v2x sim 1.0,V2X-Sim 1.0,Yes
+Dataset Gathering - Perception Review.csv,7,V2X Sim 2.0,,,,,,,,,,,,,,,V2X Sim 2.0,v2x sim 2.0,V2X-Sim 2.0,Yes
+Dataset Gathering - Prediction.csv,9,Daimler,,,,,,,,,,,,,,,Daimler,daimler,Daimler Pedestrian,Yes
+Dataset Gathering - Synthetic Survey.csv,1,VKITTI,,,,,No,,,,,No,,Yes,No,No,VKITTI,vkitti,Virtual KITTI,Yes
+Dataset Gathering - Synthetic Survey.csv,7,V2X-Sim,,,,,No,,,,,No,,Yes,Yes,No,V2X-Sim,v2x-sim,V2X-Sim 1.0,Yes

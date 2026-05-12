@@ -1,0 +1,6 @@
+﻿metric,value
+total_rows_after_mapping,422
+unique_canonical_dataset_names,278
+canonical_dataset_names_with_duplicates,100
+rows_in_duplicate_canonical_groups,244
+canonical_dataset_names_appearing_once,178

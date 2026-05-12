@@ -1,0 +1,7 @@
+﻿metric,value
+total_rows_in_combined_table,422
+active_manual_mapping_rows,53
+rows_changed_by_mapping,55
+unique_original_dataset_names,328
+unique_canonical_dataset_names_after_mapping,278
+unused_manual_mapping_rows,0

@@ -1,0 +1,7 @@
+﻿metric,value
+input_rows,422
+draft_master_rows_unique_datasets,278
+attribute_columns_merged,14
+datasets_with_multiple_source_rows,100
+attribute_conflict_rows,14
+datasets_with_attribute_conflicts,13
