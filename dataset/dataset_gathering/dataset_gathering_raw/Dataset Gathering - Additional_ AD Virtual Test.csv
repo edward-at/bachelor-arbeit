@@ -1,0 +1,71 @@
+Dataset,Time
+AMUSE,2013
+Apollo Open Platform,2018
+ApolloScape,2018
+Argoverse,2019
+Belgium Traffic Sign,2011
+Berkeley DeepDrive,2017
+Bosch Small Traffic Lights,2017
+Boxy,2019
+Brain4Cars,2016
+Caltech Pedestria,2009
+CamVid,2009
+CCSAD,2014
+Cheddar Gorge,2010
+CityScapes,2016
+CMU,2011
+Comma.ai,2016
+Comma2k19,2018
+CULane,2018
+Daimler Pedestrian,2016
+Daimler Urban,2013
+DAVIS,2017
+DBNet,2018
+DIPLECS,2015
+Dr(eye)ve,2016
+ECP,2018
+EISATS,2010
+Elektra,2016
+ETH Pedestrian,2009
+FLIR,2018
+Ford,2009
+German Traffic Sign,2012
+GIDA,2016
+HCI Challenging Stereo,2012
+HDIK,2018
+HighD,2018
+HighWay Workzones,2015
+IDD,2019
+Interaction,2020
+JAAD,2016
+KAIST Multi-Spectral,2015
+KAIST Urban,2018
+Karlsruhe Labeled Objects,2011
+Karlsruhe Stereo,2010
+KITTI,2011
+LISA Traffic Sign,2012
+Llamas,2019
+Lost & Found,2016
+Malaga,2014
+Mapillary Vistas,2017
+NEXET,2017
+NGSIM,2020
+NightOwls,2018
+nuScenes,2018
+Oxford RobotCar,2015
+Road Damage,2018
+Stanford Track,2010
+Stixel,2013
+StreetLearn,2019
+Sydney Urban,2013
+SYNTHIA,2017
+TME Motorway,2011
+TrafficNet,2012
+TRoM,2016
+TUD Brussels Pedestrian,2009
+TUM City,2018
+TuSimple,2017
+UAH,2016
+Udacity,2016
+UTBM Robotcar,2018
+Waymo,2019

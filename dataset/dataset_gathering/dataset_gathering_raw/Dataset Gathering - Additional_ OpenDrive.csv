@@ -1,0 +1,57 @@
+Dataset,Year,Camera,Lidar,IMU,GPS_GNSS,CAN Bus,Event Camera,Radar,Paper
+METEOR,2021,Yes,No,,Yes,,,,https://arxiv.org/abs/2109.07648.pdf
+DDD17,2017,Yes,No,,Yes,Yes,Yes,,https://arxiv.org/pdf/1711.01458.pdf
+nuScenes,2019,Yes,Yes,,Yes,Yes,,Yes,https://arxiv.org/pdf/1903.11027.pdf
+SemanticPOSS,2020,No,Yes,Yes,Yes,,,,https://arxiv.org/abs/2002.09147.pdf
+PandaSet,2021,Yes,Yes,Yes,Yes,,,,https://arxiv.org/abs/2112.12610.pdf
+KITTI,2012,Yes,No,Yes,Yes,,,,https://www.cvlibs.net/publications/Geiger2012CVPR.pdf
+4Seasons,2019,Yes,No,Yes,Yes,,,,https://arxiv.org/abs/2009.06364.pdf
+Apolloscape,2016,Yes,No,Yes,Yes,,,,https://arxiv.org/pdf/1803.06184.pdf
+H3D,2019,Yes,Yes,Yes,Yes,,,,https://arxiv.org/abs/1903.01568.pdf
+A2D2,2020,Yes,Yes,Yes,Yes,Yes,,,https://arxiv.org/pdf/2004.06320.pdf
+Woodscape,2019,Yes,Yes,Yes,Yes,Yes,,,https://arxiv.org/pdf/1905.01489.pdf
+ZOD,2023,Yes,Yes,Yes,Yes,Yes,,,https://arxiv.org/abs/2305.02008
+HDD,2018,Yes,Yes,Yes,Yes,Yes,,,https://arxiv.org/pdf/1811.02307v1.pdf
+Brno-Urban,2019,Yes,Yes,Yes,Yes,,,,https://arxiv.org/abs/1909.06897.pdf
+Argoverse V1,2019,Yes,Yes,,,,,,https://arxiv.org/pdf/1911.02620.pdf
+Argoverse V2,2022,Yes,Yes,,,,,,https://arxiv.org/pdf/2301.00493.pdf
+UrbanLoco,2019,Yes,Yes,Yes,,,,,https://arxiv.org/abs/1912.09513.pdf
+TAS-NIR,2022,Yes,No,,,,,,https://arxiv.org/abs/2212.09368.pdf
+CARRADA,2020,Yes,No,,,,,Yes,https://arxiv.org/abs/2005.01456.pdf
+LiDAR-CS,2022,No,Yes,,,,,,https://arxiv.org/abs/2301.12515.pdf
+SemanticKITTI,2019,No,Yes,,,,,,https://arxiv.org/pdf/1904.01416.pdf
+Toronto-3D,2020,No,Yes,,,,,,https://openaccess.thecvf.com/content_CVPRW_2020/papers/w11/Tan_Toronto-3D_A_Large-Scale_Mobile_LiDAR_Dataset_for_Semantic_Segmentation_of_CVPRW_2020_paper.pdf
+DriveLM,2023,Yes,No,,,,,,https://github.com/OpenDriveLab/DriveLM
+KITTI-360,2020,Yes,Yes,,,,,,https://arxiv.org/abs/2109.13410.pdf
+MUAD,2022,Yes,Yes,,,,,,https://arxiv.org/abs/2203.01437.pdf
+nuPlan,2021,Yes,Yes,,,,,,https://arxiv.org/abs/2106.11810.pdf
+ONCE,2021,Yes,Yes,,,,,,https://arxiv.org/pdf/2106.11037.pdf
+OpenScene,2023,Yes,No,,,,,,https://arxiv.org/abs/2211.15654.pdf
+Talk2Nav,2019,Yes,No,,,,,,https://arxiv.org/abs/1910.02029.pdf
+Waymo,2019,Yes,Yes,,,,,,https://arxiv.org/abs/1912.04838.pdf
+Cityscapes,2016,Yes,No,,,,,,https://arxiv.org/abs/1604.01685
+Lost and Found,2016,Yes,No,,,,,,https://arxiv.org/abs/1609.04653
+A*3D,2019,Yes,Yes,,,,,,https://arxiv.org/pdf/1909.07541v1.pdf
+BDD-X,2018,Yes,No,,,,,,https://arxiv.org/pdf/1807.11546.pdf
+DAWN,2019,Yes,No,,,,,,https://arxiv.org/abs/2008.05402.pdf
+DrivingStereo,2019,Yes,Yes,,,,,,https://ieeexplore.ieee.org/document/8954165/
+IDD,2018,Yes,No,,,,,,https://arxiv.org/pdf/1811.10200v1.pdf
+PIE,2019,Yes,No,,,,,,https://openaccess.thecvf.com/content_ICCV_2019/papers/Rasouli_PIE_A_Large-Scale_Dataset_and_Models_for_Pedestrian_Intention_Estimation_ICCV_2019_paper.pdf
+Reasonable Crowd,2021,Yes,No,,,,,,https://arxiv.org/abs/2107.13507.pdf
+ROAD,2021,Yes,No,,,,,,https://arxiv.org/abs/2102.11585.pdf
+Talk2Car,2019,Yes,Yes,,,,,,https://arxiv.org/pdf/1909.10838.pdf
+TITAN,2019,Yes,No,,,,,,https://arxiv.org/pdf/2003.13886.pdf
+UNDD,2019,Yes,No,,,,,,https://ieeexplore.ieee.org/document/8803299
+WildDash,2022,Yes,No,,,,,,https://openaccess.thecvf.com/content_ECCV_2018/papers/Oliver_Zendel_WildDash_-_Creating_ECCV_2018_paper.pdf
+Mapillary,2016,Yes,No,,,,,,https://openaccess.thecvf.com/content_ICCV_2017/papers/Neuhold_The_Mapillary_Vistas_ICCV_2017_paper.pdf
+VPG,2017,No,No,,,,,,https://openaccess.thecvf.com/content_iccv_2017/html/Lee_VPGNet_Vanishing_Point_ICCV_2017_paper.html
+TUsimple,2017,No,No,,,,,,https://github.com/TuSimple/tusimple-benchmark
+CULane,2018,No,No,,,,,,https://arxiv.org/abs/1712.06080.pdf
+ApolloScape,2018,No,Yes,,,,,,https://arxiv.org/abs/1803.06184.pdf
+LLAMAS,2019,Yes,No,,,,,,https://ieeexplore.ieee.org/document/9022318
+3D Synthetic,2020,No,No,,,,,,https://arxiv.org/abs/2003.10656.pdf
+CurveLanes,2020,No,No,,,,,,https://arxiv.org/abs/2007.12147.pdf
+VIL-100,2021,No,No,,,,,,https://arxiv.org/abs/2108.08482.pdf
+OpenLane-V1,2022,No,No,,,,,,https://arxiv.org/abs/2203.11089.pdf
+ONCE-3DLane,2022,No,No,,,,,,https://openaccess.thecvf.com/content/CVPR2022/papers/Yan_ONCE-3DLanes_Building_Monocular_3D_Lane_Detection_CVPR_2022_paper.pdf
+OpenLane-V2,2023,Yes,No,,,,,,https://arxiv.org/abs/2304.10440.pdf

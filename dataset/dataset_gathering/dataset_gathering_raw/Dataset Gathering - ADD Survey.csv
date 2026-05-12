@@ -1,0 +1,148 @@
+Dataset,Year,Real/Synthetic,Reference_Link
+4Seasons,2021,real,https://arxiv.org/abs/2009.06364
+A*3D,2020,real,https://arxiv.org/abs/1909.07541
+Aachen Day-Night,2018,real,https://arxiv.org/abs/1707.09092
+ACDC,2021,real,https://arxiv.org/abs/2104.13395
+aiMotive,2023,real,https://arxiv.org/abs/2211.09445
+All-in-One Drive,2021,real,https://openreview.net/forum?id=yl9aThYT9W
+Amodal Cityscapes,2022,real,https://arxiv.org/abs/2206.00527
+AMUSE,2013,real,https://www.cvl.isy.liu.se/research/datasets/amuse/
+ApolloCar3D,2019,real,https://openaccess.thecvf.com/content_CVPR_2019/html/Song_ApolloCar3D_A_Large_3D_Car_Instance_Understanding_Benchmark_for_Autonomous_CVPR_2019_paper.html
+ASAP,2022,real,https://openaccess.thecvf.com/content/CVPR2023/html/Wang_Are_We_Ready_for_Vision-Centric_Driving_Streaming_Perception_The_ASAP_Benchmark_CVPR_2023_paper.html
+Astyx,2019,real,https://www.astyx.com/automotive-radar-dataset/
+AUTOCASTSIM,2022,real,https://openaccess.thecvf.com/content/CVPR2022/html/Cui_Coopernaut_End-to-End_Driving_With_Cooperative_Perception_for_Networked_Vehicles_CVPR_2022_paper.html
+BelgiumTS,2011,real,https://btsd.ethz.ch/shareddata/
+Boreas,2023,real,https://arxiv.org/abs/2203.10168
+Bosch STL,2017,real,https://hci.iwr.uni-heidelberg.de/content/bosch-small-traffic-lights-dataset
+Boxy,2019,real,https://openaccess.thecvf.com/content_ICCV_2019/html/Behrendt_Boxy_Vehicle_Detection_in_Large_Images_ICCV_2019_paper.html
+Brno Urban,2019,real,https://ieeexplore.ieee.org/document/9197030
+CADC,2020,real,https://cadcd.uwaterloo.ca/
+CADP,2018,real,https://ieeexplore.ieee.org/document/8639302
+Caltech Lanes,2019,real,https://www.mohamedaly.info/datasets/caltech-lanes
+CARLA-100,2019,synthetic,https://openaccess.thecvf.com/content_ICCV_2019/html/Codevilla_Exploring_the_Limitations_of_Behavior_Cloning_for_Autonomous_Driving_ICCV_2019_paper.html
+CARLA-WildLife,2022,synthetic,https://arxiv.org/abs/2210.02074
+CARLANE,2022,synthetic,https://arxiv.org/abs/2206.08083
+CarlaScenes,2022,synthetic,https://openaccess.thecvf.com/content/CVPR2022W/WAD/html/Kloukiniotis_CarlaScenes_A_Synthetic_Dataset_for_Odometry_in_Autonomous_Driving_CVPRW_2022_paper.html
+CARRADA,2020,real,https://arxiv.org/abs/2005.01456
+CARTI,2022,synthetic,https://arxiv.org/html/2401.01454v2
+CCD,2020,real,https://dl.acm.org/doi/10.1145/3394171.3413818
+CCSAD,2015,real,https://link.springer.com/chapter/10.1007/978-3-319-23192-1_49
+CCTSDB 2021,2021,real,https://link.springer.com/article/10.1186/s13673-022-00356-6
+CeyMo,2021,real,https://openaccess.thecvf.com/content/WACV2022/html/Jayasinghe_CeyMo_See_More_on_Roads_-_A_Novel_Benchmark_Dataset_for_WACV_2022_paper.html
+Cirrus,2020,real,https://ieeexplore.ieee.org/document/9561393
+CityFlow,2019,real,https://openaccess.thecvf.com/content_CVPR_2019/html/Tang_CityFlow_A_City-Scale_Benchmark_for_Multi-Target_Multi-Camera_Vehicle_Tracking_and_CVPR_2019_paper.html
+CODA,2022,real,https://arxiv.org/abs/2203.07724
+CODD,2022,synthetic,https://arxiv.org/abs/2103.13279
+Comap,2021,synthetic,https://isprs-archives.copernicus.org/articles/XLIII-B2-2021/255/2021/
+comma2k19,2018,real,https://arxiv.org/abs/1812.05752
+Complex Urban,2017,real,https://arxiv.org/abs/1804.05388
+CPIS,2020,synthetic,https://arxiv.org/html/2401.01454v2
+CrashD,2022,synthetic,https://arxiv.org/abs/2112.04764
+CURE-TSR,2017,real,https://arxiv.org/abs/1712.02463
+D2-City,2019,real,https://arxiv.org/abs/1904.01975
+DA4AD,2020,real,https://link.springer.com/chapter/10.1007/978-3-030-58604-1_17
+Daimler Ped,2013,real,https://www.gavrila.net/Datasets/Daimler_Pedestrian_Benchmark_D/daimler_pedestrian_benchmark_d.html
+Daimler Stereo Ped,2011,real,https://www.gavrila.net/Datasets/Daimler_Pedestrian_Benchmark_D/Daimler_Stereo_Ped__Detection_/daimler_stereo_ped__detection_.html
+DDAD,2020,real,https://openaccess.thecvf.com/content_CVPR_2020/html/Guizilini_3D_Packing_for_Self-Supervised_Monocular_Depth_Estimation_CVPR_2020_paper.html
+DDD20,2017,real,https://arxiv.org/abs/2005.08605
+DET,2019,real,https://openaccess.thecvf.com/content_CVPRW_2019/html/EventVision/Cheng_DET_A_High-Resolution_DVS_Dataset_for_Lane_Extraction_CVPRW_2019_paper.html
+DIML,2017,real,https://dimlrgbd.github.io/
+DRIV100,2021,real,https://arxiv.org/abs/2102.00150
+DurLAR,2021,real,https://ieeexplore.ieee.org/document/9665875
+ETH Ped,2007,real,https://data.vision.ee.ethz.ch/cvl/aess/dataset/
+EU LTD,2020,real,https://arxiv.org/abs/1909.03330
+EuroCity Persons,2018,real,https://arxiv.org/abs/1805.07193
+Fishyscapes,2021,real,https://arxiv.org/abs/1904.03215
+FLIR,-,real,https://www.flir.com/oem/adas/adas-dataset-form/
+Gated2Depth,2020,real,https://arxiv.org/abs/1902.04997
+GLARE,2022,real,https://dl.acm.org/doi/abs/10.1109/TITS.2023.3294411
+Ground Truth SitXel,2013,real,https://openaccess.thecvf.com/content_cvpr_2013/html/Pfeiffer_Exploiting_the_Power_2013_CVPR_paper.html
+H3D,2019,real,https://arxiv.org/abs/1903.01568
+HAD,2019,real,https://openaccess.thecvf.com/content_CVPR_2019/html/Kim_Grounding_Human-To-Vehicle_Advice_for_Self-Driving_Vehicles_CVPR_2019_paper.html
+HEV,2019,real,https://ieeexplore.ieee.org/document/8794171
+I see you,2022,real,https://arxiv.org/abs/2211.09342
+IDDA,2020,synthetic,https://arxiv.org/abs/2004.08298
+IPS3000+,2021,real,https://arxiv.org/abs/2106.02781
+Ithaca365,2022,real,https://arxiv.org/abs/2208.01166
+K-Lane,2022,real,https://arxiv.org/abs/2110.11048
+K-Radar,2023,real,https://arxiv.org/abs/2206.08171
+KAIST MPD,2015,real,https://openaccess.thecvf.com/content_cvpr_2015/html/Hwang_Multispectral_Pedestrian_Detection_2015_CVPR_paper.html
+KITTI InstanceMotSeg,2020,real,https://ieeexplore.ieee.org/document/9575713
+LIBRE,2020,real,https://ieeexplore.ieee.org/document/9304690
+LiDAR Snowfall,2022,synthetic,https://openaccess.thecvf.com/content/CVPR2022/html/Hahner_LiDAR_Snowfall_Simulation_for_Robust_3D_Object_Detection_CVPR_2022_paper.html
+LISA,2014,real,https://ieeexplore.ieee.org/document/6957750
+LiVi-Set,2018,real,https://openaccess.thecvf.com/content_cvpr_2018/html/Chen_LiDAR-Video_Driving_Dataset_CVPR_2018_paper.html
+LLAMAS,2019,real,https://unsupervised-llamas.com/static/llamas/llamas_preview.pdf
+LostAndFound,2016,real,https://arxiv.org/abs/1609.04653
+MAVD,2021,real,https://openaccess.thecvf.com/content/CVPR2021/html/Valverde_There_Is_More_Than_Meets_the_Eye_Self-Supervised_Multi-Object_Detection_and_CVPR_2021_paper.html
+Mcity,2019,real,https://arxiv.org/abs/1912.06258
+MIT DriveSeg,2019,real,https://ieeexplore.ieee.org/document/9361244
+MIT-AVT,2020,real,https://ieeexplore.ieee.org/document/9304625
+MOTSynth,2021,synthetic,https://openaccess.thecvf.com/content/ICCV2021/html/Fabbri_MOTSynth_How_Can_Synthetic_Data_Help_Pedestrian_Detection_and_Tracking_ICCV_2021_paper.html
+MSLU,2013,real,https://www.mrpt.org/MalagaUrbanDataset
+MUAD,2022,synthetic,https://arxiv.org/abs/2203.01437
+MulRan,2020,real,https://arxiv.org/abs/2002.13502
+Multifog KITTI,2021,synthetic,https://www.mdpi.com/1424-8220/21/20/6711
+NCLT,2015,real,https://journals.sagepub.com/doi/10.1177/0278364915614638
+NEOLIX,2021,real,https://arxiv.org/abs/2011.13528
+NEXET,2017,real,https://medium.com/@valeo.ai/nexet-the-largest-and-most-diverse-road-dataset-in-the-world-4ab4f2d1335f
+NightCity,2020,real,https://ieeexplore.ieee.org/document/10213245
+NightOwis,2018,real,https://link.springer.com/chapter/10.1007/978-3-030-20893-6_42
+nighttime drive,2018,real,https://ieeexplore.ieee.org/document/8569454
+NYC3DCars,2013,real,https://openaccess.thecvf.com/content_iccv_2013/html/Matzen_NYC3DCars_A_Dataset_2013_ICCV_paper.html
+OpenLane-V2,2023,real,https://arxiv.org/abs/2304.10440
+OpenMPD,2021,real,https://ieeexplore.ieee.org/document/9669107
+OPV2V,2022,synthetic,https://arxiv.org/abs/2109.07644
+Oxford Radar RobotCar,2020,real,https://arxiv.org/abs/1909.01300
+PandaSet,2021,real,https://ieeexplore.ieee.org/document/9565009
+Paris-Lille-3D,2018,real,https://arxiv.org/abs/1712.00032
+Paris-rue-Madame,2014,real,https://hal.science/hal-01057186
+PedX,2018,real,https://ieeexplore.ieee.org/document/8675383
+PePScenes,2020,real,https://arxiv.org/abs/1912.10017
+PixSet,2021,real,https://ieeexplore.ieee.org/document/9564889
+PreSIL,2019,synthetic,https://arxiv.org/abs/1905.00160
+PVDN,2021,real,https://ieeexplore.ieee.org/document/9561904
+R3,2021,real,https://arxiv.org/html/2401.01454v2
+RadarScenes,2021,real,https://arxiv.org/abs/2104.02493
+RaidaR,2021,real,https://openaccess.thecvf.com/content/ICCV2021/html/Jin_RaidaR_A_Rich_Annotated_Image_Dataset_of_Rainy_Street_Scenes_ICCV_2021_paper.html
+RANUS,2018,real,https://ieeexplore.ieee.org/document/8354291
+RCooper,2024,real,https://arxiv.org/abs/2403.10145
+Reasonable-Crowd,2021,synthetic,https://arxiv.org/abs/2107.13507
+ROAD,2021,real,https://arxiv.org/abs/2102.11585
+RoadObstacle21,2021,synthetic,https://arxiv.org/abs/2104.14812
+RoadSaW,2022,real,https://openaccess.thecvf.com/content/CVPR2022W/WAD/html/Cordes_RoadSaW_A_Large-Scale_Dataset_for_Camera-Based_Road_Surface_and_Wetness_Estimation_CVPRW_2022_paper.html
+RoadSC,2023,real,https://arxiv.org/html/2401.01454v2
+Robo3D,2023,real,https://arxiv.org/abs/2306.14119
+SemanticPOSS,2020,synthetic,https://ieeexplore.ieee.org/document/9304739
+SemanticUSL,2021,real,https://ieeexplore.ieee.org/document/9560991
+Small Obstacles,2020,real,https://ieeexplore.ieee.org/document/9340911
+SODA10M,2021,real,https://arxiv.org/abs/2106.11118
+SOS,2022,real,https://arxiv.org/abs/2210.02074
+SSCBENCH,2023,real,https://arxiv.org/abs/2306.09001
+Stanford Tack,2011,real,https://ieeexplore.ieee.org/document/5980212
+SUPS,2023,synthetic,https://ieeexplore.ieee.org/document/9922467
+SydneyUrbanObject,2013,real,https://www.acfr.usyd.edu.au/papers/Deuge_Quadros_Hung_Douillard_ACRA2013.pdf
+Syncapes,2018,synthetic,https://arxiv.org/abs/1810.08705
+SynthCity,2019,synthetic,https://arxiv.org/abs/1907.04758
+SynWoodScape,2022,synthetic,https://arxiv.org/abs/2203.05056
+TAF-BW,2018,real,https://link.springer.com/chapter/10.1007/978-3-030-01370-7_61
+Titan,2020,real,https://openaccess.thecvf.com/content_CVPR_2020/html/Malla_TITAN_Future_Forecast_Using_Action_Priors_CVPR_2020_paper.html
+TJ4RadSet,2022,real,https://ieeexplore.ieee.org/document/9922200
+TME Motorway,2012,real,https://ieeexplore.ieee.org/document/6338603
+Toronto-3D,2020,real,https://arxiv.org/abs/2003.08284
+TRANCOS,2015,real,https://link.springer.com/chapter/10.1007/978-3-319-19390-8_33
+TRoM,2017,real,https://ieeexplore.ieee.org/document/8317925
+TUD-Brussels,2009,real,https://data.vision.ee.ethz.ch/cvl/aess/dataset/
+TuSimple,2017,real,https://github.com/TuSimple/tusimple-benchmark
+Ua-detrac,2015,real,https://arxiv.org/abs/1511.04136
+UAH-Driveset,2016,real,https://www.robesafe.uah.es/personal/eduardo.romera/uah-driveset/
+UNDD,2019,real,https://ieeexplore.ieee.org/document/8803566
+V2X-Real,2024,real,https://arxiv.org/abs/2403.16034
+V2X-Seq (perception),2023,real,https://arxiv.org/abs/2305.05938
+VEIS,2018,synthetic,https://openaccess.thecvf.com/content_ECCV_2018/html/Fatemeh_Sadieh_Saleh_Effective_Use_of_ECCV_2018_paper.html
+VERI-Wild,2019,real,https://openaccess.thecvf.com/content_CVPR_2019/html/Lou_VERI-Wild_A_Large_Dataset_and_a_New_Method_for_Vehicle_Re-Identification_CVPR_2019_paper.html
+VIL-100,2021,real,https://openaccess.thecvf.com/content/ICCV2021/html/Zhang_VIL-100_A_New_Dataset_and_a_Baseline_Model_for_Video_Instance_ICCV_2021_paper.html
+VLMV,2020,real,https://ieeexplore.ieee.org/document/9412815
+WADS,2021,real,https://arxiv.org/abs/2109.07078
+WIBAM,2021,real,https://arxiv.org/abs/2110.10966
+ZOD,2023,real,https://arxiv.org/abs/2304.12160
