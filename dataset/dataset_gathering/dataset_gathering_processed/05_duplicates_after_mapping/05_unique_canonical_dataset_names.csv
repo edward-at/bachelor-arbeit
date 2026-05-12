@@ -1,0 +1,279 @@
+﻿canonical_dataset,row_count,original_name_variants,source_files
+4Seasons,2,4Seasons,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+A*3D,3,A*3D,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+A2D2,2,A2D2,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ OpenDrive.csv
+Aachen Day-Night,1,Aachen Day-Night,Dataset Gathering - ADD Survey.csv
+ACDC,1,ACDC,Dataset Gathering - ADD Survey.csv
+aiMotive,1,aiMotive,Dataset Gathering - ADD Survey.csv
+AIODrive,2,AIODrive,Dataset Gathering - ADD Review.csv | Dataset Gathering - Synthetic Survey.csv
+All-in-One Drive,1,All-in-One Drive,Dataset Gathering - ADD Survey.csv
+Amodal Cityscapes,1,Amodal Cityscapes,Dataset Gathering - ADD Survey.csv
+AMUSE,2,AMUSE,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+ApolloCar3D,1,ApolloCar3D,Dataset Gathering - ADD Survey.csv
+ApolloScape,5,Apollo | Apollo Open Platform | ApolloScape,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Prediction.csv
+Apolloscape,1,Apolloscape,Dataset Gathering - Additional_ OpenDrive.csv
+Argoverse,2,Argoverse,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Argoverse 1,2,Argoverse V1 | Argoverse 1,Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Prediction.csv
+Argoverse 2,2,Argoverse V2 | Argoverse 2,Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Prediction.csv
+ASAP,1,ASAP,Dataset Gathering - ADD Survey.csv
+Astyx,1,Astyx,Dataset Gathering - ADD Survey.csv
+AUTOCASTSIM,1,AUTOCASTSIM,Dataset Gathering - ADD Survey.csv
+BAAI-VANJEE,2,BAAI-VANJEE,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+BDD-X,1,BDD-X,Dataset Gathering - Additional_ OpenDrive.csv
+BDD100k,1,BDD100k,Dataset Gathering - Lane Detection.csv
+BDD100K,3,BDD00K | BDD100K | Berkeley DeepDrive,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Belgium Traffic Sign,2,BelgiumTS | Belgium Traffic Sign,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+BLVD,1,BLVD,Dataset Gathering - ADD Review.csv
+Boreas,1,Boreas,Dataset Gathering - ADD Survey.csv
+Bosch Small Traffic Lights,2,Bosch STL | Bosch Small Traffic Lights,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Boxy,2,Boxy,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Brain4Cars,1,Brain4Cars,Dataset Gathering - Additional_ AD Virtual Test.csv
+Brno Urban,2,Brno Urban | Brno-Urban,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+CADC,1,CADC,Dataset Gathering - ADD Survey.csv
+CADP,1,CADP,Dataset Gathering - ADD Survey.csv
+Caltech Lane,3,Caltech | Caltech Lanes | Caltech Lane,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv | Dataset Gathering - Lane Detection.csv
+Caltech Pedestria,1,Caltech Pedestria,Dataset Gathering - Additional_ AD Virtual Test.csv
+CamVid,2,CamVid,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+CARLA-100,1,CARLA-100,Dataset Gathering - ADD Survey.csv
+CARLA-WildLife,1,CARLA-WildLife,Dataset Gathering - ADD Survey.csv
+CARLANE,3,CARLANE,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv | Dataset Gathering - Lane Detection.csv
+CarlaScenes,2,CarlaScenes,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Synthetic Survey.csv
+CARRADA,2,CARRADA,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+CARTI,1,CARTI,Dataset Gathering - ADD Survey.csv
+CCD,1,CCD,Dataset Gathering - ADD Survey.csv
+CCSAD,2,CCSAD,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+CCTSDB 2021,1,CCTSDB 2021,Dataset Gathering - ADD Survey.csv
+CeyMo,1,CeyMo,Dataset Gathering - ADD Survey.csv
+Cheddar Gorge,1,Cheddar Gorge,Dataset Gathering - Additional_ AD Virtual Test.csv
+Cirrus,1,Cirrus,Dataset Gathering - ADD Survey.csv
+CityFlow,1,CityFlow,Dataset Gathering - ADD Survey.csv
+CityScapes,3,CityScape | CityScapes | Cityscapes,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Additional_ OpenDrive.csv
+CMU,1,CMU,Dataset Gathering - Additional_ AD Virtual Test.csv
+CODA,1,CODA,Dataset Gathering - ADD Survey.csv
+CODD,1,CODD,Dataset Gathering - ADD Survey.csv
+COMAP,1,Comap,Dataset Gathering - ADD Survey.csv
+Comma.ai,1,Comma.ai,Dataset Gathering - Additional_ AD Virtual Test.csv
+Comma2k19,1,Comma2k19,Dataset Gathering - Additional_ AD Virtual Test.csv
+comma2k19,4,comma 2k19 | Comma-LD | comma2k19 | Comma2k19LD,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv | Dataset Gathering - Lane Detection.csv
+Complex Urban,1,Complex Urban,Dataset Gathering - ADD Survey.csv
+CPIS,1,CPIS,Dataset Gathering - ADD Survey.csv
+CrashD,1,CrashD,Dataset Gathering - ADD Survey.csv
+CU-LiDAR,1,CU-LiDAR,Dataset Gathering - ADD Review.csv
+CULane,4,CULane,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Lane Detection.csv
+CURE-TSR,2,CURE-TSR,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv
+CurveLanes,3,CurveLanes,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Lane Detection.csv
+D2-City,2,D2-City,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv
+DA4AD,1,DA4AD,Dataset Gathering - ADD Survey.csv
+Daimler Pedestrian,5,Daimler Ped | Daimler Stereo Ped | Daimler Pedestrian | Daimler Urban | Daimler,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Prediction.csv
+DAIR-V2X-C,2,DAIR-V2X-C,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+DAVIS,1,DAVIS,Dataset Gathering - Additional_ AD Virtual Test.csv
+DAWN,1,DAWN,Dataset Gathering - Additional_ OpenDrive.csv
+DBNet,1,DBNet,Dataset Gathering - Additional_ AD Virtual Test.csv
+DDAD,1,DDAD,Dataset Gathering - ADD Survey.csv
+DDD17,1,DDD17,Dataset Gathering - Additional_ OpenDrive.csv
+DDD20,1,DDD20,Dataset Gathering - ADD Survey.csv
+DeepAccident,2,DeepAccident,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+DET,3,DET,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv | Dataset Gathering - Lane Detection.csv
+DGL-MOTS,1,DGL-MOTS,Dataset Gathering - ADD Review.csv
+DIML,2,DIML,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Lane Detection.csv
+DIPLECS,1,DIPLECS,Dataset Gathering - Additional_ AD Virtual Test.csv
+DOLPHINS,2,DOLPHINS,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+Dr(eye)ve,1,Dr(eye)ve,Dataset Gathering - Additional_ AD Virtual Test.csv
+DRIV100,1,DRIV100,Dataset Gathering - ADD Survey.csv
+DriveLM,1,DriveLM,Dataset Gathering - Additional_ OpenDrive.csv
+DriveSeg,2,DriveSeg | MIT DriveSeg,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv
+DrivingStereo,1,DrivingStereo,Dataset Gathering - Additional_ OpenDrive.csv
+DSDLDE,1,DSDLDE,Dataset Gathering - Lane Detection.csv
+DurLAR,1,DurLAR,Dataset Gathering - ADD Survey.csv
+EISATS,1,EISATS,Dataset Gathering - Additional_ AD Virtual Test.csv
+ELAS,1,ELAS,Dataset Gathering - Lane Detection.csv
+Elektra,1,Elektra,Dataset Gathering - Additional_ AD Virtual Test.csv
+ETH Pedestrian,2,ETH Ped | ETH Pedestrian,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+EU LTD,1,EU LTD,Dataset Gathering - ADD Survey.csv
+EuroCity Persons,2,EuroCity Persons | ECP,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Fishyscapes,1,Fishyscapes,Dataset Gathering - ADD Survey.csv
+FLIR,2,FLIR,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Flying Things,1,Flying Things,Dataset Gathering - Synthetic Survey.csv
+Foggy Cityscapes,1,Foggy Cityscapes,Dataset Gathering - Synthetic Survey.csv
+Ford Multi-AV Seasonal Dataset,2,Ford Multi-AV Seasonal Dataset | Ford,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+FRIDA,1,FRIDA,Dataset Gathering - Synthetic Survey.csv
+Fusion Lane,1,Fusion Lane,Dataset Gathering - Lane Detection.csv
+Gated2Depth,1,Gated2Depth,Dataset Gathering - ADD Survey.csv
+Gen-LaneNet,5,Gen-LaneNet | 3D-LaneNet | 3D Synthetic | 3D Lanes,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Lane Detection.csv
+German Traffic Sign,1,German Traffic Sign,Dataset Gathering - Additional_ AD Virtual Test.csv
+GIDA,1,GIDA,Dataset Gathering - Additional_ AD Virtual Test.csv
+GLARE,1,GLARE,Dataset Gathering - ADD Survey.csv
+Ground Truth SitXel,1,Ground Truth SitXel,Dataset Gathering - ADD Survey.csv
+GTA-V dataset,2,GTA-V | GTA-V dataset,Dataset Gathering - ADD Review.csv | Dataset Gathering - Synthetic Survey.csv
+H3D,3,H3D,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+HAD,1,HAD,Dataset Gathering - ADD Survey.csv
+HCI Challenging Stereo,1,HCI Challenging Stereo,Dataset Gathering - Additional_ AD Virtual Test.csv
+HDD,1,HDD,Dataset Gathering - Additional_ OpenDrive.csv
+HDIK,1,HDIK,Dataset Gathering - Additional_ AD Virtual Test.csv
+HEV,1,HEV,Dataset Gathering - ADD Survey.csv
+HighD,1,HighD,Dataset Gathering - Additional_ AD Virtual Test.csv
+Highway Driving,2,Highway Driving | HighWay Workzones,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+I see you,1,I see you,Dataset Gathering - ADD Survey.csv
+IDD,3,IDD,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Additional_ OpenDrive.csv
+IDDA,3,IDDA,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv | Dataset Gathering - Synthetic Survey.csv
+Interaction,1,Interaction,Dataset Gathering - Additional_ AD Virtual Test.csv
+IPS300+,2,IPS300+,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+IPS3000+,1,IPS3000+,Dataset Gathering - ADD Survey.csv
+Ithaca365,1,Ithaca365,Dataset Gathering - ADD Survey.csv
+JAAD,1,JAAD,Dataset Gathering - Additional_ AD Virtual Test.csv
+Jiqing Expressway,1,Jiqing Expressway,Dataset Gathering - Lane Detection.csv
+K-Lane,2,K-Lane,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Lane Detection.csv
+K-Radar,1,K-Radar,Dataset Gathering - ADD Survey.csv
+KAIST Multi-Spectral,2,KAIST MPD | KAIST Multi-Spectral,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+KAIST Urban,1,KAIST Urban,Dataset Gathering - Additional_ AD Virtual Test.csv
+Karlsruhe Labeled Objects,1,Karlsruhe Labeled Objects,Dataset Gathering - Additional_ AD Virtual Test.csv
+Karlsruhe Stereo,1,Karlsruhe Stereo,Dataset Gathering - Additional_ AD Virtual Test.csv
+KITTI,4,KITTI,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Prediction.csv
+KITTI InstanceMotSeg,1,KITTI InstanceMotSeg,Dataset Gathering - ADD Survey.csv
+KITTI Road,1,KITTI Road,Dataset Gathering - Lane Detection.csv
+KITTI-360,1,KITTI-360,Dataset Gathering - Additional_ OpenDrive.csv
+Ko-PER,1,Ko-PER,Dataset Gathering - Prediction.csv
+LaneISUE,1,LaneISUE,Dataset Gathering - ADD Review.csv
+LanEvil,1,LanEvil,Dataset Gathering - Lane Detection.csv
+LIBRE,1,LIBRE,Dataset Gathering - ADD Survey.csv
+LiDAR Snowfall,1,LiDAR Snowfall,Dataset Gathering - ADD Survey.csv
+LiDAR-CS,1,LiDAR-CS,Dataset Gathering - Additional_ OpenDrive.csv
+LISA,1,LISA,Dataset Gathering - ADD Survey.csv
+LISA Traffic Sign,1,LISA Traffic Sign,Dataset Gathering - Additional_ AD Virtual Test.csv
+LiVi-Set,1,LiVi-Set,Dataset Gathering - ADD Survey.csv
+LIVOX,1,LIVOX,Dataset Gathering - ADD Review.csv
+LLAMAS,2,LLAMAS,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+Llamas,3,Llamas,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Lane Detection.csv
+Lost and Found,3,LostAndFound | Lost & Found | Lost and Found,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Additional_ OpenDrive.csv
+LUCOOP,2,LUCOOP,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+Lyft Level 5,3,Lyft-Pre | Lyft-L5 | Lyft Level 5,Dataset Gathering - ADD Review.csv | Dataset Gathering - Prediction.csv
+Malaga,2,Malaga,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Mapillary Traffic Sign,2,Mapillary,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ OpenDrive.csv
+Mapillary Vistas,1,Mapillary Vistas,Dataset Gathering - Additional_ AD Virtual Test.csv
+MAVD,1,MAVD,Dataset Gathering - ADD Survey.csv
+Mcity,1,Mcity,Dataset Gathering - ADD Survey.csv
+METEOR,2,METEOR,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ OpenDrive.csv
+Michigan north campus,1,Michigan north campus,Dataset Gathering - ADD Review.csv
+MIT-AVT,1,MIT-AVT,Dataset Gathering - ADD Survey.csv
+MOTSynth,2,MOTS | MOTSynth,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv
+MPI Sintel,1,MPI Sintel,Dataset Gathering - Synthetic Survey.csv
+MSLU,1,MSLU,Dataset Gathering - ADD Survey.csv
+MUAD,2,MUAD,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+MulRan,1,MulRan,Dataset Gathering - ADD Survey.csv
+Multifog KITTI,1,Multifog KITTI,Dataset Gathering - ADD Survey.csv
+NCLT,1,NCLT,Dataset Gathering - ADD Survey.csv
+NEOLIX,1,NEOLIX,Dataset Gathering - ADD Survey.csv
+NEXET,2,NEXET,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+NGSIM,1,NGSIM,Dataset Gathering - Additional_ AD Virtual Test.csv
+NightCity,1,NightCity,Dataset Gathering - ADD Survey.csv
+NightOwls,2,NightOwis | NightOwls,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+nighttime drive,1,nighttime drive,Dataset Gathering - ADD Survey.csv
+nuPlan,1,nuPlan,Dataset Gathering - Additional_ OpenDrive.csv
+nuScenes,4,nuScenes,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Prediction.csv
+NYC3DCars,1,NYC3DCars,Dataset Gathering - ADD Survey.csv
+ONCE,2,ONCE,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ OpenDrive.csv
+ONCE-3DLanes,3,ONCE-3DLanes | ONCE-3DLane,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Lane Detection.csv
+Open Dense Lane,1,Open Dense Lane,Dataset Gathering - Lane Detection.csv
+OpenLane,3,OpenLane | OpenLane-V1,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Lane Detection.csv
+OpenLane-V2,2,OpenLane-V2,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+OpenMPD,1,OpenMPD,Dataset Gathering - ADD Survey.csv
+OpenScene,1,OpenScene,Dataset Gathering - Additional_ OpenDrive.csv
+OPV2V,5,OPV2V,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv | Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv | Dataset Gathering - Synthetic Survey.csv
+Oxford Radar RobotCar,1,Oxford Radar RobotCar,Dataset Gathering - ADD Survey.csv
+Oxford RobotCar,2,Oxford | Oxford RobotCar,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+PandaSet,3,PandaSet,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+ParallelEye,1,ParallelEye,Dataset Gathering - Synthetic Survey.csv
+Paris-Lille-3D,1,Paris-Lille-3D,Dataset Gathering - ADD Survey.csv
+Paris-rue-Madame,1,Paris-rue-Madame,Dataset Gathering - ADD Survey.csv
+PedX,1,PedX,Dataset Gathering - ADD Survey.csv
+PePScenes,1,PePScenes,Dataset Gathering - ADD Survey.csv
+PerSIL,1,PerSIL,Dataset Gathering - Synthetic Survey.csv
+PfBench,1,PfBench,Dataset Gathering - ADD Review.csv
+PIE,2,PIE,Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Prediction.csv
+PixSet,1,PixSet,Dataset Gathering - ADD Survey.csv
+PreSIL,2,PreSIL,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv
+PREVENTION,1,PREVENTION,Dataset Gathering - Lane Detection.csv
+PVDN,1,PVDN,Dataset Gathering - ADD Survey.csv
+R3,1,R3,Dataset Gathering - ADD Survey.csv
+RadarScenes,1,RadarScenes,Dataset Gathering - ADD Survey.csv
+RaidaR,1,RaidaR,Dataset Gathering - ADD Survey.csv
+RANUS,1,RANUS,Dataset Gathering - ADD Survey.csv
+RCooper,3,RCooper,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+Reasonable Crowd,2,Reasonable-Crowd | Reasonable Crowd,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+ROAD,2,ROAD,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+Road Damage,1,Road Damage,Dataset Gathering - Additional_ AD Virtual Test.csv
+RoadObstacle21,1,RoadObstacle21,Dataset Gathering - ADD Survey.csv
+RoadSaW,1,RoadSaW,Dataset Gathering - ADD Survey.csv
+RoadSC,1,RoadSC,Dataset Gathering - ADD Survey.csv
+Robo3D,1,Robo3D,Dataset Gathering - ADD Survey.csv
+Rope3D,2,Rope3D,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+SDLane,2,SDLane,Dataset Gathering - ADD Review.csv | Dataset Gathering - Lane Detection.csv
+SemanticKITTI,2,SemanticKITTI,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ OpenDrive.csv
+SemanticPOSS,2,SemanticPOSS,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+SemanticUSL,1,SemanticUSL,Dataset Gathering - ADD Survey.csv
+SHIFT,2,SHIFT,Dataset Gathering - ADD Review.csv | Dataset Gathering - Synthetic Survey.csv
+SimuLanes,1,SimuLanes,Dataset Gathering - Lane Detection.csv
+Small Obstacles,1,Small Obstacles,Dataset Gathering - ADD Survey.csv
+SODA10M,2,SODA10M,Dataset Gathering - ADD Review.csv | Dataset Gathering - ADD Survey.csv
+SOS,1,SOS,Dataset Gathering - ADD Survey.csv
+SSCBENCH,1,SSCBENCH,Dataset Gathering - ADD Survey.csv
+Stanford Track,2,Stanford Tack | Stanford Track,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Stixel,1,Stixel,Dataset Gathering - Additional_ AD Virtual Test.csv
+StreetLearn,1,StreetLearn,Dataset Gathering - Additional_ AD Virtual Test.csv
+SUPS,1,SUPS,Dataset Gathering - ADD Survey.csv
+Sydney Urban,2,SydneyUrbanObject | Sydney Urban,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Syncapes,1,Syncapes,Dataset Gathering - ADD Survey.csv
+SynthCity,1,SynthCity,Dataset Gathering - ADD Survey.csv
+SYNTHIA,3,SYNTHIA,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Synthetic Survey.csv
+SynWoodScape,1,SynWoodScape,Dataset Gathering - ADD Survey.csv
+TAF-BW,1,TAF-BW,Dataset Gathering - ADD Survey.csv
+Talk2Car,1,Talk2Car,Dataset Gathering - Additional_ OpenDrive.csv
+Talk2Nav,1,Talk2Nav,Dataset Gathering - Additional_ OpenDrive.csv
+TAS-NIR,1,TAS-NIR,Dataset Gathering - Additional_ OpenDrive.csv
+Titan,1,Titan,Dataset Gathering - ADD Survey.csv
+TITAN,1,TITAN,Dataset Gathering - Additional_ OpenDrive.csv
+TJ4RadSet,1,TJ4RadSet,Dataset Gathering - ADD Survey.csv
+TME Motorway,2,TME Motorway,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Toronto-3D,2,Toronto-3D,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+TrafficNet,1,TrafficNet,Dataset Gathering - Additional_ AD Virtual Test.csv
+TRANCOS,1,TRANCOS,Dataset Gathering - ADD Survey.csv
+TRoM,2,TRoM,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+TTLane,1,TTLane,Dataset Gathering - Lane Detection.csv
+TUD Brussels Pedestrian,2,TUD-Brussels | TUD Brussels Pedestrian,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+TUM City,1,TUM City,Dataset Gathering - Additional_ AD Virtual Test.csv
+TUMTraf-I,2,TUMTraf-I,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+TUMTraf-V2X,1,TUMTraf-V2X,Dataset Gathering - Perception Review.csv
+TumTraf-V2X,1,TumTraf-V2X,Dataset Gathering - Perception Survey.csv
+TuSimple,3,TuSimple,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Lane Detection.csv
+TUsimple,1,TUsimple,Dataset Gathering - Additional_ OpenDrive.csv
+TUSimple,1,TUSimple,Dataset Gathering - ADD Review.csv
+UA-DETRAC,1,Ua-detrac,Dataset Gathering - ADD Survey.csv
+UAH-Driveset,2,UAH-Driveset | UAH,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ AD Virtual Test.csv
+Udacity,1,Udacity,Dataset Gathering - Additional_ AD Virtual Test.csv
+UNDD,2,UNDD,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
+UrbanLoco,1,UrbanLoco,Dataset Gathering - Additional_ OpenDrive.csv
+UTBM,1,UTBM,Dataset Gathering - ADD Review.csv
+UTBM Robotcar,1,UTBM Robotcar,Dataset Gathering - Additional_ AD Virtual Test.csv
+V2V4Real,2,V2V4Real,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+V2X-Real,1,V2X-Real,Dataset Gathering - ADD Survey.csv
+V2X-Seq,1,V2X-Seq,Dataset Gathering - Perception Review.csv
+V2X-Seq (perception),1,V2X-Seq (perception),Dataset Gathering - ADD Survey.csv
+V2X-Seq(SPD),1,V2X-Seq(SPD),Dataset Gathering - Perception Survey.csv
+V2X-Sim 1.0,4,Sim-V2X | V2X Sim 1.0 | V2X-Sim 1.0 | V2X-Sim,Dataset Gathering - ADD Review.csv | Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv | Dataset Gathering - Synthetic Survey.csv
+V2X-Sim 2.0,2,V2X Sim 2.0 | V2X-Sim 2.0,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+V2XSet,2,V2XSet,Dataset Gathering - Perception Review.csv | Dataset Gathering - Perception Survey.csv
+VEIS,2,VEIS,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Synthetic Survey.csv
+VERI-Wild,1,VERI-Wild,Dataset Gathering - ADD Survey.csv
+VIL-100,3,VIL-100 | VIL100,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Lane Detection.csv
+VIPER,1,VIPER,Dataset Gathering - Synthetic Survey.csv
+Virtual KITTI,2,Virtual KITTI | VKITTI,Dataset Gathering - ADD Review.csv | Dataset Gathering - Synthetic Survey.csv
+VKITTI2,1,VKITTI2,Dataset Gathering - Synthetic Survey.csv
+VLMV,1,VLMV,Dataset Gathering - ADD Survey.csv
+VPG,1,VPG,Dataset Gathering - Additional_ OpenDrive.csv
+VPGNet,2,VPGNet,Dataset Gathering - ADD Review.csv | Dataset Gathering - Lane Detection.csv
+WADS,1,WADS,Dataset Gathering - ADD Survey.csv
+Waymo,4,Waymo,Dataset Gathering - ADD Review.csv | Dataset Gathering - Additional_ AD Virtual Test.csv | Dataset Gathering - Additional_ OpenDrive.csv | Dataset Gathering - Prediction.csv
+WIBAM,1,WIBAM,Dataset Gathering - ADD Survey.csv
+WildDash,1,WildDash,Dataset Gathering - Additional_ OpenDrive.csv
+Woodscape,1,Woodscape,Dataset Gathering - Additional_ OpenDrive.csv
+ZOD,2,ZOD,Dataset Gathering - ADD Survey.csv | Dataset Gathering - Additional_ OpenDrive.csv
