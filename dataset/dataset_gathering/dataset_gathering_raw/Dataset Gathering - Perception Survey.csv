@@ -1,19 +1,17 @@
-,,,
-,,,
-,Dataset,Year,Real/Synthetic
-,BAAI-VANJEE,2021,Real
-,IPS300+,2021,Real
-,Rope3D,2022,Real
-,TUMTraf-I,2023,Real
-,RCooper,2024,Real
-,V2X-Sim 1.0,2022,Sim
-,V2X-Sim 2.0,2022,Sim
-,OPV2V,2022,Sim
-,DAIR-V2X-C,2022,Real
-,V2XSet,2022,Sim
-,DOLPHINS,2023,Sim
-,LUCOOP,2023,Real
-,V2V4Real,2023,Real
-,V2X-Seq(SPD),2023,Real
-,DeepAccident,2023,Sim
-,TumTraf-V2X,2024,Real
+Dataset,Year,Real/Synthetic
+BAAI-VANJEE,2021,Real
+IPS300+,2021,Real
+Rope3D,2022,Real
+TUMTraf-I,2023,Real
+RCooper,2024,Real
+V2X-Sim 1.0,2022,Sim
+V2X-Sim 2.0,2022,Sim
+OPV2V,2022,Sim
+DAIR-V2X-C,2022,Real
+V2XSet,2022,Sim
+DOLPHINS,2023,Sim
+LUCOOP,2023,Real
+V2V4Real,2023,Real
+V2X-Seq(SPD),2023,Real
+DeepAccident,2023,Sim
+TumTraf-V2X,2024,Real
