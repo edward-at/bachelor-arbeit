@@ -42,7 +42,7 @@ ax.xaxis.set_major_locator(mticker.MultipleLocator(1))
 plt.xticks(rotation=45, ha='right', fontsize=9)
 
 plt.tight_layout()
-out = os.path.join(BASE_DIR, 'figures', 'chart_01d_total_stacked.png')
+out = os.path.join(BASE_DIR, 'figures', '01d_data_to_year_total.png')
 plt.savefig(out, dpi=150, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out}')
