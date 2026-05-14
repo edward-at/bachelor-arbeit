@@ -10,7 +10,7 @@ df = pd.read_csv(os.path.join(BASE_DIR, 'dataset_cleaned.csv'))
 type_map = {0: 'Real', 1: 'Synthetic', 2: 'Mixed'}
 df['Type'] = df['Real / Synthetic / Mixed'].map(type_map)
 
-years = range(2006, 2027)
+years = range(df['Year'].min(), df['Year'].max()+1)
 
 counts = (df.groupby(['Year', 'Type'])
             .size()
@@ -53,7 +53,7 @@ plt.xticks(rotation=45, ha='right', fontsize=9)
 plt.tight_layout()
 
 # ── Save ──────────────────────────────────────────────────────────────────────
-out = os.path.join(BASE_DIR, 'figures', '02_cumulative_datasets.png')
+out = os.path.join(BASE_DIR, 'total_dataset_analysis_figures', '02_cumulative_datasets.png')
 plt.savefig(out, dpi=150, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out}')
