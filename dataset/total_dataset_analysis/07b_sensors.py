@@ -15,7 +15,7 @@ filtered = df[
 sensor_cols = ['LiDAR', 'Radar', 'IMU', 'GPS_GNSS']
 counts = filtered[sensor_cols].sum().sort_values(ascending=True)
 
-fig, ax = plt.subplots(figsize=(10, 4))
+fig, ax = plt.subplots(figsize=(10, 5))
 ax.barh(counts.index, counts.values, edgecolor='black')
 ax.set_title('Number of Datasets Using Each Sensor Type\n(Real + Original + Extension only)')
 ax.set_xlabel('Number of Datasets')

@@ -15,7 +15,7 @@ filtered = df[
 camera_cols = ['Monocular Camera', 'Stereo Camera', 'Fisheye Camera', 'Event Camera', 'Thermal Camera']
 counts = filtered[camera_cols].sum().sort_values(ascending=True)
 
-fig, ax = plt.subplots(figsize=(10, 5))
+fig, ax = plt.subplots(figsize=(10, 6))
 ax.barh(counts.index, counts.values, edgecolor='black')
 ax.set_title('Number of Datasets Using Each Camera Type\n(Real + Original + Extension only)')
 ax.set_xlabel('Number of Datasets')
