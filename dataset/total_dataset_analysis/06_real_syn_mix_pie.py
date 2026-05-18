@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from tum_colors import TUM_SECONDARY
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'dataset_cleaned.csv'))
@@ -11,7 +13,9 @@ sizes = [counts.get(k, 0) for k in [0, 1, 2]]
 names = [labels[k] for k in [0, 1, 2]]
 
 plt.figure()
-plt.pie(sizes, labels=names, autopct='%1.1f%%', wedgeprops={'edgecolor': 'black'})
+plt.pie(sizes, labels=names, autopct='%1.1f%%',
+        colors=[TUM_SECONDARY['blue2'], TUM_SECONDARY['gray'], TUM_SECONDARY['light_gray']],
+        wedgeprops={'edgecolor': 'black'})
 plt.title('Real / Synthetic / Mixed Datasets')
 plt.tight_layout()
 
