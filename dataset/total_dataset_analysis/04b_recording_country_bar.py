@@ -1,12 +1,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import os, sys
 from collections import defaultdict
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from tum_colors import TUM_SECONDARY
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'dataset_cleaned.csv'))
 
-# ── All datasets (Real + Synthetic + Mixed) for bar chart ────────────────────
 REMOVE = {'Multiple', 'Europe', 'Global'}
 REMAP  = {'North America': 'USA', 'UK': 'United Kingdom'}
 
@@ -24,12 +25,11 @@ for val in df['Recording Country'].dropna():
     for country in parts:
         country_counts[country] += share
 
-# ── Sort descending ───────────────────────────────────────────────────────────
 sorted_counts = sorted(country_counts.items(), key=lambda x: x[1], reverse=True)
 countries, values = zip(*sorted_counts)
 
 fig, ax = plt.subplots(figsize=(10, len(countries) * 0.35 + 1))
-ax.barh(list(reversed(countries)), list(reversed(values)), edgecolor='black')
+ax.barh(list(reversed(countries)), list(reversed(values)), color=TUM_SECONDARY['blue2'], edgecolor='black')
 ax.set_title('Number of Datasets per Recording Country')
 ax.set_xlabel('Number of Datasets')
 ax.grid(True)
