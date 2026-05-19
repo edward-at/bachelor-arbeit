@@ -12,10 +12,18 @@ labels = {0: 'Real', 1: 'Synthetic', 2: 'Mixed'}
 sizes = [counts.get(k, 0) for k in [0, 1, 2]]
 names = [labels[k] for k in [0, 1, 2]]
 
+DARK_COLORS = {TUM_SECONDARY['blue1'], TUM_SECONDARY['blue2']}
+pie_colors = [TUM_SECONDARY['blue2'], TUM_SECONDARY['gray'], TUM_SECONDARY['light_gray'], TUM_SECONDARY['blue1']]  # adjust per chart
+
 plt.figure()
-plt.pie(sizes, labels=names, autopct='%1.1f%%',
-        colors=[TUM_SECONDARY['blue2'], TUM_SECONDARY['gray'], TUM_SECONDARY['light_gray']],
-        wedgeprops={'edgecolor': 'black'})
+wedges, texts, autotexts = plt.pie(sizes, labels=names, autopct='%1.1f%%',
+                                    colors=pie_colors,
+                                    wedgeprops={'edgecolor': 'black'})
+for i, autotext in enumerate(autotexts):
+    if pie_colors[i] in DARK_COLORS:
+        autotext.set_color('white')
+    else:
+        autotext.set_color('black')
 plt.title('Real / Synthetic / Mixed Datasets')
 plt.tight_layout()
 
@@ -23,3 +31,4 @@ out = os.path.join(BASE_DIR, 'total_dataset_analysis_figures', '06_pie_real_synt
 plt.savefig(out, dpi=150, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out}')
+

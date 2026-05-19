@@ -1,11 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from tum_colors import TUM_SECONDARY
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'dataset_cleaned.csv'))
 
-# Filter: Real (0) + Original (0) + Extension (2) only
 filtered = df[
     (df['Real / Synthetic / Mixed'] == 0) &
     (df['Original / Derived / Extension / Aggregated'].isin([0, 2]))
@@ -15,7 +16,7 @@ veh_cols = ['Ego-motion IMU / INS', 'CAN Bus / Vehicle Odometry', 'Ego Pose / Tr
 counts = filtered[veh_cols].sum().sort_values(ascending=True)
 
 fig, ax = plt.subplots(figsize=(10, 4))
-ax.barh(counts.index, counts.values, edgecolor='black')
+ax.barh(counts.index, counts.values, color=TUM_SECONDARY['blue2'], edgecolor='black')
 ax.set_title('Number of Datasets with Each Vehicle Information Type\n(Real + Original + Extension only)')
 ax.set_xlabel('Number of Datasets')
 ax.grid(True)
