@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import os, sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from tum_colors import TUM_SECONDARY
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'filtered_dataset_cleaned.csv'))
@@ -8,7 +10,7 @@ df = pd.read_csv(os.path.join(BASE_DIR, 'filtered_dataset_cleaned.csv'))
 counts = df['lidar'].value_counts().sort_index()
 
 plt.figure(figsize=(5, 6))
-plt.bar(counts.index, counts.values, edgecolor='black')
+plt.bar(counts.index, counts.values, edgecolor='black', color=TUM_SECONDARY['blue2'])
 plt.title('Number of LiDARs per Dataset')
 plt.xlabel('Number of LiDARs')
 plt.ylabel('Number of Datasets')

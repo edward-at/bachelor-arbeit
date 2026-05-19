@@ -1,13 +1,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import os, sys
 from collections import Counter
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
+from tum_colors import TUM_SECONDARY
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'filtered_dataset_cleaned.csv'))
 
-# Count how many datasets include each weather type
-# Unknown entries are excluded
 weather_counts = Counter()
 for val in df['weather'].dropna():
     if val == 'Unknown':
@@ -15,11 +15,10 @@ for val in df['weather'].dropna():
     for w in val.split(';'):
         weather_counts[w.strip()] += 1
 
-# Sort ascending for horizontal bar
 sorted_counts = dict(sorted(weather_counts.items(), key=lambda x: x[1]))
 
 plt.figure(figsize=(10, 5))
-plt.barh(list(sorted_counts.keys()), list(sorted_counts.values()), edgecolor='black')
+plt.barh(list(sorted_counts.keys()), list(sorted_counts.values()), edgecolor='black', color=TUM_SECONDARY['blue2'])
 plt.title('Number of Datasets per Weather Condition')
 plt.xlabel('Number of Datasets')
 plt.grid(True)
