@@ -6,14 +6,13 @@ from tum_colors import TUM_SECONDARY
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'filtered_dataset_cleaned.csv'))
-df_sorted = df[['dataset', 'citation']].dropna().sort_values('citation')
+df_sorted = df[['dataset', 'Citation']].dropna().sort_values('Citation')
 
-# Exclude top 4 dominant datasets for readability
 EXCLUDE = {'KITTI', 'nuScenes', 'Waymo Open Dataset', 'BDD100K (Berkley Deep Drive 100k)', 'Oxford RobotCar', 'KITTI-360'}
 df_zoom = df_sorted[~df_sorted['dataset'].isin(EXCLUDE)]
 
 plt.figure(figsize=(15, 10))
-plt.barh(df_zoom['dataset'], df_zoom['citation'],
+plt.barh(df_zoom['dataset'], df_zoom['Citation'],
          edgecolor='black', color=TUM_SECONDARY['blue2'])
 plt.xlim(0, 700)
 plt.title('Citation Count per Dataset (Excluding Top 6, Zoomed 0–700)')

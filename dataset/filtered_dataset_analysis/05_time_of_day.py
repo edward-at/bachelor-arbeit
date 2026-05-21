@@ -7,7 +7,7 @@ from tum_colors import TUM_SECONDARY
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'filtered_dataset_cleaned.csv'))
 
-counts = df['time_of_day'].value_counts()
+counts = df['totd'].value_counts()
 label_map = {'Day': 'Day', 'Day; Night': 'Day & Night'}
 labels = [label_map.get(l, l) for l in counts.index]
 pie_colors = [TUM_SECONDARY['blue2'], TUM_SECONDARY['light_gray']]

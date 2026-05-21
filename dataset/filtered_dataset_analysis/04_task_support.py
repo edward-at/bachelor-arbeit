@@ -8,15 +8,15 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'filtered_dataset_cleaned.csv'))
 
 task_cols = {
-    'object_detection':       'Object Detection',
-    'multi_object_tracking':  'Multi-Object Tracking',
-    'segmentation':           'Segmentation',
-    'depth_estimation':       'Depth Estimation',
-    'odometry_slam':          'Odometry / SLAM',
-    'prediction':             'Motion / Trajectory Prediction',
-    'planning':               'Planning',
-    'mapping':                'HD / Online Mapping',
-    'lane_detection':         'Lane Detection',
+    'Object Detection (2D / 3D)':                                      'Object Detection',
+    'Multi-Object Tracking (2D / 3D)':                                 'Multi-Object Tracking',
+    'Segmentation (Semantic / Instance / Panoptic / 3D Point Cloud)':  'Segmentation',
+    'Depth Estimation':                                                 'Depth Estimation',
+    'Odometry /SLAM':                                                   'Odometry / SLAM',
+    'Motion / Trajectory Prediction':                                   'Motion Prediction',
+    'Planning (Behavior / Motion)':                                     'Planning',
+    'HD / Online Mapping':                                              'HD / Online Mapping',
+    'Lane Detection':                                                   'Lane Detection',
 }
 
 counts = {label: df[col].sum() for col, label in task_cols.items()}

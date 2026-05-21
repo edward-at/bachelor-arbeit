@@ -6,10 +6,10 @@ from tum_colors import TUM_SECONDARY
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'filtered_dataset_cleaned.csv'))
-df_sorted = df[['dataset', 'citation']].dropna().sort_values('citation')
+df_sorted = df[['dataset', 'Citation']].dropna().sort_values('Citation')
 
 plt.figure(figsize=(15, 10))
-plt.barh(df_sorted['dataset'], df_sorted['citation'],
+plt.barh(df_sorted['dataset'], df_sorted['Citation'],
          edgecolor='black', color=TUM_SECONDARY['blue2'])
 plt.xlim(0, 14000)
 plt.title('Citation Count per Dataset')

@@ -1,35 +1,35 @@
-no.,dataset,year,camera,lidar,lidar_beam,radar,area,time_of_day,weather,object_categories,object_detection,multi_object_tracking,segmentation,depth_estimation,odometry_slam,prediction,planning,mapping,lane_detection,size,temporal,citation
-1,KITTI,2012,4,1,64,0,"Karlsruhe, Germany (city, rural areas, highways)",Day,Sun,8,1,1,0,1,1,0,0,0,0,41K frames,1,13393
-2,Comma.ai,2016,1,0,0,0,California USA (highway),Day,Sun,0,0,0,0,0,0,0,1,0,0,7.25 hours,1,345
-3,Oxford RobotCar,2017,4,3,1; 4,0,"Central Oxford, UK",Day; Night,Sun; Rain; Snow,0,0,0,0,0,1,0,0,1,0,~1000 km,1,2122
-4,ApolloScape,2018,2,2,0,0,China (multiple cities),Day; Night,Sun; Cloud; Rain,26,1,1,1,1,1,1,0,1,1,"143,906 frames",1,231
-5,Comma2k19,2019,1,0,0,0,"San Jose / San Francisco, CA, USA",Day,Sun,0,0,0,0,0,1,0,0,1,0,2M images,0,109
-6,HDD (HRI Driving Dataset),2018,3,1,64,0,"San Francisco Bay Area, CA, USA (suburban, urban, highway)",Day,Sun,0,0,0,0,0,0,0,1,0,0,104 hours,1,467
-7,Brno Urban Dataset,2019,4,2,32,0,"Brno, Czech Republic (urban)",Day; Night,0,0,0,0,0,0,1,0,0,1,0,375.7 km,1,63
-8,EU Long-term (UTBM),2019,2,4,32; 4; 1,1,"Montbéliard, France (downtown, suburban)",Day; Night,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0,~37 hours,1,150
-9,KAIST Complex Urban Dataset,2019,2,4,16; 1,0,"South Korea (Gangnam, Daejeon, Suwon, Namsan, Pangyo, Dongtan, Yeouido, )",Day,Sun,0,0,0,0,0,1,0,0,0,0,~190km paths,1,92
-10,nuScenes,2019,6,1,32,5,Boston and Singapore (urban),Day; Night,Sun; Cloud; Rain,23,1,1,1,0,1,1,0,1,1,40K frames,1,10681
-11,Waymo Open Dataset,2019,5,5,64,0,"Phoenix AZ, Mountain View CA, San Francisco CA, Kirkland WA, USA",Day; Night,Sun; Rain,23,1,1,1,0,0,1,1,1,1,230K frames,1,5288
-12,Woodscape,2019,4,1,64,0,"USA, Europe, and China (Highway, urban driving, and parking)",Day,Sun,40,1,0,1,1,1,0,1,0,1,~100K frames,1,434
-13,4Seasons,2020,2,0,0,0,"Munich, Germany",Day; Night,Sun; Rain; Snow; Fog,0,0,0,0,0,1,0,0,1,0,"59,746 frames",1,130
-14,A2D2 (Audi Autonomous Driving Dataset),2020,6,5,16,0,"Munich, Ingolstadt, Gaimersheim, Germany",Day,Sun; Cloud; Rain,38,1,0,1,0,1,0,1,0,0,"41,277 frames",0,658
-15,BDD100K (Berkley Deep Drive 100k),2020,1,0,0,0,"10 cities in USA (New York, San Francisco, etc.)",Day; Night,Sun; Rain; Snow; Fog,10,1,1,1,0,0,0,0,0,1,12M frames,1,3932
-16,CADC (Canadian Adverse Driving Conditions),2020,8,1,32,0,"Waterloo, Ontario, Canada (urban roads, winter)",Day,Sun; Snow,10,1,1,0,0,0,0,0,0,0,56K frames,0,400
-17,Ford Multi-AV Seasonal Dataset,2020,7,4,32,0,"Southeast Michigan, USA (metropolitan, suburban, residential, city center, campus)",Day,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0,~66 km,1,201
-18,Oxford Radar RobotCar,2020,4,4,32; 0,1,"Oxford, UK",Day; Night,Sun; Rain,0,0,0,1,0,1,0,0,0,0,240K scans,1,593
-19,TITAN,2020,1,0,0,0,"Central Tokyo, Japan",Day,Sun,3,1,1,0,0,0,1,0,0,0,"75,262 frames",1,172
-20,UrbanLoco,2020,7,2,32; 32,0,"San Francisco, Hong Kong (urban canyons, bridges, tunnels, sharp turns, hills, construction sites)",Day,Sun,0,0,0,0,0,1,0,0,0,0,~40 km,1,200
-21,DurLAR,2021,1,1,128,0,"Durham, UK",Day; Night,Sun; Rain,0,0,0,0,1,1,0,0,0,0,100K frames,1,34
-22,KITTI-360,2021,2,2,64; 1,0,"Karlsruhe, Germany (city, rural areas, highways)",Day,Sun,19,1,1,1,1,1,0,0,0,0,150K frames,1,1127
-23,nuPlan,2021,8,5,40; 20; 20,0,"Boston, Pittsburgh, Las Vegas, USA + Singapore",Day; Night,Sun; Rain,7,0,1,1,0,0,1,1,1,0,1282 hours,1,125
-24,PandaSet,2021,6,2,64,0,"Silicon Valley, USA (San Francisco, El Camino Real from Palo Alto to San Mateo)",Day; Night,Sun,28,1,1,1,0,0,0,0,0,0,"8,240 frames",1,393
-25,Ithaca365,2022,4,3,16; 128,0,"Ithaca, NY, USA (urban, rural, residential, highway)",Day; Night,Sun; Cloud; Rain; Snow,6,1,0,1,1,0,0,0,0,0,7K frames,0,71
-26,View-of-Delft,2022,1,1,64,1,"Delft, Netherland",Day,Sun,3,1,1,0,1,1,1,0,0,0,~10k frames,1,396
-27,Boreas,2023,1,1,128,1,"Toronto, Ontario, Canada",Day; Night,Sun; Rain; Snow,6,1,0,0,0,1,0,0,0,0,"7,111 frames",1,234
-28,UrbanNav,2023,1,4,16; 32; 16; 32,0,"Hong Kong, Tokyo",Day,Sun,0,0,0,0,0,1,0,0,0,0,29.38 km,1,100
-29,ZOD (Zenseact Open Dataset),2023,1,3,128; 16,0,14 European countries,Day,Sun,0,1,1,1,1,1,1,0,1,1,100K frames,1,159
-30,HeLiPR,2024,0,4,128; 16; 6; 64,0,"Daejeon, South Korea (urban, town, bridge, freeway environments)",Day; Night,Sun,0,0,0,0,0,1,0,0,0,0,164 km,1,79
-31,OmniHD-Scenes,2024,6,1,128,6,"China (Changsha Autonomous Driving Demonstration Zone,)",Day; Night,Sun; Cloud; Rain,4,1,1,1,0,1,0,0,0,0,~450K frames,1,22
-32,HeRCULES,2025,2,1,0,1,"IFC Seoul (urban, bridge, campus, mountain, stream, alleyway)",Day; Night,Sun; Cloud; Rain; Snow,0,0,0,0,0,1,0,0,1,0,58.5 km,1,20
-33,NVIDIA Physical AI Autonomous Vehicles,2025,0,0,0,0,25 countries (2500+ cities),Day; Night,Sun; Rain; Fog; Snow,0,0,0,0,0,0,0,0,0,0,1727 hours,1,-
-34,Boreas Road Trip,2026,1,2,128; 0,1,Canada,Day; Night,Sun; Snow,0,0,0,0,0,1,0,0,0,0,643 km,1,1
+no,dataset,year,Citation,camera,lidar,lidar_beam,radar,imu_freq,imu_grade,gps_gnss_freq,gps_type,can_bus,total_duration,road_type,totd,weather,object_categories,Object Detection (2D / 3D),Multi-Object Tracking (2D / 3D),Segmentation (Semantic / Instance / Panoptic / 3D Point Cloud),Depth Estimation,Odometry /SLAM,Motion / Trajectory Prediction,Planning (Behavior / Motion),HD / Online Mapping,Lane Detection
+1,KITTI,2012,13393,4,1,64,0,100,Navigation,100,RTK,No,6,city; residential; campus; rural; highway,Day,Sun,8,1,1,0,1,1,0,0,0,0
+2,Comma.ai,2016,345,1,0,0,0,N/A,Consumer,N/A,Standard,Yes,7.25,highway,Day,0,0,0,0,0,0,0,0,1,0,0
+3,Oxford RobotCar,2017,2122,4,3,1; 4,0,50,Navigation,50,RTK,No,N/A,N/A,Day; Night,Sun; Rain; Snow,0,0,0,0,0,1,0,0,1,0
+4,ApolloScape,2018,231,2,2,0,0,N/A,Navigation,N/A,RTK,No,N/A,N/A,Day; Night,Sun; Cloud; Rain,26,1,1,1,1,1,1,0,1,1
+5,Comma2k19,2019,109,1,0,0,0,100; 10,Consumer,10; 1,Standard,Yes,33,highway,Day,0,0,0,0,0,0,1,0,0,1,0
+6,HDD (HRI Driving Dataset),2018,467,3,1,64,0,120,Navigation,120  ,RTK,Yes,104,suburban; urban; highway,Day,0,0,0,0,0,0,0,0,1,0,0
+7,Brno Urban Dataset,2019,63,4,2,32,0,400,Industrial,20,RTK,No,14,city; suburb; country; highway,Day; Night,0,0,0,0,0,0,1,0,0,1,0
+8,EU Long-term (UTBM),2019,150,2,4,32; 4; 1,1,100,Industrial,10,RTK,No,N/A,downtown; suburban; construction,Day; Night,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0
+9,KAIST Complex Urban Dataset,2019,92,2,4,16; 1,0,100,Consumer,10  ,RTK,No,N/A,urban,Day,0,0,0,0,0,0,1,0,0,0,0
+10,nuScenes,2019,10681,6,1,32,5,1000,Industrial,1000  ,RTK,Yes,15,urban; residential; nature; industrial,Day; Night,Sun; Cloud; Rain,23,1,1,1,0,1,1,0,1,1
+11,Waymo Open Dataset,2019,5288,5,5,64,0,N/A,Navigation,N/A,RTK,No,6.39,urban; suburban,Day; Night,Sun; Rain,23,1,1,1,0,0,1,1,1,1
+12,Woodscape,2019,434,4,1,64,0,200,Industrial,20; 1,RTK,Yes,N/A,highway; urban; parking,Day,0,40,1,0,1,1,1,0,1,0,1
+13,4Seasons,2020,130,2,0,0,0,2000,Tactical,100,RTK,No,N/A,urban; tunnel; countryside; highway,Day; Night,Sun; Rain; Snow; Fog,0,0,0,0,0,1,0,0,1,0
+14,A2D2 (Audi Autonomous Driving Dataset),2020,658,6,5,16,0,N/A,Tactical,N/A,RTK,Yes,N/A,highway; country; city,Day,Sun; Cloud; Rain,38,1,0,1,0,1,0,1,0,0
+15,BDD100K (Berkley Deep Drive 100k),2020,3932,1,0,0,0,N/A,Consumer,N/A,Standard,No,1100,city; residential; highway,Day; Night,Sun; Rain; Snow; Fog,10,1,1,1,0,0,0,0,0,1
+16,CADC (Canadian Adverse Driving Conditions),2020,400,8,1,32,0,100; 200; 200,Tactical; Industrial; Industrial,100  ,RTK/PPP,Yes,N/A,urban,Day,Sun; Snow,10,1,1,0,0,0,0,0,0,0
+17,Ford Multi-AV Seasonal Dataset,2020,201,7,4,32,0,200,Navigation,200  ,RTK,No,N/A,airport; highway; city; campus; suburban,Day,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0
+18,Oxford Radar RobotCar,2020,593,4,4,32; 0,1,50,Navigation,50  ,RTK,No,N/A,urban,Day; Night,Sun; Rain,0,0,0,1,0,1,0,0,0,0
+19,TITAN,2020,172,1,0,0,0,100,Consumer,N/A,-,No,10,urban,Day,0,3,1,1,0,0,0,1,0,0,0
+20,UrbanLoco,2020,200,7,2,32; 32,0,100,Industrial,1,Standard,No,N/A,urban; bridge; tunnel; construction; suburban,Day,0,0,0,0,0,0,1,0,0,0,0
+21,DurLAR,2021,34,1,1,128,0,250,Navigation,250,RTK,No,N/A,traffic; structures; hills; maneuvers,Day; Night,Sun; Rain,0,0,0,0,1,1,0,0,0,0
+22,KITTI-360,2021,1127,2,2,64; 1,0,100,Navigation,100,RTK,No,N/A,city; rural; highway; suburban,Day,0,19,1,1,1,1,1,0,0,0,0
+23,nuPlan,2021,125,8,5,40; 20; 20,0,100,Tactical,20  ,RTK,No,1282,N/A,Day; Night,Sun; Rain,7,0,1,1,0,0,1,1,1,0
+24,PandaSet,2021,393,6,2,64,0,100,Industrial,100  ,RTK/PPP,No,N/A,urban; construction,Day; Night,0,28,1,1,1,0,0,0,0,0,0
+25,Ithaca365,2022,71,4,3,16; 128,0,125,Industrial,100,RTK/PPP,No,N/A,urban; highway; rural; campus; residential,Day; Night,Sun; Cloud; Rain; Snow,6,1,0,1,1,0,0,0,0,0
+26,View-of-Delft,2022,396,1,1,64,1,100,Consumer,100,RTK,No,N/A,urban; city,Day,0,3,1,1,0,1,1,1,0,0,0
+27,Boreas,2023,234,1,1,128,1,200,Navigation,200  ,RTK,No,N/A,N/A,Day; Night,Sun; Rain; Snow,6,1,0,0,0,1,0,0,0,0
+28,UrbanNav,2023,100,1,4,16; 32; 16; 32,0,400; 50,Industrial,1; 10; 5; 10,RTK,No,N/A,N/A,Day,0,0,0,0,0,0,1,0,0,0,0
+29,ZOD (Zenseact Open Dataset),2023,159,1,3,128; 16,0,100,Navigation,100  ,RTK,No,N/A,N/A,Day,0,0,1,1,1,1,1,1,0,1,1
+30,HeLiPR,2024,79,0,4,128; 16; 6; 64,0,100,Industrial,50,RTK,No,N/A,urban; city; highway; bridge,Day; Night,0,0,0,0,0,0,1,0,0,0,0
+31,OmniHD-Scenes,2024,22,6,1,128,6,100,Navigation,100,RTK,No,12.5,N/A,Day; Night,Sun; Cloud; Rain,4,1,1,1,0,1,0,0,0,0
+32,HeRCULES,2025,20,2,1,0,1,100,Industrial,50,RTK,No,N/A,urban; bridge; campus,Day; Night,Sun; Cloud; Rain; Snow,0,0,0,0,0,1,0,0,1,0
+33,NVIDIA Physical AI Autonomous Vehicles,2025,-,0,0,0,0,N/A,Navigation,N/A,RTK,No,1700,N/A,Day; Night,Sun; Rain; Fog; Snow,0,0,0,0,0,0,0,0,0,0
+34,Boreas Road Trip,2026,1,1,2,128; 0,1,200,Tactical,200,RTK,No,N/A,suburbs; industrial; urban; forest; farm; tunnel; skyway; regional; freeway,Day; Night,Sun; Snow,0,0,0,0,0,1,0,0,0,0
