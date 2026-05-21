@@ -18,7 +18,6 @@ for col in ['camera', 'lidar', 'radar', 'object_categories']:
     df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
 
 # ── Clean: total_duration ─────────────────────────────────────────────────────
-# Keep as float, NaN = not documented
 df['total_duration'] = pd.to_numeric(df['total_duration'], errors='coerce')
 
 # ── Clean: can_bus → 1/0 ─────────────────────────────────────────────────────
@@ -35,32 +34,54 @@ df['weather'] = df['weather'].replace({'0': 'Unknown', 'nan': 'Unknown'})
 df['lidar_beam'] = df['lidar_beam'].astype(str).str.strip()
 df['lidar_beam'] = df['lidar_beam'].replace({'nan': '0'})
 
-# ── Clean: imu_freq ───────────────────────────────────────────────────────────
-# Keep as string — multi-value entries like '100; 10' parsed per chart
-df['imu_freq'] = df['imu_freq'].astype(str).str.strip()
-df['imu_freq'] = df['imu_freq'].replace({'nan': '0'})
+# ── Clean: imu_grade_top — highest grade per dataset ─────────────────────────
+# Hierarchy: Navigation (4) > Tactical (3) > Industrial (2) > Consumer (1)
+# Scores noted for future use: Navigation=1.0, Tactical=0.75, Industrial=0.5, Consumer=0.25
+GRADE_RANK = {'Navigation': 4, 'Tactical': 3, 'Industrial': 2, 'Consumer': 1}
 
-# ── Clean: imu_grade ──────────────────────────────────────────────────────────
-# Keep as string — multi-value entries like 'Tactical; Industrial' parsed per chart
-df['imu_grade'] = df['imu_grade'].astype(str).str.strip()
-df['imu_grade'] = df['imu_grade'].replace({'nan': 'Unknown'})
+def highest_grade(val):
+    if pd.isna(val) or str(val).strip() in ('nan', 'Unknown', ''):
+        return None
+    parts = [p.strip() for p in str(val).split(';')]
+    ranked = [(GRADE_RANK.get(p, 0), p) for p in parts if p in GRADE_RANK]
+    return max(ranked)[1] if ranked else None
 
-# ── Clean: gps_gnss_freq ──────────────────────────────────────────────────────
-# Strip trailing spaces, keep as string — multi-value entries parsed per chart
-df['gps_gnss_freq'] = df['gps_gnss_freq'].astype(str).str.strip()
-df['gps_gnss_freq'] = df['gps_gnss_freq'].replace({'nan': '0'})
+df['imu_grade_top'] = df['imu_grade'].apply(highest_grade)
+
+# ── Clean: imu_freq_top — highest IMU frequency per dataset (Hz) ──────────────
+# For multi-value entries like '100; 10' or '400; 50', take the maximum
+def highest_freq(val):
+    if pd.isna(val) or str(val).strip() in ('nan', '0', ''):
+        return None
+    parts = [p.strip() for p in str(val).split(';')]
+    nums = []
+    for p in parts:
+        try:
+            nums.append(float(p))
+        except ValueError:
+            pass
+    return max(nums) if nums else None
+
+df['imu_freq_top'] = df['imu_freq'].apply(highest_freq)
+
+# ── Clean: gps_gnss_freq_top — highest GPS frequency per dataset (Hz) ─────────
+df['gps_gnss_freq_top'] = df['gps_gnss_freq'].apply(highest_freq)
 
 # ── Clean: gps_type ───────────────────────────────────────────────────────────
-# Keep as string — '-' means not documented
-df['gps_type'] = df['gps_type'].astype(str).str.strip()
-df['gps_type'] = df['gps_type'].replace({'nan': 'Unknown', '-': 'Unknown'})
+# Merge RTK and RTK/PPP → RTK, '-' → Unknown
+def clean_gps_type(val):
+    if pd.isna(val) or str(val).strip() in ('nan', '-', ''):
+        return 'Unknown'
+    parts = [p.strip() for p in str(val).split(';')]
+    cleaned = ['RTK' if 'RTK' in p else p for p in parts]
+    return '; '.join(sorted(set(cleaned)))
+
+df['gps_type'] = df['gps_type'].apply(clean_gps_type)
 
 # ── Clean: totd (time of day) ─────────────────────────────────────────────────
-# Keep as string — 'Day' or 'Day; Night'
 df['totd'] = df['totd'].astype(str).str.strip()
 
 # ── Clean: road_type ─────────────────────────────────────────────────────────
-# Keep as string — semicolon-separated categories parsed per chart
 df['road_type'] = df['road_type'].astype(str).str.strip()
 
 # ── Clean: task columns → ensure int ─────────────────────────────────────────
@@ -83,6 +104,7 @@ for col in task_cols:
 df.to_csv(OUTPUT_FILE, index=False)
 print(f'Cleaned CSV saved → {OUTPUT_FILE}')
 print(f'Shape: {df.shape[0]} rows x {df.shape[1]} columns')
-print(f'\nNaN check:')
-check_cols = ['camera', 'lidar', 'radar', 'object_categories', 'can_bus'] + task_cols
+print(f'\nNaN check (key columns):')
+check_cols = ['camera', 'lidar', 'radar', 'object_categories', 'can_bus',
+              'imu_grade_top', 'imu_freq_top', 'gps_gnss_freq_top'] + task_cols
 print(df[check_cols].isna().sum())

@@ -20,7 +20,7 @@ for val in df['lidar_beam'].dropna():
 sorted_counts = dict(sorted(beam_counts.items()))
 labels = [str(k) for k in sorted_counts.keys()]
 
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(5, 6))
 plt.bar(labels, list(sorted_counts.values()), edgecolor='black', color=TUM_SECONDARY['blue2'])
 plt.title('LiDAR Beam Count Distribution')
 plt.xlabel('Number of Beams')
