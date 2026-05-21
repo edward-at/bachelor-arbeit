@@ -1,5 +1,5 @@
 no.,dataset,year,camera,lidar,lidar_beam,radar,area,time_of_day,weather,object_categories,object_detection,multi_object_tracking,segmentation,depth_estimation,odometry_slam,prediction,planning,mapping,lane_detection,size,temporal,citation
-1,KITTI,2012,4,1,64,0,"Karlsruhe, Germany (city, rural areas, highways)",Day,Sun,8,1,1,0,1,1,0,0,0,0,41K frames,1,20400.0
+1,KITTI,2012,4,1,64,0,"Karlsruhe, Germany (city, rural areas, highways)",Day,Sun,8,1,1,0,1,1,0,0,0,0,41K frames,1,13393.0
 2,Comma.ai,2016,1,0,0,0,California USA (highway),Day,Sun,0,0,0,0,0,0,0,1,0,0,7.25 hours,1,345.0
 3,Oxford RobotCar,2017,4,3,1; 4,0,"Central Oxford, UK",Day; Night,Sun; Rain; Snow,0,0,0,0,0,1,0,0,1,0,~1000 km,1,2122.0
 4,ApolloScape,2018,2,2,0,0,China (multiple cities),Day; Night,Sun; Cloud; Rain,26,1,1,1,1,1,1,0,1,1,"143,906 frames",1,231.0
@@ -24,13 +24,12 @@ no.,dataset,year,camera,lidar,lidar_beam,radar,area,time_of_day,weather,object_c
 23,nuPlan,2021,8,5,40; 20; 20,0,"Boston, Pittsburgh, Las Vegas, USA + Singapore",Day; Night,Sun; Rain,7,0,1,1,0,0,1,1,1,0,1282 hours,1,125.0
 24,PandaSet,2021,6,2,64,0,"Silicon Valley, USA (San Francisco, El Camino Real from Palo Alto to San Mateo)",Day; Night,Sun,28,1,1,1,0,0,0,0,0,0,"8,240 frames",1,393.0
 25,Ithaca365,2022,4,3,16; 128,0,"Ithaca, NY, USA (urban, rural, residential, highway)",Day; Night,Sun; Cloud; Rain; Snow,6,1,0,1,1,0,0,0,0,0,7K frames,0,71.0
-26,K-Radar (KAIST-Radar),2022,4,2,128; 64,1,"South Korea (highway, urban campus, suburban, alleyway)",Day; Night,Sun; Rain; Snow; Fog,5,1,1,0,1,0,0,0,0,0,35K frames,0,262.0
-27,View-of-Delft,2022,1,1,64,1,"Delft, Netherland",Day,Sun,3,1,1,0,1,1,1,0,0,0,~10k frames,1,396.0
-28,Boreas,2023,1,1,128,1,"Toronto, Ontario, Canada",Day; Night,Sun; Rain; Snow,6,1,0,0,0,1,0,0,0,0,"7,111 frames",1,234.0
-29,UrbanNav,2023,1,4,16; 32; 16; 32,0,"Hong Kong, Tokyo",Day,Sun,0,0,0,0,0,1,0,0,0,0,29.38 km,1,100.0
-30,ZOD (Zenseact Open Dataset),2023,1,3,128; 16,0,14 European countries,Day,Sun,0,1,1,1,1,1,1,0,1,1,100K frames,1,159.0
-31,HeLiPR,2024,0,4,128; 16; 6; 64,0,"Daejeon, South Korea (urban, town, bridge, freeway environments)",Day; Night,Sun,0,0,0,0,0,1,0,0,0,0,164 km,1,79.0
-32,OmniHD-Scenes,2024,6,1,128,6,"China (Changsha Autonomous Driving Demonstration Zone,)",Day; Night,Sun; Cloud; Rain,4,1,1,1,0,1,0,0,0,0,~450K frames,1,22.0
-33,HeRCULES,2025,2,1,0,1,"IFC Seoul (urban, bridge, campus, mountain, stream, alleyway)",Day; Night,Sun; Cloud; Rain; Snow,0,0,0,0,0,1,0,0,1,0,58.5 km,1,20.0
-34,NVIDIA Physical AI Autonomous Vehicles,2025,0,0,0,0,25 countries (2500+ cities),Day; Night,Sun; Rain; Fog; Snow,0,0,0,0,0,0,0,0,0,0,1727 hours,1,
-35,Boreas Road Trip,2026,1,2,128; 0,1,Canada,Day; Night,Sun; Snow,0,0,0,0,0,1,0,0,0,0,643 km,1,1.0
+26,View-of-Delft,2022,1,1,64,1,"Delft, Netherland",Day,Sun,3,1,1,0,1,1,1,0,0,0,~10k frames,1,396.0
+27,Boreas,2023,1,1,128,1,"Toronto, Ontario, Canada",Day; Night,Sun; Rain; Snow,6,1,0,0,0,1,0,0,0,0,"7,111 frames",1,234.0
+28,UrbanNav,2023,1,4,16; 32; 16; 32,0,"Hong Kong, Tokyo",Day,Sun,0,0,0,0,0,1,0,0,0,0,29.38 km,1,100.0
+29,ZOD (Zenseact Open Dataset),2023,1,3,128; 16,0,14 European countries,Day,Sun,0,1,1,1,1,1,1,0,1,1,100K frames,1,159.0
+30,HeLiPR,2024,0,4,128; 16; 6; 64,0,"Daejeon, South Korea (urban, town, bridge, freeway environments)",Day; Night,Sun,0,0,0,0,0,1,0,0,0,0,164 km,1,79.0
+31,OmniHD-Scenes,2024,6,1,128,6,"China (Changsha Autonomous Driving Demonstration Zone,)",Day; Night,Sun; Cloud; Rain,4,1,1,1,0,1,0,0,0,0,~450K frames,1,22.0
+32,HeRCULES,2025,2,1,0,1,"IFC Seoul (urban, bridge, campus, mountain, stream, alleyway)",Day; Night,Sun; Cloud; Rain; Snow,0,0,0,0,0,1,0,0,1,0,58.5 km,1,20.0
+33,NVIDIA Physical AI Autonomous Vehicles,2025,0,0,0,0,25 countries (2500+ cities),Day; Night,Sun; Rain; Fog; Snow,0,0,0,0,0,0,0,0,0,0,1727 hours,1,
+34,Boreas Road Trip,2026,1,2,128; 0,1,Canada,Day; Night,Sun; Snow,0,0,0,0,0,1,0,0,0,0,643 km,1,1.0
