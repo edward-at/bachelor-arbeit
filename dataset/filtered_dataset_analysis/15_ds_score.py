@@ -1,16 +1,12 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import os, sys
-from collections import defaultdict
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))
 from tum_colors import TUM_SECONDARY
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'filtered_dataset_cleaned.csv'))
 
-# ── Road Type Score ───────────────────────────────────────────────────────────
-# Score = number of unique road groups / 5
-# Groups: Urban, Highway, Rural, Controlled, Infrastructure
 ROAD_MAP = {
     'urban': 'Urban', 'city': 'Urban', 'downtown': 'Urban',
     'residential': 'Urban', 'suburban': 'Urban', 'suburb': 'Urban', 'suburbs': 'Urban',
@@ -21,37 +17,27 @@ ROAD_MAP = {
     'bridge': 'Infrastructure', 'tunnel': 'Infrastructure',
     'construction': 'Infrastructure', 'industrial': 'Infrastructure', 'structures': 'Infrastructure',
 }
-EXCLUDE_ROAD = {'traffic', 'maneuvers'}
+VALID_WEATHER = {'Sun', 'Rain', 'Snow', 'Cloud', 'Fog'}
 
 def road_score(val):
     if pd.isna(val) or str(val).strip() in ('nan', ''):
-        return 0
+        return 0.2   # minimum baseline — road type exists but undocumented
     tokens = [t.strip().lower() for t in str(val).split(';')]
     groups = {ROAD_MAP[t] for t in tokens if t in ROAD_MAP}
     return len(groups) / 5
 
-df['road_score'] = df['road_type'].apply(road_score)
-
-# ── Weather Score ─────────────────────────────────────────────────────────────
-# Score = number of unique weather types / 5
-# Types: Sun, Rain, Snow, Cloud, Fog
-VALID_WEATHER = {'Sun', 'Rain', 'Snow', 'Cloud', 'Fog'}
-
 def weather_score(val):
     if pd.isna(val) or str(val).strip() in ('nan', 'Unknown'):
-        return 0
+        return 0.4   # minimum baseline — Sun and Cloud assumed as default conditions
     types = {w.strip() for w in str(val).split(';') if w.strip() in VALID_WEATHER}
     return len(types) / 5
 
+df['road_score']    = df['road_type'].apply(road_score)
 df['weather_score'] = df['weather'].apply(weather_score)
-
-# ── Ds = 0.5*road_score + 0.5*weather_score ──────────────────────────────────
 df['Ds'] = 0.5 * df['road_score'] + 0.5 * df['weather_score']
 
-# Sort by Ds descending
-df_sorted = df[['dataset', 'Ds']].sort_values('Ds')
+df_sorted = df[['dataset', 'Ds']].sort_values('Ds', ascending=True)
 
-# ── Plot ──────────────────────────────────────────────────────────────────────
 plt.figure(figsize=(12, 10))
 plt.barh(df_sorted['dataset'], df_sorted['Ds'],
          edgecolor='black', color=TUM_SECONDARY['blue2'])
@@ -66,5 +52,3 @@ out = os.path.join(BASE_DIR, 'filtered_dataset_analysis_figures', '15_ds_score.p
 plt.savefig(out, dpi=150, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out}')
-print()
-print(df[['dataset', 'road_score', 'weather_score', 'Ds']].sort_values('Ds', ascending=False).to_string())

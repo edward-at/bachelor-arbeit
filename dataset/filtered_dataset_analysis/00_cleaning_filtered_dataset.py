@@ -63,6 +63,8 @@ def highest_freq(val):
     return max(nums) if nums else None
 
 df['imu_freq_top'] = df['imu_freq'].apply(highest_freq)
+# Note: imu_freq_top is kept for reference but not used in scoring
+# Qs = 0.5 * imu_grade + 0.5 * gps_type (frequency removed due to high missing rate)
 
 # ── Clean: gps_gnss_freq_top — highest GPS frequency per dataset (Hz) ─────────
 df['gps_gnss_freq_top'] = df['gps_gnss_freq'].apply(highest_freq)
