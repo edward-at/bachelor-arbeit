@@ -60,7 +60,7 @@ plt.figure(figsize=(12, 10))
 plt.barh(df_sorted['dataset'], df_sorted['DSS'],
          edgecolor='black', color=TUM_SECONDARY['blue2'])
 plt.xlim(0, 1)
-plt.title('Dynamic Scenario Suitability Score (DSS) per Dataset\nDSS = 0.6×Qs + 0.2×Ds + 0.2×Ps')
+plt.title('Dynamic Scenario Suitability Score (DSS) per Dataset\nDSS = 0.6×Qs + 0.25×Ds + 0.15×Ps')
 plt.xlabel('DSS Score (0–1)')
 plt.grid(True)
 plt.gca().set_axisbelow(True)
