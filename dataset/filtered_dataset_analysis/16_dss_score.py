@@ -51,7 +51,7 @@ df['Ps'] = df['can_bus'].fillna(0)
 # ── DSS = 0.6*Qs + 0.25*Ds + 0.15*Ps ──────────────────────────────────────────
 # Citation score removed — citation count reflects perception task adoption,
 # not inertial signal quality, which is the focus of this thesis
-df['DSS'] = 0.60 * df['Qs'] + 0.25 * df['Ds'] + 0.15 * df['Ps']
+df['DSS'] = 0.6 * df['Qs'] + 0.25 * df['Ds'] + 0.15 * df['Ps']
 
 # ── Plot A — Horizontal bar (DSS sorted) ─────────────────────────────────────
 df_sorted = df[['dataset', 'DSS']].sort_values('DSS')

@@ -1,35 +1,34 @@
 no,dataset,year,Citation,camera,lidar,lidar_beam,radar,imu_freq,imu_grade,gps_gnss_freq,gps_type,can_bus,total_duration,road_type,totd,weather,object_categories,Object Detection (2D / 3D),Multi-Object Tracking (2D / 3D),Segmentation (Semantic / Instance / Panoptic / 3D Point Cloud),Depth Estimation,Odometry /SLAM,Motion / Trajectory Prediction,Planning (Behavior / Motion),HD / Online Mapping,Lane Detection,imu_grade_top,imu_freq_top,gps_gnss_freq_top
 1,KITTI,2012,13393.0,4,1,64,0,100,Navigation,100,RTK,0,6.0,city; residential; campus; rural; highway,Day,Sun,8,1,1,0,1,1,0,0,0,0,Navigation,100.0,100.0
 2,Comma.ai,2016,345.0,1,0,0,0,,Consumer,,Standard,1,7.25,highway,Day,Unknown,0,0,0,0,0,0,0,1,0,0,Consumer,,
-3,Oxford RobotCar,2017,2122.0,4,3,1; 4,0,50,Navigation,50,RTK,0,,,Day; Night,Sun; Rain; Snow,0,0,0,0,0,1,0,0,1,0,Navigation,50.0,50.0
-4,ApolloScape,2018,231.0,2,2,0,0,,Navigation,,RTK,0,,,Day; Night,Sun; Cloud; Rain,26,1,1,1,1,1,1,0,1,1,Navigation,,
-5,Comma2k19,2019,109.0,1,0,0,0,100; 10,Consumer,10; 1,Standard,1,33.0,highway,Day,Unknown,0,0,0,0,0,1,0,0,1,0,Consumer,100.0,10.0
-6,HDD (HRI Driving Dataset),2018,467.0,3,1,64,0,120,Navigation,120  ,RTK,1,104.0,suburban; urban; highway,Day,Unknown,0,0,0,0,0,0,0,1,0,0,Navigation,120.0,120.0
-7,Brno Urban Dataset,2019,63.0,4,2,32,0,400,Industrial,20,RTK,0,14.0,city; suburb; country; highway,Day; Night,Unknown,0,0,0,0,0,1,0,0,1,0,Industrial,400.0,20.0
-8,EU Long-term (UTBM),2019,150.0,2,4,32; 4; 1,1,100,Industrial,10,RTK,0,,downtown; suburban; construction,Day; Night,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0,Industrial,100.0,10.0
-9,KAIST Complex Urban Dataset,2019,92.0,2,4,16; 1,0,100,Consumer,10  ,RTK,0,,urban,Day,Unknown,0,0,0,0,0,1,0,0,0,0,Consumer,100.0,10.0
-10,nuScenes,2019,10681.0,6,1,32,5,1000,Industrial,1000  ,RTK,1,15.0,urban; residential; nature; industrial,Day; Night,Sun; Cloud; Rain,23,1,1,1,0,1,1,0,1,1,Industrial,1000.0,1000.0
-11,Waymo Open Dataset,2019,5288.0,5,5,64,0,,Navigation,,RTK,0,6.39,urban; suburban,Day; Night,Sun; Rain,23,1,1,1,0,0,1,1,1,1,Navigation,,
-12,Woodscape,2019,434.0,4,1,64,0,200,Industrial,20; 1,RTK,1,,highway; urban; parking,Day,Unknown,40,1,0,1,1,1,0,1,0,1,Industrial,200.0,20.0
-13,4Seasons,2020,130.0,2,0,0,0,2000,Tactical,100,RTK,0,,urban; tunnel; countryside; highway,Day; Night,Sun; Rain; Snow; Fog,0,0,0,0,0,1,0,0,1,0,Tactical,2000.0,100.0
-14,A2D2 (Audi Autonomous Driving Dataset),2020,658.0,6,5,16,0,,Tactical,,RTK,1,,highway; country; city,Day,Sun; Cloud; Rain,38,1,0,1,0,1,0,1,0,0,Tactical,,
-15,BDD100K (Berkley Deep Drive 100k),2020,3932.0,1,0,0,0,,Consumer,,Standard,0,1100.0,city; residential; highway,Day; Night,Sun; Rain; Snow; Fog,10,1,1,1,0,0,0,0,0,1,Consumer,,
-16,CADC (Canadian Adverse Driving Conditions),2020,400.0,8,1,32,0,100; 200; 200,Tactical; Industrial; Industrial,100  ,RTK,1,,urban,Day,Sun; Snow,10,1,1,0,0,0,0,0,0,0,Tactical,200.0,100.0
-17,Ford Multi-AV Seasonal Dataset,2020,201.0,7,4,32,0,200,Navigation,200  ,RTK,0,,airport; highway; city; campus; suburban,Day,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0,Navigation,200.0,200.0
-18,Oxford Radar RobotCar,2020,593.0,4,4,32; 0,1,50,Navigation,50  ,RTK,0,,urban,Day; Night,Sun; Rain,0,0,0,1,0,1,0,0,0,0,Navigation,50.0,50.0
-19,TITAN,2020,172.0,1,0,0,0,100,Consumer,,Unknown,0,10.0,urban,Day,Unknown,3,1,1,0,0,0,1,0,0,0,Consumer,100.0,
-20,UrbanLoco,2020,200.0,7,2,32; 32,0,100,Industrial,1,Standard,0,,urban; bridge; tunnel; construction; suburban,Day,Unknown,0,0,0,0,0,1,0,0,0,0,Industrial,100.0,1.0
-21,DurLAR,2021,34.0,1,1,128,0,250,Navigation,250,RTK,0,,traffic; structures; hills; maneuvers,Day; Night,Sun; Rain,0,0,0,0,1,1,0,0,0,0,Navigation,250.0,250.0
-22,KITTI-360,2021,1127.0,2,2,64; 1,0,100,Navigation,100,RTK,0,,city; rural; highway; suburban,Day,Unknown,19,1,1,1,1,1,0,0,0,0,Navigation,100.0,100.0
-23,nuPlan,2021,125.0,8,5,40; 20; 20,0,100,Tactical,20  ,RTK,0,1282.0,,Day; Night,Sun; Rain,7,0,1,1,0,0,1,1,1,0,Tactical,100.0,20.0
-24,PandaSet,2021,393.0,6,2,64,0,100,Industrial,100  ,RTK,0,,urban; construction,Day; Night,Unknown,28,1,1,1,0,0,0,0,0,0,Industrial,100.0,100.0
-25,Ithaca365,2022,71.0,4,3,16; 128,0,125,Industrial,100,RTK,0,,urban; highway; rural; campus; residential,Day; Night,Sun; Cloud; Rain; Snow,6,1,0,1,1,0,0,0,0,0,Industrial,125.0,100.0
-26,View-of-Delft,2022,396.0,1,1,64,1,100,Consumer,100,RTK,0,,urban; city,Day,Unknown,3,1,1,0,1,1,1,0,0,0,Consumer,100.0,100.0
-27,Boreas,2023,234.0,1,1,128,1,200,Navigation,200  ,RTK,0,,,Day; Night,Sun; Rain; Snow,6,1,0,0,0,1,0,0,0,0,Navigation,200.0,200.0
-28,UrbanNav,2023,100.0,1,4,16; 32; 16; 32,0,400; 50,Industrial,1; 10; 5; 10,RTK,0,,,Day,Unknown,0,0,0,0,0,1,0,0,0,0,Industrial,400.0,10.0
-29,ZOD (Zenseact Open Dataset),2023,159.0,1,3,128; 16,0,100,Navigation,100  ,RTK,0,,,Day,Unknown,0,1,1,1,1,1,1,0,1,1,Navigation,100.0,100.0
-30,HeLiPR,2024,79.0,0,4,128; 16; 6; 64,0,100,Industrial,50,RTK,0,,urban; city; highway; bridge,Day; Night,Unknown,0,0,0,0,0,1,0,0,0,0,Industrial,100.0,50.0
-31,OmniHD-Scenes,2024,22.0,6,1,128,6,100,Navigation,100,RTK,0,12.5,,Day; Night,Sun; Cloud; Rain,4,1,1,1,0,1,0,0,0,0,Navigation,100.0,100.0
-32,HeRCULES,2025,20.0,2,1,0,1,100,Industrial,50,RTK,0,,urban; bridge; campus,Day; Night,Sun; Cloud; Rain; Snow,0,0,0,0,0,1,0,0,1,0,Industrial,100.0,50.0
-33,NVIDIA Physical AI Autonomous Vehicles,2025,,0,0,0,0,,Navigation,,RTK,0,1700.0,,Day; Night,Sun; Rain; Fog; Snow,0,0,0,0,0,0,0,0,0,0,Navigation,,
-34,Boreas Road Trip,2026,1.0,1,2,128; 0,1,200,Tactical,200,RTK,0,,suburbs; industrial; urban; forest; farm; tunnel; skyway; regional; freeway,Day; Night,Sun; Snow,0,0,0,0,0,1,0,0,0,0,Tactical,200.0,200.0
+3,Oxford RobotCar,2017,2122.0,4,3,1; 4,0,50,Navigation,50,RTK,0,,nan,Day; Night,Sun; Rain; Snow,0,0,0,0,0,1,0,0,1,0,Navigation,50.0,50.0
+4,Comma2k19,2019,109.0,1,0,0,0,100; 10,Consumer,10; 1,Standard,1,33.0,highway,Day,Unknown,0,0,0,0,0,1,0,0,1,0,Consumer,100.0,10.0
+5,HDD (HRI Driving Dataset),2018,467.0,3,1,64,0,120,Navigation,120  ,RTK,1,104.0,suburban; urban; highway,Day,Unknown,0,0,0,0,0,0,0,1,0,0,Navigation,120.0,120.0
+6,Brno Urban Dataset,2019,63.0,4,2,32,0,400,Industrial,20,RTK,0,14.0,city; suburb; country; highway,Day; Night,Unknown,0,0,0,0,0,1,0,0,1,0,Industrial,400.0,20.0
+7,EU Long-term (UTBM),2019,150.0,2,4,32; 4; 1,1,100,Industrial,10,RTK,0,,downtown; suburban; construction,Day; Night,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0,Industrial,100.0,10.0
+8,KAIST Complex Urban Dataset,2019,92.0,2,4,16; 1,0,100,Consumer,10  ,RTK,0,,urban,Day,Unknown,0,0,0,0,0,1,0,0,0,0,Consumer,100.0,10.0
+9,nuScenes,2019,10681.0,6,1,32,5,1000,Industrial,1000  ,RTK,1,15.0,urban; residential; nature; industrial,Day; Night,Sun; Cloud; Rain,23,1,1,1,0,1,1,0,1,1,Industrial,1000.0,1000.0
+10,Waymo Open Dataset,2019,5288.0,5,5,64,0,,Navigation,,RTK,0,6.39,urban; suburban,Day; Night,Sun; Rain,23,1,1,1,0,0,1,1,1,1,Navigation,,
+11,Woodscape,2019,434.0,4,1,64,0,200,Industrial,20; 1,RTK,1,,highway; urban; parking,Day,Unknown,40,1,0,1,1,1,0,1,0,1,Industrial,200.0,20.0
+12,4Seasons,2020,130.0,2,0,0,0,2000,Tactical,100,RTK,0,,urban; tunnel; countryside; highway,Day; Night,Sun; Rain; Snow; Fog,0,0,0,0,0,1,0,0,1,0,Tactical,2000.0,100.0
+13,A2D2 (Audi Autonomous Driving Dataset),2020,658.0,6,5,16,0,,Tactical,,RTK,1,,highway; country; city,Day,Sun; Cloud; Rain,38,1,0,1,0,1,0,1,0,0,Tactical,,
+14,BDD100K (Berkley Deep Drive 100k),2020,3932.0,1,0,0,0,,Consumer,,Standard,0,1100.0,city; residential; highway,Day; Night,Sun; Rain; Snow; Fog,10,1,1,1,0,0,0,0,0,1,Consumer,,
+15,CADC (Canadian Adverse Driving Conditions),2020,400.0,8,1,32,0,100; 200; 200,Tactical; Industrial; Industrial,100  ,RTK,1,,urban,Day,Sun; Snow,10,1,1,0,0,0,0,0,0,0,Tactical,200.0,100.0
+16,Ford Multi-AV Seasonal Dataset,2020,201.0,7,4,32,0,200,Navigation,200  ,RTK,0,,airport; highway; city; campus; suburban,Day,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0,Navigation,200.0,200.0
+17,Oxford Radar RobotCar,2020,593.0,4,4,32; 0,1,50,Navigation,50  ,RTK,0,,urban,Day; Night,Sun; Rain,0,0,0,1,0,1,0,0,0,0,Navigation,50.0,50.0
+18,TITAN,2020,172.0,1,0,0,0,100,Consumer,,Unknown,0,10.0,urban,Day,Unknown,3,1,1,0,0,0,1,0,0,0,Consumer,100.0,
+19,UrbanLoco,2020,200.0,7,2,32; 32,0,100,Industrial,1,Standard,0,,urban; bridge; tunnel; construction; suburban,Day,Unknown,0,0,0,0,0,1,0,0,0,0,Industrial,100.0,1.0
+20,DurLAR,2021,34.0,1,1,128,0,250,Navigation,250,RTK,0,,traffic; structures; hills; maneuvers,Day; Night,Sun; Rain,0,0,0,0,1,1,0,0,0,0,Navigation,250.0,250.0
+21,KITTI-360,2021,1127.0,2,2,64; 1,0,100,Navigation,100,RTK,0,,city; rural; highway; suburban,Day,Unknown,19,1,1,1,1,1,0,0,0,0,Navigation,100.0,100.0
+22,nuPlan,2021,125.0,8,5,40; 20; 20,0,100,Tactical,20  ,RTK,0,1282.0,nan,Day; Night,Sun; Rain,7,0,1,1,0,0,1,1,1,0,Tactical,100.0,20.0
+23,PandaSet,2021,393.0,6,2,64,0,100,Industrial,100  ,RTK,0,,urban; construction,Day; Night,Unknown,28,1,1,1,0,0,0,0,0,0,Industrial,100.0,100.0
+24,Ithaca365,2022,71.0,4,3,16; 128,0,125,Industrial,100,RTK,0,,urban; highway; rural; campus; residential,Day; Night,Sun; Cloud; Rain; Snow,6,1,0,1,1,0,0,0,0,0,Industrial,125.0,100.0
+25,View-of-Delft,2022,396.0,1,1,64,1,100,Consumer,100,RTK,0,,urban; city,Day,Unknown,3,1,1,0,1,1,1,0,0,0,Consumer,100.0,100.0
+26,Boreas,2023,234.0,1,1,128,1,200,Navigation,200  ,RTK,0,,nan,Day; Night,Sun; Rain; Snow,6,1,0,0,0,1,0,0,0,0,Navigation,200.0,200.0
+27,UrbanNav,2023,100.0,1,4,16; 32; 16; 32,0,400; 50,Industrial,1; 10; 5; 10,RTK,0,,nan,Day,Unknown,0,0,0,0,0,1,0,0,0,0,Industrial,400.0,10.0
+28,ZOD (Zenseact Open Dataset),2023,159.0,1,3,128; 16,0,100,Navigation,100  ,RTK,0,,nan,Day,Unknown,0,1,1,1,1,1,1,0,1,1,Navigation,100.0,100.0
+29,HeLiPR,2024,79.0,0,4,128; 16; 6; 64,0,100,Industrial,50,RTK,0,,urban; city; highway; bridge,Day; Night,Unknown,0,0,0,0,0,1,0,0,0,0,Industrial,100.0,50.0
+30,OmniHD-Scenes,2024,22.0,6,1,128,6,100,Navigation,100,RTK,0,12.5,nan,Day; Night,Sun; Cloud; Rain,4,1,1,1,0,1,0,0,0,0,Navigation,100.0,100.0
+31,HeRCULES,2025,20.0,2,1,0,1,100,Industrial,50,RTK,0,,urban; bridge; campus,Day; Night,Sun; Cloud; Rain; Snow,0,0,0,0,0,1,0,0,1,0,Industrial,100.0,50.0
+32,NVIDIA Physical AI Autonomous Vehicles,2025,,0,0,0,0,,Navigation,,RTK,0,1700.0,nan,Day; Night,Sun; Rain; Fog; Snow,0,0,0,0,0,0,0,0,0,0,Navigation,,
+33,Boreas Road Trip,2026,1.0,1,2,128; 0,1,200,Tactical,200,RTK,0,,suburbs; industrial; urban; forest; farm; tunnel; skyway; regional; freeway,Day; Night,Sun; Snow,0,0,0,0,0,1,0,0,0,0,Tactical,200.0,200.0
