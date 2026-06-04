@@ -161,7 +161,7 @@ SIGNALS = [
 ]
 
 N_SIGNALS = len(SIGNALS)
-N_BINS    = 125
+N_BINS    = 250
 FIG_W     = 10.0
 FIG_H     = 6.0
 
@@ -451,7 +451,7 @@ def plot_signal(dataset_name: str,
 
     # ── Axis labels & styling ─────────────────────────────────────────────
     ax_lin.set_title(
-        f"{sig['label']}  ·  {dataset_name.upper()}",
+        f"{sig['label']} Distribution — {dataset_name}",
         fontsize=11,
         fontweight="bold",
         pad=8,

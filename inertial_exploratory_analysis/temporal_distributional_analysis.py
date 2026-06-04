@@ -110,8 +110,8 @@ DATASET_COLORS = {
     "nuscene":   TUM_EXT['olive'],
     "nvidia":    TUM_EXT['maroon'],
     "oxford":    TUM_EXT['gold'],
-    "waymo":     TUM_PRIMARY['blue2'],
-    "zod":       TUM_PRIMARY['gray'],
+    "waymo":     TUM_SECONDARY['blue2'],
+    "zod":       TUM_SECONDARY['gray'],
 }
 DATASET_COLOR_FALLBACK = TUM_SECONDARY['blue2']   # used if dataset not in dict above
 
@@ -205,6 +205,13 @@ YLIN_CAP_FACTOR = 1.20   # cap = 2nd tallest bin × 1.20
 # Change this value to resample at a different resolution, e.g. 0.5 or 1.0.
 WINDOW_S = 0.1   # seconds per window
 
+# Streaming batch size for very large datasets (e.g. NVIDIA 298k clips).
+# Clips are processed in batches of this size, windowed immediately, then
+# raw frames are discarded to avoid loading everything into RAM at once.
+# Datasets with fewer clips than this threshold use the simple load path.
+LARGE_DATASET_THRESHOLD = 10_000   # clips
+BATCH_SIZE              = 5_000    # clips per batch
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DATA LOADING
@@ -221,30 +228,45 @@ WINDOW_S = 0.1   # seconds per window
 REQUIRED_COLS = {"timestamp_s", "speed", "a_long", "a_lat", "jerk_long", "jerk_lat", "yaw_rate"}
 
 
-def load_clips(dataset_dir: Path, dataset_name: str) -> pd.DataFrame | None:
+def load_clips(dataset_dir: Path, dataset_name: str) -> tuple[pd.DataFrame | None, int]:
     """
-    Concatenate all clip_*.parquet files for one dataset.
-    Returns None if no usable data is found.
+    Load all clips for one dataset.
+
+    Small datasets (≤ LARGE_DATASET_THRESHOLD clips):
+        Load all raw frames at once, return for windowing in compute_signals.
+
+    Large datasets (> LARGE_DATASET_THRESHOLD clips, e.g. NVIDIA 298k):
+        Window each batch of BATCH_SIZE clips immediately and discard raw
+        frames to stay within reasonable RAM. Returns pre-windowed DataFrame.
+
+    Schema is peeked once from the first file only (not per-file) to avoid
+    298k redundant disk seeks on large datasets.
+
+    Returns (dataframe, n_raw_frames). dataframe is None if no data found.
     """
     import pyarrow.parquet as pq
 
     parquet_files = sorted(dataset_dir.glob("clip_*.parquet"))
     if not parquet_files:
         print(f"  [WARN] No clip_*.parquet files found in {dataset_dir}")
-        return None
+        return None, 0
 
-    chunks = []
+    # Peek schema ONCE from first file only
+    try:
+        first_schema = set(pq.read_schema(parquet_files[0]).names)
+        cols_to_read = list(REQUIRED_COLS & first_schema)
+    except Exception:
+        cols_to_read = list(REQUIRED_COLS)
+
     missing_warned = False
 
-    for fp in parquet_files:
+    def _read_file(fp):
+        nonlocal missing_warned
         try:
-            schema_cols  = set(pq.read_schema(fp).names)
-            cols_to_read = list(REQUIRED_COLS & schema_cols)
             df = pd.read_parquet(fp, columns=cols_to_read)
         except Exception as e:
             print(f"  [WARN] Could not read {fp.name}: {e}")
-            continue
-
+            return None
         missing = REQUIRED_COLS - set(df.columns)
         if missing and not missing_warned:
             print(f"  [WARN] {dataset_name}: columns {missing} not found — filled with NaN")
@@ -252,18 +274,74 @@ def load_clips(dataset_dir: Path, dataset_name: str) -> pd.DataFrame | None:
         for col in REQUIRED_COLS:
             if col not in df.columns:
                 df[col] = np.nan
+        return df[list(REQUIRED_COLS)]
 
-        chunks.append(df[list(REQUIRED_COLS)])
+    # ── Small dataset: load all raw frames at once ────────────────────────
+    if len(parquet_files) <= LARGE_DATASET_THRESHOLD:
+        chunks = [r for fp in parquet_files if (r := _read_file(fp)) is not None]
+        if not chunks:
+            return None, 0
+        combined = pd.concat(chunks, ignore_index=True)
+        n_raw = len(combined)
+        if n_raw < 10:
+            print(f"  [WARN] {dataset_name}: only {n_raw} rows — skipping")
+            return None, 0
+        return combined, n_raw
 
-    if not chunks:
-        return None
+    # ── Large dataset: window each batch immediately to save RAM ──────────
+    print(f"  [INFO] {dataset_name}: {len(parquet_files):,} clips — streaming mode")
+    all_windowed = []
+    n_raw = 0
 
-    combined = pd.concat(chunks, ignore_index=True)
-    if len(combined) < 10:
-        print(f"  [WARN] {dataset_name}: only {len(combined)} rows total — skipping")
-        return None
+    for batch_start in range(0, len(parquet_files), BATCH_SIZE):
+        batch = parquet_files[batch_start: batch_start + BATCH_SIZE]
+        chunks = [r for fp in batch if (r := _read_file(fp)) is not None]
+        if not chunks:
+            continue
+        batch_df = pd.concat(chunks, ignore_index=True)
+        n_raw += len(batch_df)
+        all_windowed.append(_window_df(batch_df, clip_id_offset=batch_start))
+        del batch_df, chunks
 
-    return combined
+    if not all_windowed:
+        return None, 0
+
+    # Pre-windowed: mark by dropping timestamp_s so compute_signals skips windowing
+    result = pd.concat(all_windowed, ignore_index=True)
+    return result, n_raw
+
+
+def _window_df(df: pd.DataFrame, clip_id_offset: int = 0) -> pd.DataFrame:
+    """
+    Group frames into WINDOW_S windows and return per-window means.
+    clip_id_offset shifts clip IDs to keep global keys unique across batches.
+    """
+    SIGNAL_COLS = ["speed", "a_long", "a_lat", "jerk_long", "jerk_lat", "yaw_rate"]
+
+    ts = df["timestamp_s"].values.astype(float)
+
+    # Detect clip boundaries via timestamp gaps > 1s
+    dt = np.diff(ts, prepend=ts[0])
+    clip_ids = np.zeros(len(ts), dtype=np.int64)
+    for b in np.where(np.abs(dt) > 1.0)[0]:
+        clip_ids[b:] += 1
+    clip_ids += clip_id_offset
+
+    # Relative time within each clip
+    t_rel = np.empty_like(ts)
+    for cid in np.unique(clip_ids):
+        mask = clip_ids == cid
+        t_rel[mask] = ts[mask] - ts[mask][0]
+
+    # Global unique window key.
+    # Multiplier must exceed max windows per clip.
+    # NVIDIA: ~22s clips / 0.1s = 220 windows max → 1_000_000 is safe.
+    window_ids = (t_rel // WINDOW_S).astype(np.int64)
+    global_key = clip_ids * 1_000_000 + window_ids
+
+    df_work = pd.DataFrame({col: df[col].values.astype(float) for col in SIGNAL_COLS})
+    df_work["_key"] = global_key
+    return df_work.groupby("_key")[SIGNAL_COLS].mean().reset_index(drop=True)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -272,60 +350,29 @@ def load_clips(dataset_dir: Path, dataset_name: str) -> pd.DataFrame | None:
 
 def compute_signals(df: pd.DataFrame) -> dict[str, np.ndarray]:
     """
-    Temporally downsample all 6 signals into non-overlapping WINDOW_S windows.
+    Extract and clip all 6 signals.
 
-    For each clip, frames are grouped by:
-        window_id = floor((timestamp_s - clip_start_s) / WINDOW_S)
-    and the mean of each signal is taken within each window. Each window
-    produces exactly one data point regardless of the dataset's frame rate.
-
-    This makes all datasets comparable (200 Hz and 10 Hz produce the same
-    number of data points per second of recording) and naturally smooths
-    transient zeros from brief stationary moments.
-
-    Hard clip limits are applied AFTER windowing to remove physical outliers.
+    If df contains 'timestamp_s' (small datasets): apply windowing first.
+    If df is already windowed (large datasets from batch loader): clip directly.
     """
-    SIGNAL_COLS = ["speed", "a_long", "a_lat", "jerk_long", "jerk_lat", "yaw_rate"]
     CLIP_LIMITS = {
-        "speed":     (0,    50),
-        "a_long":  (-15,   15),
-        "a_lat":   (-15,   15),
-        "jerk_long":(-30,  30),
-        "jerk_lat": (-30,  30),
-        "yaw_rate": (-1.5, 1.5),
+        "speed":      (0,     50),
+        "a_long":   (-15,    15),
+        "a_lat":    (-15,    15),
+        "jerk_long": (-30,   30),
+        "jerk_lat":  (-30,   30),
+        "yaw_rate":  (-1.5,  1.5),
     }
-
-    ts = df["timestamp_s"].values.astype(float)
-
-    # Build window IDs relative to the start of the whole dataset.
-    # Clips are independent recordings, so we reset relative time per clip
-    # by using timestamp continuity: a gap > 1 s signals a new clip boundary.
-    dt = np.diff(ts, prepend=ts[0]) # type: ignore
-    clip_boundary = np.where(np.abs(dt) > 1.0)[0]
-    clip_ids = np.zeros(len(ts), dtype=np.int64)
-    for b in clip_boundary:
-        clip_ids[b:] += 1
-
-    # Relative time within each clip
-    t_rel = np.empty_like(ts)
-    for cid in np.unique(clip_ids):
-        mask = clip_ids == cid
-        t_rel[mask] = ts[mask] - ts[mask][0]
-
-    window_ids = (t_rel // WINDOW_S).astype(np.int64)
-
-    # Global unique window key: combine clip_id and window_id
-    global_key = clip_ids * 10_000_000 + window_ids
-
-    # Group by window key and compute mean for each signal
-    df_work = pd.DataFrame({col: df[col].values.astype(float)
-                            for col in SIGNAL_COLS})
-    df_work["_key"] = global_key
-    windowed = df_work.groupby("_key")[SIGNAL_COLS].mean()
 
     def clip_valid(arr, lo, hi):
         a = np.asarray(arr, dtype=float)
         return a[(a >= lo) & (a <= hi) & ~np.isnan(a)]
+
+    # Large dataset: already windowed by batch loader
+    if "timestamp_s" not in df.columns:
+        windowed = df
+    else:
+        windowed = _window_df(df, clip_id_offset=0)
 
     return {
         "speed":     clip_valid(windowed["speed"].values,      *CLIP_LIMITS["speed"]),
@@ -473,11 +520,15 @@ def plot_signal(dataset_name: str,
 
         ax.set_xlim(xlim_lo, xlim_hi)
 
+    # ── Axis labels & styling ─────────────────────────────────────────────
+    window_label = f"{WINDOW_S / 1000:g}ms"
     ax.set_title(
-        f"{sig['label']}  ·  {dataset_name.upper()}  "
-        f"({int(WINDOW_S * 1000)} ms windows)",
-        fontsize=11, fontweight="bold", pad=8,
+    f"{sig['label']} Distribution -- {dataset_name.upper()} ({window_label} windows)",
+    fontsize=11,
+    fontweight="bold",
+    pad=8,
     )
+
     ax.set_xlabel(sig["xlabel"], fontsize=9, labelpad=4)
     ax.set_ylabel("Fraction of frames", fontsize=9, labelpad=4)
     ax.tick_params(axis="both", labelsize=8.5)
@@ -500,11 +551,10 @@ def _process_dataset(args: tuple) -> dict | None:
     """
     ds_dir, ds_name, fig_root, position = args
 
-    df = load_clips(ds_dir, ds_name)
+    df, n_raw = load_clips(ds_dir, ds_name)
     if df is None:
         return None
 
-    n_frames = len(df)
     sig_data = compute_signals(df)
 
     results = []
@@ -512,19 +562,19 @@ def _process_dataset(args: tuple) -> dict | None:
         vals      = sig_data.get(sig["key"], np.array([]))
         out_path  = fig_root / f"{ds_name}_{sig['key']}.png"
         bar_color = _get_bar_color(ds_name, sig["key"])
-        plot_signal(ds_name, sig, vals, out_path, n_frames, bar_color)
+        plot_signal(ds_name, sig, vals, out_path, n_raw, bar_color)
         results.append({
             "key":    sig["key"],
             "unit":   sig["unit"],
             "n":      len(vals),
-            "pct":    100.0 * len(vals) / max(1, n_frames),
+            "pct":    100.0 * len(vals) / max(1, n_raw),
             "mean":   float(np.mean(vals)) if len(vals) > 0 else float("nan"),
             "fname":  out_path.name,
         })
 
     return {
         "dataset":  ds_name,
-        "n_frames": n_frames,
+        "n_frames": n_raw,
         "signals":  results,
     }
 
@@ -552,9 +602,6 @@ def main():
         print(f"[ERROR] No dataset folders found in {inertial_root}")
         sys.exit(1)
 
-    # One worker per dataset, capped at CPU count.
-    # Datasets with many clips (NVIDIA 298k, 4seasons 31M) are I/O + CPU heavy,
-    # so process-level parallelism avoids Python's GIL entirely.
     n_workers   = min(len(datasets), os.cpu_count() or 4)
     total_plots = len(datasets) * N_SIGNALS
 
