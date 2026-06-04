@@ -91,12 +91,12 @@ SIGNAL_COLORS = {
 # PHASE 2 — colorful (uncomment when final dataset set is fixed)
 #
 # SIGNAL_COLORS = {
-#     "speed":     TUM_PRIMARY['tum_blue'],     # Pantone 300C
-#     "lon_accel": TUM_ACCENT['green'],         # Pantone 383
-#     "lat_accel": TUM_ACCENT['orange'],        # Pantone 158
-#     "lon_jerk":  TUM_SECONDARY['blue1'],      # Pantone 540
-#     "lat_jerk":  TUM_EXT['red'],              # TUM red
-#     "yaw_rate":  TUM_EXT['teal'],             # TUM teal
+#     "speed":     TUM_SECONDARY['blue2'],    
+#     "lon_accel": TUM_ACCENT['green'],       
+#     "lat_accel": TUM_SECONDARY['gray'],        
+#     "lon_jerk":  TUM_ACCENT['blue1'],      
+#     "lat_jerk":  TUM_SECONDARY['light_gray'],             
+#     "yaw_rate":  TUM_ACCENT['orange'],            
 # }
 
 MEAN_LINE_COLOR = TUM_PRIMARY['black']  # dark gray for mean + zero lines
@@ -161,12 +161,17 @@ SIGNALS = [
 ]
 
 N_SIGNALS = len(SIGNALS)
-N_BINS    = 250
+N_BINS    = 125
 FIG_W     = 10.0
 FIG_H     = 6.0
 
 # Padding multiplier added to p01/p99 to set x-axis limits
 X_PAD_FRAC = 0.10
+
+# Y-axis cap: the linear axis is capped at this multiple of the 2nd tallest bin.
+# This prevents a dominant zero-spike from flattening all other bars.
+# The spike is still shown but clipped with a visual break marker (triangle).
+YLIN_CAP_FACTOR = 1.20   # cap = 2nd tallest bin × 1.20
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -288,11 +293,47 @@ def _data_xlim(values: np.ndarray, lo: float, hi: float) -> tuple[float, float]:
     p99 = float(np.percentile(values, 99))
     rng = p99 - p01
     if rng < 1e-9:
-        # Degenerate (all-zero): show ±1 unit around the value
         center = float(np.median(values))
         return max(lo, center - 1.0), min(hi, center + 1.0)
     pad = rng * X_PAD_FRAC
     return max(lo, p01 - pad), min(hi, p99 + pad)
+
+
+def _ylin_cap(density: np.ndarray) -> float | None:
+    """
+    Return a y-axis cap for the linear axis based on the 2nd tallest bin.
+    Returns None if no capping is needed (distribution is not spike-dominated).
+
+    A spike is considered dominant when the tallest bin is more than 3×
+    the 2nd tallest bin — i.e. it would visually crush everything else.
+    """
+    if len(density) < 2:
+        return None
+    sorted_d = np.sort(density)[::-1]   # descending
+    tallest  = sorted_d[0]
+    second   = sorted_d[1]
+    if second < 1e-9:
+        return None
+    if tallest > 3.0 * second:
+        return second * YLIN_CAP_FACTOR
+    return None
+
+
+def _draw_cap_markers(ax, density: np.ndarray, centers: np.ndarray,
+                      cap: float, color: str) -> None:
+    """
+    Draw small downward-pointing triangles on top of every bar that was
+    clipped by the y-axis cap, to signal that the bar continues upward.
+    """
+    clipped = centers[density > cap]
+    for x in clipped:
+        ax.annotate(
+            "▼",
+            xy=(x, cap),
+            xytext=(x, cap * 1.01),
+            ha="center", va="bottom",
+            fontsize=7, color=color, alpha=0.8,
+        )
 
 
 def plot_signal(dataset_name: str,
@@ -301,18 +342,17 @@ def plot_signal(dataset_name: str,
                 out_path: Path,
                 total_frames: int) -> None:
     """
-    Single figure, twin y-axes:
-      Left axis  — linear bar histogram (TUM blue)
-      Right axis — same distribution as continuous line on log scale (red)
-    Both share the same data-driven x-axis.
+    Single figure:
+      Linear bar histogram only.
+      Y-axis is optionally capped at 2nd tallest bin × YLIN_CAP_FACTOR
+      when the distribution is spike-dominated.
+      Clipped bars get a ▼ marker to indicate truncation.
     """
-    lo    = sig["clip_lo"]
-    hi    = sig["clip_hi"]
-    color_bar = SIGNAL_COLORS[sig["key"]]   # TUM blue (phase 1)
-    color_log = TUM_EXT["red"]                  # TUM red for log line
+    lo        = sig["clip_lo"]
+    hi        = sig["clip_hi"]
+    color_bar = SIGNAL_COLORS[sig["key"]]
 
     fig, ax_lin = plt.subplots(figsize=(FIG_W, FIG_H))
-    ax_log = ax_lin.twinx()
 
     if len(values) < 5:
         ax_lin.text(0.5, 0.5, "Insufficient data",
@@ -333,25 +373,44 @@ def plot_signal(dataset_name: str,
         p05_v  = float(np.percentile(values,  5))
         p95_v  = float(np.percentile(values, 95))
 
-        # ── Left axis: linear bars ────────────────────────────────────────
-        ax_lin.bar(centers, density, width=width,
-                   color=color_bar, alpha=0.75, linewidth=1,
-                   label="Linear distribution", zorder=2)
+        # ── Linear histogram bars ─────────────────────────────────────────
+        ax_lin.bar(
+            centers,
+            density,
+            width=width,
+            color=color_bar,
+            alpha=0.75,
+            linewidth=0,
+            label="Distribution",
+            zorder=2
+        )
 
-        # ── Right axis: log-scale line ────────────────────────────────────
-        mask = density > 0
-        if mask.sum() > 1:
-            ax_log.plot(centers[mask], density[mask],
-                        color=color_log, lw=2, alpha=0.9,
-                        label="Log-scale distribution", zorder=3)
-        ax_log.set_yscale("log")
+        # ── Optional y-axis cap for spike-dominated distributions ─────────
+        cap = _ylin_cap(density)
+        if cap is not None:
+            ax_lin.set_ylim(0, cap)
+            _draw_cap_markers(ax_lin, density, centers, cap, color_bar)
 
         # ── Reference lines ───────────────────────────────────────────────
         if lo < 0 and xlim_lo < 0 < xlim_hi:
-            ax_lin.axvline(0, color=MEAN_LINE_COLOR, lw=0.5,
-                           ls="-", alpha=1^, zorder=1)
-        ax_lin.axvline(mean_v, color=MEAN_LINE_COLOR, lw=1,
-                       ls="--", alpha=1, zorder=4, label="Mean")
+            ax_lin.axvline(
+                0,
+                color=MEAN_LINE_COLOR,
+                lw=0.5,
+                ls="-",
+                alpha=1,
+                zorder=1
+            )
+
+        ax_lin.axvline(
+            mean_v,
+            color=MEAN_LINE_COLOR,
+            lw=1,
+            ls="--",
+            alpha=1,
+            zorder=4,
+            label="Mean"
+        )
 
         # ── Stats box ─────────────────────────────────────────────────────
         stats_text = (
@@ -359,39 +418,52 @@ def plot_signal(dataset_name: str,
             f"p05 = {p05_v:+.3f}   p95 = {p95_v:+.3f}\n"
             f"n = {len(values):,} / {total_frames:,} frames"
         )
-        ax_lin.text(0.97, 0.97, stats_text,
-                    ha="right", va="top",
-                    transform=ax_lin.transAxes,
-                    fontsize=8.5, color= TUM_PRIMARY["black"],
-                    linespacing=1.6,
-                    bbox=dict(boxstyle="round,pad=0.3", fc="white",
-                              ec=TUM_PRIMARY["white"], alpha=0.90, lw=0.6),
-                    zorder=5)
+
+        ax_lin.text(
+            0.97,
+            0.97,
+            stats_text,
+            ha="right",
+            va="top",
+            transform=ax_lin.transAxes,
+            fontsize=8.5,
+            color=TUM_PRIMARY["black"],
+            linespacing=1.6,
+            bbox=dict(
+                boxstyle="round,pad=0.3",
+                fc="white",
+                ec=TUM_PRIMARY["black"],
+                alpha=0.90,
+                lw=0.6
+            ),
+            zorder=5
+        )
 
         ax_lin.set_xlim(xlim_lo, xlim_hi)
 
         # ── Legend ────────────────────────────────────────────────────────
-        handles_lin, labels_lin = ax_lin.get_legend_handles_labels()
-        handles_log, labels_log = ax_log.get_legend_handles_labels()
-        ax_lin.legend(handles_lin + handles_log,
-                      labels_lin + labels_log,
-                      fontsize=8, loc="upper left",
-                      framealpha=0.85, edgecolor=TUM_PRIMARY["white"])
+        ax_lin.legend(
+            fontsize=8,
+            loc="upper left",
+            framealpha=0.85,
+            edgecolor=TUM_PRIMARY["black"]
+        )
 
     # ── Axis labels & styling ─────────────────────────────────────────────
     ax_lin.set_title(
         f"{sig['label']}  ·  {dataset_name.upper()}",
-        fontsize=11, fontweight="bold", pad=8,
+        fontsize=11,
+        fontweight="bold",
+        pad=8,
     )
+
     ax_lin.set_xlabel(sig["xlabel"], fontsize=9, labelpad=4)
-    ax_lin.set_ylabel("Fraction of frames (linear scale)", fontsize=9, labelpad=4)
-    ax_log.set_ylabel("Fraction of frames (log scale)",   fontsize=9, labelpad=4)
+    ax_lin.set_ylabel("Fraction of frames", fontsize=9, labelpad=4)
 
     ax_lin.tick_params(axis="both", labelsize=8.5)
-    ax_log.tick_params(axis="y",    labelsize=8.5)
 
     ax_lin.spines["top"].set_visible(False)
-    ax_log.spines["top"].set_visible(False)
+    ax_lin.spines["right"].set_visible(False)
 
     fig.tight_layout()
     plt.savefig(out_path, dpi=180, bbox_inches="tight")
@@ -419,7 +491,7 @@ def main():
 
     total_plots = len(datasets) * N_SIGNALS
     print(f"\n{'='*60}")
-    print(f"  distributional_analysis.py — 6 signals, log y-scale")
+    print(f"  distributional_analysis.py — 6 signals, linear histograms")
     print(f"  Found {len(datasets)} dataset(s) → {total_plots} PNGs")
     print(f"  Output → {fig_root}")
     print(f"{'='*60}\n")
