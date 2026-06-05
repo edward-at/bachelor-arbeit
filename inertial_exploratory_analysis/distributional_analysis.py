@@ -5,7 +5,6 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 import pandas as pd
 
@@ -262,11 +261,11 @@ def compute_signals(df: pd.DataFrame) -> dict[str, np.ndarray]:
     Extract and clip all 6 signals.
 
     Unit conversions applied here (after windowing):
-      speed_kmh  → used directly as km/h  (clip: 0–200 km/h)
+      speed_kmh  → used directly as km/h  (clip: 0–180 km/h)
       yaw_rate   → rad/s × (180/π) = °/s  (clip: ±90 °/s)
     """
     CLIP_LIMITS = {
-        "speed":    (0,     200.0),   # km/h
+        "speed":      (0,     200.0),   # km/h
         "a_long":   (-15,     15),
         "a_lat":    (-15,     15),
         "jerk_long": (-30,    30),
@@ -334,21 +333,26 @@ def _ylin_cap(density: np.ndarray) -> float | None:
     second   = sorted_d[1]
     if second < 1e-9:
         return None
-    if tallest > 3.0 * second:
+    if tallest > 2.0 * second:
         return second * YLIN_CAP_FACTOR
     return None
 
 
 def _draw_cap_markers(ax, density: np.ndarray, centers: np.ndarray,
                       cap: float, color: str) -> None:
+    """
+    Draw downward triangles just inside the y-axis cap (at 97% of cap height)
+    on every clipped bar. Staying below the cap line keeps markers inside the
+    axes and prevents overlap with the figure title.
+    """
     clipped = centers[density > cap]
     for x in clipped:
         ax.annotate(
             "▼",
             xy=(x, cap),
-            xytext=(x, cap * 1.01),
+            xytext=(x, cap),
             ha="center", va="bottom",
-            fontsize=7, color="black", alpha=0.8,
+            fontsize=8, color="black", alpha=1,
         )
 
 
@@ -395,7 +399,7 @@ def plot_signal(dataset_name: str,
         stats_text = (
             f"μ = {mean_v:+.3f}   σ = {std_v:.3f}\n"
             f"p05 = {p05_v:+.3f}   p95 = {p95_v:+.3f}\n"
-            f"n = {len(values):,} / {total_frames:,} frames"
+            f"n = {len(values):,} windows  |  {total_frames:,} raw frames"
         )
         ax.text(0.97, 0.97, stats_text,
                 ha="right", va="top",
@@ -414,7 +418,7 @@ def plot_signal(dataset_name: str,
         fontsize=11, fontweight="bold", pad=8,
     )
     ax.set_xlabel(sig["xlabel"], fontsize=9, labelpad=4)
-    ax.set_ylabel("Fraction of frames", fontsize=9, labelpad=4)
+    ax.set_ylabel(f"Fraction of {int(WINDOW_S * 1000)} ms windows", fontsize=9, labelpad=4)
     ax.tick_params(axis="both", labelsize=8.5)
     ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
     ax.set_axisbelow(True)   # grid behind bars
@@ -447,7 +451,6 @@ def _process_dataset(args: tuple) -> dict | None:
             "key":    sig["key"],
             "unit":   sig["unit"],
             "n":      len(vals),
-            "pct":    100.0 * len(vals) / max(1, n_raw),
             "mean":   float(np.mean(vals)) if len(vals) > 0 else float("nan"),
             "fname":  out_path.name,
         })
@@ -470,7 +473,7 @@ def main():
     root          = _find_project_root()
     inertial_root = root / "inertial_data"
     fig_root      = (Path.home() / "Downloads" / "bachelor-arbeit"
-                     / "inertial_exploratory_analysis" / "figures" / "distributions")
+                     / "inertial_exploratory_analysis" / "figures" / "temporal")
     fig_root.mkdir(parents=True, exist_ok=True)
 
     datasets = sorted(
@@ -489,6 +492,7 @@ def main():
     print(f"  distributional_analysis.py — {N_SIGNALS} signals, {int(WINDOW_S*1000)} ms windows")
     print(f"  Found {len(datasets)} dataset(s) → {total_plots} PNGs")
     print(f"  Workers: {n_workers}  (CPU cores: {os.cpu_count()})")
+    print(f"  Input   → {inertial_root}")
     print(f"  Output  → {fig_root}")
     print(f"  Started → {_now()}")
     print(f"{'='*60}\n")
@@ -511,11 +515,11 @@ def main():
                 continue
 
             print(f"── {ds_name.upper()} {'─' * max(1, 40 - len(ds_name))}  [{_now()}]")
-            print(f"   Loaded {_format_count(result['n_frames'])} frames")
+            print(f"   Raw frames: {_format_count(result['n_frames'])}  →  windowed at {int(WINDOW_S*1000)} ms")
             for r in result["signals"]:
                 mean_s = f"{r['mean']:+.3f}" if not np.isnan(r["mean"]) else "N/A"
                 print(f"   ✓ {r['fname']:<45}  "
-                      f"{r['n']:>9,} valid ({r['pct']:5.1f}%)  "
+                      f"{r['n']:>9,} windows  "
                       f"mean={mean_s} {r['unit']}")
             print()
             summary_rows.append({
