@@ -65,9 +65,9 @@ DATASET_COLORS = {
     "kitti360":  TUM_EXT['teal'],
     "nuscene":   TUM_EXT['navy'],
     "nvidia":    TUM_EXT['purple'],
-    "oxford":    TUM_SECONDARY['blue2'],
-    "waymo":     TUM_SECONDARY['gray'],
-    "zod":       TUM_SECONDARY['light_gray'],
+    "oxford":    TUM_EXT['olive'],
+    "waymo":     TUM_SECONDARY['blue2'],
+    "zod":       TUM_SECONDARY['gray'],
 }
 DATASET_COLOR_FALLBACK = TUM_SECONDARY['blue2']
 
@@ -91,7 +91,7 @@ SIGNALS = [
         "label":    "Speed",
         "unit":     "km/h",
         "clip_lo":  0.0,
-        "clip_hi":  200.0,        # km/h (≈ 55 m/s, covers highway + fast roads)
+        "clip_hi":  200.0,
         "xlabel":   "Speed (km/h)",
     },
     {
@@ -130,7 +130,7 @@ SIGNALS = [
         "key":      "yaw_rate",
         "label":    "Yaw Rate",
         "unit":     "°/s",
-        "clip_lo":  -90.0,        # deg/s (= ±1.57 rad/s ≈ ±90°/s)
+        "clip_lo":  -90.0,
         "clip_hi":   90.0,
         "xlabel":   "Yaw Rate (°/s)",
     },
@@ -153,8 +153,6 @@ BATCH_SIZE              = 5_000
 # DATA LOADING
 # ─────────────────────────────────────────────────────────────────────────────
 
-# speed_kmh is read from the parquet directly (already in km/h).
-# yaw_rate is read in rad/s and converted to °/s in compute_signals.
 REQUIRED_COLS = {"timestamp_s", "speed_kmh", "a_long", "a_lat",
                  "jerk_long", "jerk_lat", "yaw_rate"}
 
@@ -224,16 +222,13 @@ def load_clips(dataset_dir: Path, dataset_name: str) -> tuple[pd.DataFrame | Non
 
 
 def _window_df(df: pd.DataFrame, clip_id_offset: int = 0) -> pd.DataFrame:
-    """
-    Group frames into WINDOW_S windows and return per-window means.
-    Uses speed_kmh (km/h) and yaw_rate (rad/s) as stored — unit conversion
-    happens in compute_signals after windowing.
-    """
     SIGNAL_COLS = ["speed_kmh", "a_long", "a_lat", "jerk_long", "jerk_lat", "yaw_rate"]
 
-    ts = df["timestamp_s"].values.astype(float)
+    ts = np.asarray(df["timestamp_s"].to_numpy(dtype=float))
 
-    dt = np.diff(ts, prepend=ts[0])
+    dt = np.empty_like(ts)
+    dt[0] = 0.0
+    dt[1:] = np.diff(ts)
     clip_ids = np.zeros(len(ts), dtype=np.int64)
     for b in np.where(np.abs(dt) > 1.0)[0]:
         clip_ids[b:] += 1
@@ -257,20 +252,13 @@ def _window_df(df: pd.DataFrame, clip_id_offset: int = 0) -> pd.DataFrame:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def compute_signals(df: pd.DataFrame) -> dict[str, np.ndarray]:
-    """
-    Extract and clip all 6 signals.
-
-    Unit conversions applied here (after windowing):
-      speed_kmh  → used directly as km/h  (clip: 0–180 km/h)
-      yaw_rate   → rad/s × (180/π) = °/s  (clip: ±90 °/s)
-    """
     CLIP_LIMITS = {
-        "speed":      (0,     200.0),   # km/h
+        "speed":      (0,     200.0),
         "a_long":   (-15,     15),
         "a_lat":    (-15,     15),
         "jerk_long": (-30,    30),
         "jerk_lat":  (-30,    30),
-        "yaw_rate":  (-90.0,  90.0),    # °/s
+        "yaw_rate":  (-90.0,  90.0),
     }
 
     def clip_valid(arr, lo, hi):
@@ -282,8 +270,7 @@ def compute_signals(df: pd.DataFrame) -> dict[str, np.ndarray]:
     else:
         windowed = _window_df(df, clip_id_offset=0)
 
-    # Convert yaw_rate: rad/s → °/s
-    yaw_deg = windowed["yaw_rate"].values.astype(float) * (180.0 / np.pi)
+    yaw_deg = windowed["yaw_rate"].to_numpy(dtype=float) * (180.0 / np.pi)
 
     return {
         "speed":     clip_valid(windowed["speed_kmh"].values,  *CLIP_LIMITS["speed"]),
@@ -340,11 +327,6 @@ def _ylin_cap(density: np.ndarray) -> float | None:
 
 def _draw_cap_markers(ax, density: np.ndarray, centers: np.ndarray,
                       cap: float, color: str) -> None:
-    """
-    Draw downward triangles just inside the y-axis cap (at 97% of cap height)
-    on every clipped bar. Staying below the cap line keeps markers inside the
-    axes and prevents overlap with the figure title.
-    """
     clipped = centers[density > cap]
     for x in clipped:
         ax.annotate(
@@ -352,7 +334,7 @@ def _draw_cap_markers(ax, density: np.ndarray, centers: np.ndarray,
             xy=(x, cap),
             xytext=(x, cap),
             ha="center", va="bottom",
-            fontsize=8, color="black", alpha=1,
+            fontsize=6, color="black", alpha=1,
         )
 
 
@@ -370,7 +352,7 @@ def plot_signal(dataset_name: str,
     if len(values) < 5:
         ax.text(0.5, 0.5, "Insufficient data",
                 ha="center", va="center",
-                transform=ax.transAxes, fontsize=11, color="gray")
+                transform=ax.transAxes, color="gray")
     else:
         xlim_lo, xlim_hi = _data_xlim(values, lo, hi)
         bins    = np.linspace(xlim_lo, xlim_hi, N_BINS + 1)
@@ -384,8 +366,7 @@ def plot_signal(dataset_name: str,
         p05_v  = float(np.percentile(values,  5))
         p95_v  = float(np.percentile(values, 95))
 
-        ax.bar(centers, density, width=width,
-               color=bar_color, alpha=0.75, linewidth=0, zorder=2)
+        ax.bar(centers, density, width=width, color=bar_color, zorder=2)
 
         cap = _ylin_cap(density)
         if cap is not None:
@@ -401,30 +382,32 @@ def plot_signal(dataset_name: str,
             f"p05 = {p05_v:+.3f}   p95 = {p95_v:+.3f}\n"
             f"n = {len(values):,} windows  |  {total_frames:,} raw frames"
         )
-        ax.text(0.97, 0.97, stats_text,
-                ha="right", va="top",
-                transform=ax.transAxes,
-                fontsize=8.5, color=TUM_PRIMARY["black"],
-                linespacing=1.6,
-                bbox=dict(boxstyle="round,pad=0.3", fc="white",
-                          ec="#cccccc", alpha=0.90, lw=0.6),
-                zorder=5)
+        ax.text(
+            0.97, 0.97, stats_text,
+            ha="right",
+            va="top",
+            transform=ax.transAxes,
+            color=TUM_PRIMARY["black"],
+            fontsize=9,
+            bbox=dict(
+                facecolor="white",
+                edgecolor="#cccccc",
+                alpha=0.90
+            ),
+            zorder=5
+        )
 
         ax.set_xlim(xlim_lo, xlim_hi)
 
     window_label = f"{int(WINDOW_S * 1000)} ms"
-    ax.set_title(
-        f"{sig['label']} Distribution — {dataset_name.upper()} ({window_label} windows)",
-        fontsize=11, fontweight="bold", pad=8,
-    )
-    ax.set_xlabel(sig["xlabel"], fontsize=9, labelpad=4)
-    ax.set_ylabel(f"Fraction of {int(WINDOW_S * 1000)} ms windows", fontsize=9, labelpad=4)
-    ax.tick_params(axis="both", labelsize=8.5)
-    ax.grid(True, linestyle="--", linewidth=0.5, alpha=0.7)
-    ax.set_axisbelow(True)   # grid behind bars
+    ax.set_title(f"{sig['label']} Distribution — {dataset_name.upper()} ({window_label} windows)")
+    ax.set_xlabel(sig["xlabel"])
+    ax.set_ylabel(f"Fraction of {int(WINDOW_S * 1000)} ms windows")
+    ax.grid(True)
+    ax.set_axisbelow(True)
 
     fig.tight_layout()
-    plt.savefig(out_path, dpi=180, bbox_inches="tight")
+    plt.savefig(out_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
 
