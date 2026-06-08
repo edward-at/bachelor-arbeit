@@ -456,7 +456,7 @@ def main():
     root          = _find_project_root()
     inertial_root = root / "inertial_data"
     fig_root      = (Path.home() / "Downloads" / "bachelor-arbeit"
-                     / "inertial_exploratory_analysis" / "figures" / "temporal")
+                     / "inertial_exploratory_analysis" / "figures" / "distribution")
     fig_root.mkdir(parents=True, exist_ok=True)
 
     datasets = sorted(

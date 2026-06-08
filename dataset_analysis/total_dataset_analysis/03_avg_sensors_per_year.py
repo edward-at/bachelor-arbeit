@@ -46,6 +46,6 @@ ax2.set_ylim(0, stats['count'].max() * 3)
 plt.tight_layout()
 
 out = os.path.join(BASE_DIR, 'total_dataset_analysis_figures', '03_avg_sensors_per_year.png')
-plt.savefig(out, dpi=150, bbox_inches='tight')
+plt.savefig(out, dpi=300, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out}')

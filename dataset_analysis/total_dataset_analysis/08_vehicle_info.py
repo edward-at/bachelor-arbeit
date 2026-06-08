@@ -24,6 +24,6 @@ ax.set_axisbelow(True)
 
 plt.tight_layout()
 out = os.path.join(BASE_DIR, 'total_dataset_analysis_figures', '08_vehicle_info.png')
-plt.savefig(out, dpi=150, bbox_inches='tight')
+plt.savefig(out, dpi=300, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out}')

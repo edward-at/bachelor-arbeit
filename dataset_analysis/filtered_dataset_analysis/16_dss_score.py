@@ -93,7 +93,7 @@ ax.set_title('Score Components Heatmap per Dataset\n(sorted by DSS)', fontsize=1
 plt.tight_layout()
 
 out_b = os.path.join(BASE_DIR, 'filtered_dataset_analysis_figures', '16b_dss_heatmap.png')
-plt.savefig(out_b, dpi=150, bbox_inches='tight')
+plt.savefig(out_b, dpi=300, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out_b}')
 print()

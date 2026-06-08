@@ -23,6 +23,6 @@ plt.title('CAN Bus Availability')
 plt.tight_layout()
 
 out = os.path.join(BASE_DIR, 'filtered_dataset_analysis_figures', '09_can_bus.png')
-plt.savefig(out, dpi=150, bbox_inches='tight')
+plt.savefig(out, dpi=300, bbox_inches='tight')
 plt.show()
 print(f'Saved → {out}')
