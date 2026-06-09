@@ -59,15 +59,13 @@ SIGNAL_COLORS = {
 
 DATASET_COLORS = {
     "boreas_rt": TUM_EXT['maroon'],
-    "durlar":    TUM_EXT['orange'],
-    "ford":      TUM_EXT['yellow'],
-    "kitti":     TUM_EXT['dark_green'],
-    "kitti360":  TUM_EXT['teal'],
-    "nuscene":   TUM_EXT['navy'],
-    "nvidia":    TUM_EXT['purple'],
-    "oxford":    TUM_EXT['olive'],
-    "waymo":     TUM_SECONDARY['blue2'],
-    "zod":       TUM_SECONDARY['gray'],
+    "ford":      TUM_EXT['orange'],
+    "kitti":     TUM_EXT['yellow'],
+    "kitti360":  TUM_EXT['olive'],
+    "nuscene":   TUM_EXT['dark_green'],
+    "nvidia":    TUM_EXT['teal'],
+    "oxford":    TUM_EXT['navy'],
+    "waymo":     TUM_EXT['purple'],
 }
 DATASET_COLOR_FALLBACK = TUM_SECONDARY['blue2']
 

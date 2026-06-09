@@ -1,0 +1,976 @@
+"""
+Script 14: Standardize Ego-Motion / Inertial Data
+==================================================
+Bachelor Thesis: "Identifying Dynamic Biases in Large-Scale Public Datasets
+via Distributional Analysis"
+
+Input  : parquet_data/<dataset>/<any_subfolder>/**/*.parquet
+Output : inertial_data/<dataset>/clip_0001.parquet
+                                  clip_0002.parquet  ...
+
+One input parquet file  →  one output clip (no windowing, no splitting).
+Clip identity is encoded in the folder path + sequential padded filename.
+Output naming is identical across all datasets: clip_XXXX.parquet
+
+─── COLUMN AVAILABILITY POLICY ────────────────────────────────────────────
+Every output file always contains all 43 columns, even if most values are
+NaN. Two reasons a column can be NaN:
+
+  NOT_AVAILABLE : the raw dataset does not carry this signal at all.
+  INVALID       : the signal exists but a value is unreliable at that frame
+                  (e.g. curvature at near-zero speed).
+
+The reason for each column is stored as Parquet file-level metadata under
+the key  "col_sources"  as a JSON string:
+  {"ax": "RAW", "ay": "RAW", "az": "NOT_AVAILABLE",
+   "curvature": "DERIVED", "curvature_valid": "FLAG", ...}
+
+Reading it back:
+  import json, pyarrow.parquet as pq
+  meta = pq.read_schema("clip_0001.parquet").metadata
+  sources = json.loads(meta[b"col_sources"])
+
+This means future scripts can do:
+  sources["ax"]  # → "NOT_AVAILABLE"
+without a KeyError and without adding extra columns to the table.
+
+─── COLUMN ORDER (43 columns) ─────────────────────────────────────────────
+  timestamp_ns, timestamp_s, t_rel_ns, t_rel_s, dt_ns, dt_s,
+  x, y, z, lat, lon,
+  x_rel, y_rel, x_aligned, y_aligned, heading_initial,
+  vx, vy, vz, speed, speed_kmh,
+  ax, ay, az, a_long, a_lat, deceleration, acc_mag,
+  jerk_long, jerk_lat, jerk_mag, abs_jerk_long, abs_jerk_mag,
+  roll, pitch, yaw, yaw_unwrapped, yaw_rate,
+  heading_change, abs_heading_change,
+  curvature, abs_curvature, curvature_valid
+
+─── TRIAGE FIXES APPLIED (2026-06-09) ─────────────────────────────────────
+  Bucket B: drop frames with dt < DT_MIN_S (near-zero gaps cause derivative
+            explosion). Applied in build_standard_frame() after monotonic
+            filter. Affects boreas_rt, durlar, ford, nuscene, nvidia, waymo.
+  Bucket D: ZOD heading column is in degrees, not radians. Convert with
+            np.radians() in load_zod() before passing to build_standard_frame.
+"""
+
+import json
+import math
+import os
+import threading
+import traceback
+import warnings
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
+from scipy.signal import savgol_filter
+from tqdm import tqdm
+
+warnings.filterwarnings("ignore")
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CONFIGURATION
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _find_dataset_root() -> Path:
+    import sys
+    candidates = []
+    if len(sys.argv) > 1:
+        candidates.append(Path(sys.argv[1]).expanduser().resolve())
+    script_dir = Path(__file__).parent.resolve()
+    candidates += [
+        script_dir,
+        Path.cwd().resolve(),
+        script_dir.parent,
+        Path.cwd().resolve() / "dataset",
+        script_dir / "dataset",
+    ]
+    for root in candidates:
+        if (root / "parquet_data").is_dir():
+            return root
+    checked = "\n  ".join(str(c) for c in candidates)
+    raise FileNotFoundError(
+        "Could not find 'parquet_data/' in any of:\n  " + checked +
+        "\n\nFix options:"
+        "\n  1. cd into the folder that contains parquet_data/ and run from there:"
+        "\n       cd ~/Downloads/dataset && python ~/Downloads/standardize_inertial_data.py"
+        "\n  2. Pass the path as an argument:"
+        "\n       python standardize_inertial_data.py ~/Downloads/dataset"
+    )
+
+BASE_DIR    = _find_dataset_root()
+PARQUET_DIR = BASE_DIR / "parquet_data"
+OUTPUT_DIR  = BASE_DIR / "inertial_data"
+
+# Savitzky-Golay smoothing (speed → a_long, a_long/a_lat → jerk)
+SG_WINDOW = 11      # must be odd
+SG_POLY   = 3
+
+# Curvature validity threshold [m/s]
+CURV_SPEED_MIN = 0.5
+
+# ── BUCKET B FIX ─────────────────────────────────────────────────────────────
+# Frames with dt < DT_MIN_FRAC × median_dt are dropped before any derivative
+# is computed. Near-zero dt gaps (e.g. duplicate GPS/IMU packets with slightly
+# different nanosecond timestamps) cause d/dt to explode by thousands of times.
+# Using a relative fraction (10% of median dt) makes this adaptive across
+# datasets with different sampling rates (e.g. 2000 Hz 4seasons vs 100 Hz DurLAR).
+DT_MIN_FRAC = 0.1   # drop frames where dt < 10% of median dt
+
+# Worker threads for parallel file processing (I/O + CPU bound per file)
+MAX_WORKERS = min(os.cpu_count() or 4, 8)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OUTPUT SCHEMA
+# ─────────────────────────────────────────────────────────────────────────────
+
+OUTPUT_COLUMNS = [
+    "timestamp_ns", "timestamp_s", "t_rel_ns", "t_rel_s", "dt_ns", "dt_s",
+    "x", "y", "z", "lat", "lon",
+    "x_rel", "y_rel", "x_aligned", "y_aligned", "heading_initial",
+    "vx", "vy", "vz", "speed", "speed_kmh",
+    "ax", "ay", "az", "a_long", "a_lat", "deceleration", "acc_mag",
+    "jerk_long", "jerk_lat", "jerk_mag", "abs_jerk_long", "abs_jerk_mag",
+    "roll", "pitch", "yaw", "yaw_unwrapped", "yaw_rate",
+    "heading_change", "abs_heading_change",
+    "curvature", "abs_curvature", "curvature_valid",
+]
+
+SRC_RAW   = "RAW"
+SRC_DERIV = "DERIVED"
+SRC_NA    = "NOT_AVAILABLE"
+SRC_FLAG  = "FLAG"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# UTILITIES
+# ─────────────────────────────────────────────────────────────────────────────
+
+def quat_to_euler(qw, qx, qy, qz):
+    """Unit quaternion arrays → (roll, pitch, yaw) in radians."""
+    qw = np.asarray(qw, dtype=float)
+    qx = np.asarray(qx, dtype=float)
+    qy = np.asarray(qy, dtype=float)
+    qz = np.asarray(qz, dtype=float)
+    sinr = 2.0 * (qw * qx + qy * qz)
+    cosr = 1.0 - 2.0 * (qx * qx + qy * qy)
+    roll  = np.arctan2(sinr, cosr)
+    sinp  = np.clip(2.0 * (qw * qy - qz * qx), -1.0, 1.0)
+    pitch = np.arcsin(sinp)
+    siny  = 2.0 * (qw * qz + qx * qy)
+    cosy  = 1.0 - 2.0 * (qy * qy + qz * qz)
+    yaw   = np.arctan2(siny, cosy)
+    return roll, pitch, yaw
+
+
+def latlon_to_xy(lat, lon):
+    """GPS degrees → local metric (x, y) in metres via flat-Earth projection."""
+    lat = np.asarray(lat, dtype=float)
+    lon = np.asarray(lon, dtype=float)
+    lat0, lon0 = lat[0], lon[0]
+    R = 6_371_000.0
+    x = R * np.radians(lon - lon0) * np.cos(np.radians(lat0))
+    y = R * np.radians(lat - lat0)
+    return x, y
+
+
+def smooth_sg(arr):
+    """Savitzky-Golay filter; returns original if too short."""
+    arr = np.asarray(arr, dtype=float)
+    n = len(arr)
+    w = SG_WINDOW if SG_WINDOW <= n else (n if n % 2 == 1 else max(n - 1, 1))
+    if w < SG_POLY + 2 or w < 3:
+        return arr
+    try:
+        return savgol_filter(arr, w, SG_POLY)
+    except Exception:
+        return arr
+
+
+def deriv(signal, dt_s):
+    """Finite-difference derivative; NaN for first frame and zero-dt frames."""
+    sig = np.asarray(signal, dtype=float)
+    dt  = np.asarray(dt_s,   dtype=float)
+    diff = np.diff(sig, prepend=np.nan)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        out = np.where(dt > 0, diff / dt, np.nan)
+    out[0] = np.nan
+    return out
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CORE: build the 43-column standardized DataFrame for ONE clip
+# ─────────────────────────────────────────────────────────────────────────────
+
+def build_standard_frame(
+    timestamp_ns,
+    x=None, y=None, z=None,
+    lat=None, lon=None,
+    vx=None, vy=None, vz=None,
+    speed_raw=None,
+    ax_raw=None, ay_raw=None, az_raw=None,
+    roll_raw=None, pitch_raw=None, yaw_raw=None,
+    yaw_rate_raw=None,
+):
+    n = len(timestamp_ns)
+    col_sources = {}
+
+    def arr(v):
+        if v is None:
+            return np.full(n, np.nan)
+        a = np.asarray(v, dtype=float)
+        return a if len(a) == n else np.full(n, np.nan)
+
+    # ── 1. TIMESTAMPS ────────────────────────────────────────────────────────
+    ts_ns = np.asarray(timestamp_ns, dtype=np.int64)
+
+    # Step 1: keep strictly increasing timestamps (remove non-monotonic)
+    keep = np.ones(n, dtype=bool)
+    mx = ts_ns[0]
+    for i in range(1, n):
+        if ts_ns[i] > mx:
+            mx = ts_ns[i]
+        else:
+            keep[i] = False
+
+    # ── BUCKET B FIX ─────────────────────────────────────────────────────────
+    # Step 2: after monotonic filter, drop frames where dt < DT_MIN_FRAC × median_dt.
+    # Near-zero dt gaps (duplicate GPS/IMU packets) cause d/dt to explode.
+    # Relative threshold adapts to dataset sampling rate automatically:
+    #   4seasons at 2000 Hz: median_dt=0.0005s → threshold=0.00005s → nothing dropped
+    #   DurLAR   at  100 Hz: median_dt=0.010s  → threshold=0.001s   → glitches dropped
+    ts_monotonic = ts_ns[keep]
+    dt_check = np.diff(ts_monotonic, prepend=ts_monotonic[0])
+    dt_check[0] = ts_monotonic[0]  # keep first frame always
+    dt_check_s = dt_check / 1e9
+    median_dt_s = float(np.median(dt_check_s[1:]))  # exclude first frame
+    dt_min_s = max(1e-9, median_dt_s * DT_MIN_FRAC)
+    keep_dt = dt_check_s >= dt_min_s
+    keep_dt[0] = True  # always keep first frame
+
+    # Combine both filters back to original indices
+    keep_indices = np.where(keep)[0]
+    final_keep = np.zeros(n, dtype=bool)
+    final_keep[keep_indices[keep_dt]] = True
+
+    ts_ns = ts_ns[final_keep]
+    n = len(ts_ns)
+
+    def arr_k(v):
+        if v is None:
+            return np.full(n, np.nan)
+        a_full = np.asarray(v, dtype=float)
+        if len(a_full) < len(final_keep):
+            tmp = np.full(len(final_keep), np.nan)
+            tmp[:len(a_full)] = a_full
+            a_full = tmp
+        return a_full[final_keep]
+
+    timestamp_s = ts_ns / 1e9
+    t_rel_ns    = ts_ns - ts_ns[0]
+    t_rel_s     = t_rel_ns / 1e9
+
+    _dt_raw = np.empty(n, dtype=object)
+    _dt_raw[0] = pd.NA
+    _dt_raw[1:] = np.diff(ts_ns).astype(np.int64)
+    dt_ns_arr = pd.array(_dt_raw, dtype="Int64")
+
+    dt_s = np.empty(n)
+    dt_s[0] = np.nan
+    dt_s[1:] = np.diff(ts_ns) / 1e9
+
+    for c in ["timestamp_ns","timestamp_s","t_rel_ns","t_rel_s","dt_ns","dt_s"]:
+        col_sources[c] = SRC_DERIV
+
+    # ── 2. POSITION ───────────────────────────────────────────────────────────
+    x_arr   = arr_k(x)
+    y_arr   = arr_k(y)
+    z_arr   = arr_k(z)
+    lat_arr = arr_k(lat)
+    lon_arr = arr_k(lon)
+
+    col_sources["x"]   = SRC_RAW if x   is not None else SRC_NA
+    col_sources["y"]   = SRC_RAW if y   is not None else SRC_NA
+    col_sources["z"]   = SRC_RAW if z   is not None else SRC_NA
+    col_sources["lat"] = SRC_RAW if lat is not None else SRC_NA
+    col_sources["lon"] = SRC_RAW if lon is not None else SRC_NA
+
+    if np.all(np.isnan(x_arr)) and not np.all(np.isnan(lat_arr)):
+        x_arr, y_arr = latlon_to_xy(lat_arr, lon_arr)
+        col_sources["x"] = SRC_DERIV
+        col_sources["y"] = SRC_DERIV
+
+    # ── 3. RELATIVE & ALIGNED TRAJECTORY ─────────────────────────────────────
+    x_rel = x_arr - x_arr[0] if not np.isnan(x_arr[0]) else x_arr.copy()
+    y_rel = y_arr - y_arr[0] if not np.isnan(y_arr[0]) else y_arr.copy()
+
+    yaw_r  = arr_k(yaw_raw)
+    yaw_uw = np.unwrap(yaw_r)
+
+    valid_yaw = ~np.isnan(yaw_uw)
+    if valid_yaw.any():
+        heading_initial = float(yaw_uw[valid_yaw][0])
+    else:
+        k = min(5, n - 1)
+        dx = x_arr[k] - x_arr[0]
+        dy = y_arr[k] - y_arr[0]
+        heading_initial = float(np.arctan2(dy, dx)) \
+            if not (np.isnan(dx) or np.isnan(dy)) else 0.0
+
+    rot = math.pi / 2.0 - heading_initial
+    x_aligned = x_rel * np.cos(rot) - y_rel * np.sin(rot)
+    y_aligned  = x_rel * np.sin(rot) + y_rel * np.cos(rot)
+
+    for c in ["x_rel","y_rel","x_aligned","y_aligned","heading_initial"]:
+        col_sources[c] = SRC_DERIV
+
+    # ── 4. VELOCITY ───────────────────────────────────────────────────────────
+    vx_arr = arr_k(vx)
+    vy_arr = arr_k(vy)
+    vz_arr = arr_k(vz)
+
+    col_sources["vx"] = SRC_RAW if vx is not None else SRC_NA
+    col_sources["vy"] = SRC_RAW if vy is not None else SRC_NA
+    col_sources["vz"] = SRC_RAW if vz is not None else SRC_NA
+
+    if np.all(np.isnan(vx_arr)) and not np.all(np.isnan(x_arr)):
+        vx_arr = deriv(x_arr, dt_s)
+        vy_arr = deriv(y_arr, dt_s)
+        col_sources["vx"] = SRC_DERIV
+        col_sources["vy"] = SRC_DERIV
+
+    if np.all(np.isnan(vz_arr)) and not np.all(np.isnan(z_arr)):
+        vz_arr = deriv(z_arr, dt_s)
+        col_sources["vz"] = SRC_DERIV
+
+    if speed_raw is not None:
+        speed_arr = arr_k(speed_raw)
+        col_sources["speed"] = SRC_RAW
+    else:
+        speed_arr = np.sqrt(vx_arr**2 + vy_arr**2)
+        col_sources["speed"] = SRC_DERIV if not np.all(np.isnan(speed_arr)) else SRC_NA
+
+    speed_arr = np.where(speed_arr < 0, np.nan, speed_arr)
+    speed_kmh = speed_arr * 3.6
+    col_sources["speed_kmh"] = SRC_DERIV
+
+    # ── 5. ORIENTATION ────────────────────────────────────────────────────────
+    roll_arr  = arr_k(roll_raw)
+    pitch_arr = arr_k(pitch_raw)
+
+    col_sources["roll"]          = SRC_RAW if roll_raw  is not None else SRC_NA
+    col_sources["pitch"]         = SRC_RAW if pitch_raw is not None else SRC_NA
+    col_sources["yaw"]           = SRC_RAW if yaw_raw   is not None else SRC_NA
+    col_sources["yaw_unwrapped"] = SRC_DERIV
+
+    # ── 6. YAW RATE ───────────────────────────────────────────────────────────
+    if yaw_rate_raw is not None:
+        yaw_rate_arr = arr_k(yaw_rate_raw)
+        col_sources["yaw_rate"] = SRC_RAW
+    else:
+        yaw_rate_arr = deriv(yaw_uw, dt_s)
+        col_sources["yaw_rate"] = SRC_DERIV if not np.all(np.isnan(yaw_rate_arr)) else SRC_NA
+
+    # ── 7. RAW IMU ACCELERATIONS ─────────────────────────────────────────────
+    ax_arr = arr_k(ax_raw)
+    ay_arr = arr_k(ay_raw)
+    az_arr = arr_k(az_raw)
+    col_sources["ax"] = SRC_RAW if ax_raw is not None else SRC_NA
+    col_sources["ay"] = SRC_RAW if ay_raw is not None else SRC_NA
+    col_sources["az"] = SRC_RAW if az_raw is not None else SRC_NA
+
+    # ── 8. LONGITUDINAL / LATERAL ACCELERATION ───────────────────────────────
+    speed_smooth = smooth_sg(np.where(np.isnan(speed_arr), 0.0, speed_arr))
+    a_long = deriv(speed_smooth, dt_s)
+    a_lat  = speed_arr * yaw_rate_arr
+
+    col_sources["a_long"] = SRC_DERIV if not np.all(np.isnan(a_long)) else SRC_NA
+    col_sources["a_lat"]  = SRC_DERIV if not np.all(np.isnan(a_lat))  else SRC_NA
+
+    deceleration = np.where(a_long < 0, -a_long, 0.0)
+    acc_mag      = np.sqrt(a_long**2 + a_lat**2)
+    col_sources["deceleration"] = col_sources["a_long"]
+    col_sources["acc_mag"]      = SRC_DERIV
+
+    # ── 9. JERK ──────────────────────────────────────────────────────────────
+    a_long_s = smooth_sg(np.where(np.isnan(a_long), 0.0, a_long))
+    a_lat_s  = smooth_sg(np.where(np.isnan(a_lat),  0.0, a_lat))
+    jerk_long     = deriv(a_long_s, dt_s)
+    jerk_lat      = deriv(a_lat_s,  dt_s)
+    jerk_mag      = np.sqrt(jerk_long**2 + jerk_lat**2)
+    abs_jerk_long = np.abs(jerk_long)
+    abs_jerk_mag  = jerk_mag.copy()
+
+    jerk_src = SRC_DERIV if not np.all(np.isnan(jerk_long)) else SRC_NA
+    for c in ["jerk_long","jerk_lat","jerk_mag","abs_jerk_long","abs_jerk_mag"]:
+        col_sources[c] = jerk_src
+
+    # ── 10. HEADING CHANGE ───────────────────────────────────────────────────
+    heading_change     = np.diff(yaw_uw, prepend=np.nan)
+    heading_change[0]  = np.nan
+    abs_heading_change = np.abs(heading_change)
+    hc_src = SRC_DERIV if not np.all(np.isnan(heading_change)) else SRC_NA
+    col_sources["heading_change"]     = hc_src
+    col_sources["abs_heading_change"] = hc_src
+
+    # ── 11. CURVATURE ────────────────────────────────────────────────────────
+    curv_valid = speed_arr > CURV_SPEED_MIN
+    with np.errstate(divide="ignore", invalid="ignore"):
+        curvature = np.where(curv_valid, yaw_rate_arr / speed_arr, np.nan)
+    abs_curvature = np.abs(curvature)
+    curv_src = SRC_DERIV if not np.all(np.isnan(curvature)) else SRC_NA
+    col_sources["curvature"]       = curv_src
+    col_sources["abs_curvature"]   = curv_src
+    col_sources["curvature_valid"] = SRC_FLAG
+
+    # ── 12. ASSEMBLE ─────────────────────────────────────────────────────────
+    df = pd.DataFrame({
+        "timestamp_ns":       pd.array(ts_ns,      dtype="Int64"),
+        "timestamp_s":        timestamp_s,
+        "t_rel_ns":           pd.array(t_rel_ns,   dtype="Int64"),
+        "t_rel_s":            t_rel_s,
+        "dt_ns":              dt_ns_arr,
+        "dt_s":               dt_s,
+        "x":                  x_arr,
+        "y":                  y_arr,
+        "z":                  z_arr,
+        "lat":                lat_arr,
+        "lon":                lon_arr,
+        "x_rel":              x_rel,
+        "y_rel":              y_rel,
+        "x_aligned":          x_aligned,
+        "y_aligned":          y_aligned,
+        "heading_initial":    np.full(n, heading_initial),
+        "vx":                 vx_arr,
+        "vy":                 vy_arr,
+        "vz":                 vz_arr,
+        "speed":              speed_arr,
+        "speed_kmh":          speed_kmh,
+        "ax":                 ax_arr,
+        "ay":                 ay_arr,
+        "az":                 az_arr,
+        "a_long":             a_long,
+        "a_lat":              a_lat,
+        "deceleration":       deceleration,
+        "acc_mag":            acc_mag,
+        "jerk_long":          jerk_long,
+        "jerk_lat":           jerk_lat,
+        "jerk_mag":           jerk_mag,
+        "abs_jerk_long":      abs_jerk_long,
+        "abs_jerk_mag":       abs_jerk_mag,
+        "roll":               roll_arr,
+        "pitch":              pitch_arr,
+        "yaw":                yaw_r,
+        "yaw_unwrapped":      yaw_uw,
+        "yaw_rate":           yaw_rate_arr,
+        "heading_change":     heading_change,
+        "abs_heading_change": abs_heading_change,
+        "curvature":          curvature,
+        "abs_curvature":      abs_curvature,
+        "curvature_valid":    curv_valid,
+    })
+
+    return df[OUTPUT_COLUMNS], col_sources
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SAVE
+# ─────────────────────────────────────────────────────────────────────────────
+
+def save_clip(df, col_sources, out_path: Path):
+    table = pa.Table.from_pandas(df, preserve_index=False)
+    meta  = table.schema.metadata or {}
+    meta[b"col_sources"] = json.dumps(col_sources).encode()
+    table = table.replace_schema_metadata(meta)
+    pq.write_table(table, out_path)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DATASET LOADERS
+# ─────────────────────────────────────────────────────────────────────────────
+
+def to_timestamp_ns(series):
+    import pandas as pd, numpy as np
+    if pd.api.types.is_datetime64_any_dtype(series):
+        return series.astype(np.int64)
+    try:
+        vals = series.astype(float)
+    except (ValueError, TypeError):
+        try:
+            return pd.to_datetime(series, format="ISO8601").astype(np.int64)
+        except Exception:
+            return pd.to_datetime(series, format="mixed").astype(np.int64)
+    median = float(np.nanmedian(vals))
+    if median > 1e17:
+        return vals.round().astype(np.int64)
+    elif median > 1e14:
+        return (vals * 1_000).round().astype(np.int64)
+    elif median > 1e11:
+        return (vals * 1_000_000).round().astype(np.int64)
+    else:
+        return (vals * 1_000_000_000).round().astype(np.int64)
+
+
+def load_4seasons(f):
+    raw = pd.read_parquet(f)
+    ts_ns = to_timestamp_ns(raw["timestamp"])
+    roll_r, pitch_r, yaw_r = quat_to_euler(
+        raw["qw"], raw["qx"], raw["qy"], raw["qz"])
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        x            = raw["x"].values   if "x"  in raw.columns else None,
+        y            = raw["y"].values   if "y"  in raw.columns else None,
+        z            = raw["z"].values   if "z"  in raw.columns else None,
+        ax_raw       = raw["ax"].values,
+        ay_raw       = raw["ay"].values,
+        az_raw       = raw["az"].values  if "az" in raw.columns else None,
+        roll_raw     = roll_r,
+        pitch_raw    = pitch_r,
+        yaw_raw      = yaw_r,
+        yaw_rate_raw = raw["wz"].values  if "wz" in raw.columns else None,
+    )
+
+
+def load_a2d2(f):
+    raw = pd.read_parquet(f)
+    ts_ns = (raw["timestamp"].astype(np.int64) * 1000)
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        speed_raw    = raw["vehicle_speed"].values / 3.6,
+        ax_raw       = raw["acceleration_x"].values,
+        ay_raw       = raw["acceleration_y"].values,
+        az_raw       = raw["acceleration_z"].values if "acceleration_z" in raw.columns else None,
+        roll_raw     = np.radians(raw["roll_angle"].values),
+        pitch_raw    = np.radians(raw["pitch_angle"].values),
+        yaw_rate_raw = raw["angular_velocity_omega_z"].values,
+    )
+
+
+def load_boreas(f):
+    raw = pd.read_parquet(f)
+    ts_col = "GPSTime" if "GPSTime" in raw.columns else "ROSTime"
+    ts_ns  = (raw[ts_col].astype(float) * 1e9).round().astype(np.int64)
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        x            = raw["easting"].values   if "easting"   in raw.columns else None,
+        y            = raw["northing"].values  if "northing"  in raw.columns else None,
+        z            = raw["altitude"].values  if "altitude"  in raw.columns else None,
+        lat          = raw["latitude"].values  if "latitude"  in raw.columns else None,
+        lon          = raw["longitude"].values if "longitude" in raw.columns else None,
+        vx           = raw["vel_east"].values  if "vel_east"  in raw.columns else None,
+        vy           = raw["vel_north"].values if "vel_north" in raw.columns else None,
+        vz           = raw["vel_up"].values    if "vel_up"    in raw.columns else None,
+        speed_raw    = raw["speed"].values     if "speed"     in raw.columns else None,
+        ax_raw       = raw["accelx"].values    if "accelx"    in raw.columns else None,
+        ay_raw       = raw["accely"].values    if "accely"    in raw.columns else None,
+        az_raw       = raw["accelz"].values    if "accelz"    in raw.columns else None,
+        roll_raw     = np.radians(raw["roll"].values)    if "roll"    in raw.columns else None,
+        pitch_raw    = np.radians(raw["pitch"].values)   if "pitch"   in raw.columns else None,
+        yaw_raw      = np.radians(raw["heading"].values) if "heading" in raw.columns else None,
+        yaw_rate_raw = raw["angvel_z"].values  if "angvel_z"  in raw.columns else None,
+    )
+
+
+def _median_filter_1d(arr, window=5):
+    """Rolling median filter for 1D numpy array.
+    Kills isolated GPS position spikes before differentiation.
+    Forward-fills NaNs first so the window always has real values.
+    """
+    s = pd.Series(arr.astype(float)).ffill().bfill()
+    return s.rolling(window=window, center=True, min_periods=1).median().values
+
+
+def load_durlar(f):
+    raw = pd.read_parquet(f)
+    ts_ns = raw["timestamp"].astype(np.int64)
+    roll_r, pitch_r, yaw_r = quat_to_euler(
+        raw["field.orientation.w"], raw["field.orientation.x"],
+        raw["field.orientation.y"], raw["field.orientation.z"])
+    # Median filter lat/lon to remove GPS multipath position spikes before
+    # differentiation into speed → a_long → jerk_long.
+    # Window=5 frames (0.05s at 100Hz) kills single-sample spikes without
+    # distorting genuine vehicle motion.
+    lat_clean = _median_filter_1d(raw["field.latitude"].values,  window=5)
+    lon_clean = _median_filter_1d(raw["field.longitude"].values, window=5)
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        lat          = lat_clean,
+        lon          = lon_clean,
+        z            = raw["field.altitude"].values,
+        ax_raw       = raw["field.linear_acceleration.x"].values,
+        ay_raw       = raw["field.linear_acceleration.y"].values,
+        az_raw       = raw["field.linear_acceleration.z"].values,
+        roll_raw     = roll_r,
+        pitch_raw    = pitch_r,
+        yaw_raw      = yaw_r,
+        yaw_rate_raw = raw["field.angular_velocity.z"].values,
+    )
+
+
+def load_ford(f):
+    raw = pd.read_parquet(f)
+    ts_ns = to_timestamp_ns(raw["timestamp"])
+    roll_r, pitch_r, yaw_r = quat_to_euler(
+        raw["qw"], raw["qx"], raw["qy"], raw["qz"])
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        x            = raw["x"].values        if "x"         in raw.columns else None,
+        y            = raw["y"].values        if "y"         in raw.columns else None,
+        z            = raw["z"].values        if "z"         in raw.columns else None,
+        lat          = raw["latitude"].values  if "latitude"  in raw.columns else None,
+        lon          = raw["longitude"].values if "longitude" in raw.columns else None,
+        vx           = raw["vx"].values        if "vx"        in raw.columns else None,
+        vy           = raw["vy"].values        if "vy"        in raw.columns else None,
+        vz           = raw["vz"].values        if "vz"        in raw.columns else None,
+        speed_raw    = raw["speed"].values     if "speed"     in raw.columns else None,
+        ax_raw       = raw["ax"].values        if "ax"        in raw.columns else None,
+        ay_raw       = raw["ay"].values        if "ay"        in raw.columns else None,
+        az_raw       = raw["az"].values        if "az"        in raw.columns else None,
+        roll_raw     = roll_r,
+        pitch_raw    = pitch_r,
+        yaw_raw      = yaw_r,
+        yaw_rate_raw = raw["wz"].values        if "wz"        in raw.columns else None,
+    )
+
+
+def load_hdd(f):
+    raw = pd.read_parquet(f)
+    ts_ns = to_timestamp_ns(raw["timestamp"])
+    x_arr, y_arr = latlon_to_xy(raw["lat"].values, raw["lng"].values) \
+        if "lat" in raw.columns else (None, None)
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        x            = x_arr,
+        y            = y_arr,
+        lat          = raw["lat"].values if "lat" in raw.columns else None,
+        lon          = raw["lng"].values if "lng" in raw.columns else None,
+        speed_raw    = raw["vel"].values if "vel" in raw.columns else None,
+        yaw_raw      = raw["yaw"].values if "yaw" in raw.columns else None,
+    )
+
+
+def load_kitti_generic(f):
+    raw = pd.read_parquet(f)
+    ts_ns = to_timestamp_ns(raw["timestamp"])
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        z            = raw["alt"].values   if "alt"   in raw.columns else None,
+        lat          = raw["lat"].values   if "lat"   in raw.columns else None,
+        lon          = raw["lon"].values   if "lon"   in raw.columns else None,
+        vx           = raw["vf"].values    if "vf"    in raw.columns else None,
+        vy           = raw["vl"].values    if "vl"    in raw.columns else None,
+        vz           = raw["vu"].values    if "vu"    in raw.columns else None,
+        ax_raw       = raw["ax"].values    if "ax"    in raw.columns else None,
+        ay_raw       = raw["ay"].values    if "ay"    in raw.columns else None,
+        az_raw       = raw["az"].values    if "az"    in raw.columns else None,
+        roll_raw     = raw["roll"].values  if "roll"  in raw.columns else None,
+        pitch_raw    = raw["pitch"].values if "pitch" in raw.columns else None,
+        yaw_raw      = raw["yaw"].values   if "yaw"   in raw.columns else None,
+        yaw_rate_raw = raw["wz"].values    if "wz"    in raw.columns else None,
+    )
+
+
+def load_nuscene(f):
+    raw = pd.read_parquet(f)
+    ts_ns = (raw["utime"].astype(np.int64) * 1000)
+    roll_r, pitch_r, yaw_r = quat_to_euler(
+        raw["qw"], raw["qx"], raw["qy"], raw["qz"])
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        x            = raw["x"].values     if "x"     in raw.columns else None,
+        y            = raw["y"].values     if "y"     in raw.columns else None,
+        z            = raw["z"].values     if "z"     in raw.columns else None,
+        vx           = raw["vel_x"].values if "vel_x" in raw.columns else None,
+        vy           = raw["vel_y"].values if "vel_y" in raw.columns else None,
+        vz           = raw["vel_z"].values if "vel_z" in raw.columns else None,
+        speed_raw    = raw["speed"].values if "speed" in raw.columns else None,
+        ax_raw       = raw["ax"].values    if "ax"    in raw.columns else None,
+        ay_raw       = raw["ay"].values    if "ay"    in raw.columns else None,
+        az_raw       = raw["az"].values    if "az"    in raw.columns else None,
+        roll_raw     = roll_r,
+        pitch_raw    = pitch_r,
+        yaw_raw      = yaw_r,
+        yaw_rate_raw = raw["wz"].values    if "wz"    in raw.columns else None,
+    )
+
+
+def load_nvidia(f):
+    raw = pd.read_parquet(f)
+    ts_ns = (raw["timestamp"].astype(np.int64) * 1_000)
+    roll_r, pitch_r, yaw_r = quat_to_euler(
+        raw["qw"], raw["qx"], raw["qy"], raw["qz"])
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        x            = raw["x"].values  if "x"  in raw.columns else None,
+        y            = raw["y"].values  if "y"  in raw.columns else None,
+        z            = raw["z"].values  if "z"  in raw.columns else None,
+        vx           = raw["vx"].values if "vx" in raw.columns else None,
+        vy           = raw["vy"].values if "vy" in raw.columns else None,
+        vz           = raw["vz"].values if "vz" in raw.columns else None,
+        ax_raw       = raw["ax"].values if "ax" in raw.columns else None,
+        ay_raw       = raw["ay"].values if "ay" in raw.columns else None,
+        az_raw       = raw["az"].values if "az" in raw.columns else None,
+        roll_raw     = roll_r,
+        pitch_raw    = pitch_r,
+        yaw_raw      = yaw_r,
+    )
+
+
+def load_oxford(f):
+    raw = pd.read_parquet(f)
+    ts_ns = to_timestamp_ns(raw["timestamp"])
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        x            = raw["easting"].values        if "easting"        in raw.columns else None,
+        y            = raw["northing"].values       if "northing"       in raw.columns else None,
+        z            = raw["altitude"].values       if "altitude"       in raw.columns else None,
+        lat          = raw["latitude"].values       if "latitude"       in raw.columns else None,
+        lon          = raw["longitude"].values      if "longitude"      in raw.columns else None,
+        vx           = raw["velocity_east"].values  if "velocity_east"  in raw.columns else None,
+        vy           = raw["velocity_north"].values if "velocity_north" in raw.columns else None,
+        vz           = raw["velocity_down"].values  if "velocity_down"  in raw.columns else None,
+        roll_raw     = raw["roll"].values  if "roll"  in raw.columns else None,
+        pitch_raw    = raw["pitch"].values if "pitch" in raw.columns else None,
+        yaw_raw      = raw["yaw"].values   if "yaw"   in raw.columns else None,
+    )
+
+
+def load_waymo(f):
+    raw = pd.read_parquet(f)
+
+    if "scenario_id" not in raw.columns:
+        ts_ns = (raw["timestamp_s"].astype(float) * 1e9).round().astype(np.int64)
+        return [(build_standard_frame(
+            timestamp_ns = ts_ns.values,
+            x            = raw["x"].values          if "x"          in raw.columns else None,
+            y            = raw["y"].values          if "y"          in raw.columns else None,
+            z            = raw["z"].values          if "z"          in raw.columns else None,
+            vx           = raw["velocity_x"].values if "velocity_x" in raw.columns else None,
+            vy           = raw["velocity_y"].values if "velocity_y" in raw.columns else None,
+            speed_raw    = raw["speed"].values      if "speed"      in raw.columns else None,
+            yaw_raw      = raw["heading"].values    if "heading"    in raw.columns else None,
+        ), None)]
+
+    clips = []
+    for scen_id, grp in raw.groupby("scenario_id"):
+        grp = grp.sort_values("timestamp_s").reset_index(drop=True)
+        ts_ns = (grp["timestamp_s"].astype(float) * 1e9).round().astype(np.int64)
+        result = build_standard_frame(
+            timestamp_ns = ts_ns.values,
+            x            = grp["x"].values          if "x"          in grp.columns else None,
+            y            = grp["y"].values          if "y"          in grp.columns else None,
+            z            = grp["z"].values          if "z"          in grp.columns else None,
+            vx           = grp["velocity_x"].values if "velocity_x" in grp.columns else None,
+            vy           = grp["velocity_y"].values if "velocity_y" in grp.columns else None,
+            speed_raw    = grp["speed"].values      if "speed"      in grp.columns else None,
+            yaw_raw      = grp["heading"].values    if "heading"    in grp.columns else None,
+        )
+        clips.append((result, str(scen_id)))
+    return clips
+
+
+def load_zod(f):
+    # ── BUCKET D FIX ─────────────────────────────────────────────────────────
+    # ZOD heading column is stored in degrees, not radians.
+    # Converting to radians here fixes yaw_rate, a_lat, and jerk_lat downstream
+    # since all three derive from yaw_rate = d(yaw_unwrapped)/dt and
+    # a_lat = speed * yaw_rate.
+    raw = pd.read_parquet(f)
+    ts_ns = to_timestamp_ns(raw["timestamp"])
+
+    # Check if heading is in degrees (max > 4 strongly indicates degrees)
+    heading_col = raw["heading"].values if "heading" in raw.columns else None
+    if heading_col is not None and np.nanmax(np.abs(heading_col)) > 4.0:
+        heading_col = np.radians(heading_col)   # deg → rad
+
+    roll_col  = raw["roll"].values  if "roll"  in raw.columns else None
+    pitch_col = raw["pitch"].values if "pitch" in raw.columns else None
+    if roll_col  is not None and np.nanmax(np.abs(roll_col))  > 4.0:
+        roll_col  = np.radians(roll_col)
+    if pitch_col is not None and np.nanmax(np.abs(pitch_col)) > 4.0:
+        pitch_col = np.radians(pitch_col)
+
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        lat          = raw["posLat"].values if "posLat" in raw.columns else None,
+        lon          = raw["posLon"].values if "posLon" in raw.columns else None,
+        z            = raw["posAlt"].values if "posAlt" in raw.columns else None,
+        vx           = raw["velEast"].values    if "velEast"    in raw.columns else None,
+        vy           = raw["velNorth"].values   if "velNorth"   in raw.columns else None,
+        vz           = raw["velDown"].values    if "velDown"    in raw.columns else None,
+        speed_raw    = raw["speed"].values      if "speed"      in raw.columns else None,
+        ax_raw       = raw["accelerationX"].values if "accelerationX" in raw.columns else None,
+        ay_raw       = raw["accelerationY"].values if "accelerationY" in raw.columns else None,
+        az_raw       = raw["accelerationZ"].values if "accelerationZ" in raw.columns else None,
+        roll_raw     = roll_col,
+        pitch_raw    = pitch_col,
+        yaw_raw      = heading_col,
+        yaw_rate_raw = raw["angularRateZ"].values if "angularRateZ" in raw.columns else None,
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LOADER REGISTRY
+# ─────────────────────────────────────────────────────────────────────────────
+
+LOADERS = {
+    "4seasons":  load_4seasons,
+    "a2d2":      load_a2d2,
+    "boreas_rt": load_boreas,
+    "durlar":    load_durlar,
+    "ford":      load_ford,
+    "hdd":       load_hdd,
+    "kitti":     load_kitti_generic,
+    "kitti360":  load_kitti_generic,
+    "nuscene":   load_nuscene,
+    "nuscenes":  load_nuscene,
+    "nvidia":    load_nvidia,
+    "oxford":    load_oxford,
+    "waymo":     load_waymo,
+    "zod":       load_zod,
+}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PARALLEL PIPELINE
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _process_one_file(args):
+    f, loader = args
+    try:
+        result = loader(f)
+        if isinstance(result, list):
+            return [item for item, _ in result]
+        return [result]
+    except Exception as e:
+        return [f"ERROR::{f.name}::{traceback.format_exc()}"]
+
+
+def process_dataset(dataset_name: str, global_bar: tqdm):
+    src_dir = PARQUET_DIR / dataset_name
+    out_dir = OUTPUT_DIR  / dataset_name
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    parquet_files = sorted(src_dir.rglob("*.parquet"))
+    if not parquet_files:
+        global_bar.write(f"  [{dataset_name}] SKIP – no parquet files found")
+        return 0, 0
+
+    loader_key = dataset_name.lower()
+    if loader_key not in LOADERS:
+        global_bar.write(f"  [{dataset_name}] SKIP – no loader registered")
+        return 0, 0
+
+    loader  = LOADERS[loader_key]
+    n_files = len(parquet_files)
+    errors  = []
+    results = [None] * n_files
+
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
+        future_to_idx = {
+            pool.submit(_process_one_file, (f, loader)): i
+            for i, f in enumerate(parquet_files)
+        }
+        with tqdm(
+            total=n_files,
+            desc=f"  {dataset_name:<12}",
+            unit="file",
+            leave=False,
+            dynamic_ncols=True,
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} files [{elapsed}<{remaining}]",
+        ) as pbar:
+            for future in as_completed(future_to_idx):
+                idx = future_to_idx[future]
+                clip_list = future.result()
+                ok, errs = [], []
+                for item in clip_list:
+                    if isinstance(item, str) and item.startswith("ERROR::"):
+                        errs.append(item)
+                    else:
+                        ok.append(item)
+                results[idx] = ok
+                errors.extend(errs)
+                pbar.update(1)
+
+    for err in errors:
+        parts = err.split("::", 2)
+        fname = parts[1] if len(parts) > 1 else "?"
+        detail = parts[2] if len(parts) > 2 else err
+        global_bar.write(f"  [{dataset_name}] ERROR in {fname}:\n{detail}")
+
+    clip_index = 1
+    saved = 0
+    for clip_list in results:
+        if not clip_list:
+            continue
+        for item in clip_list:
+            if not isinstance(item, tuple) or len(item) != 2:
+                continue
+            df, col_sources = item
+            if df is None or df.empty:
+                continue
+            out_name = f"clip_{clip_index:04d}.parquet"
+            save_clip(df, col_sources, out_dir / out_name)
+            clip_index += 1
+            saved += 1
+
+    global_bar.update(n_files)
+    return saved, len(errors)
+
+
+def main():
+    print("=" * 60)
+    print(" Script 14 – Ego-Motion Standardization")
+    print(f" Bucket B fix : drop dt < {DT_MIN_FRAC*100:.0f}% of median dt (adaptive per dataset)")
+    print(f" Bucket D fix : ZOD heading deg→rad auto-detection")
+    print(f" Workers : {MAX_WORKERS} threads")
+    print(f" Input   : {PARQUET_DIR}")
+    print(f" Output  : {OUTPUT_DIR}")
+    print("=" * 60)
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    datasets = sorted(d.name for d in PARQUET_DIR.iterdir() if d.is_dir())
+
+    all_files = []
+    for ds in datasets:
+        src_dir = PARQUET_DIR / ds
+        files   = sorted(src_dir.rglob("*.parquet"))
+        all_files.extend(files)
+
+    total_files = len(all_files)
+    print(f" Datasets : {len(datasets)}")
+    print(f" Files    : {total_files} total")
+    print()
+
+    total_saved  = 0
+    total_errors = 0
+
+    with tqdm(
+        total=total_files,
+        desc="Overall",
+        unit="file",
+        dynamic_ncols=True,
+        bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} files [{elapsed}<{remaining}, {rate_fmt}]",
+    ) as master_bar:
+        for ds in datasets:
+            master_bar.set_postfix_str(ds)
+            saved, errs = process_dataset(ds, master_bar)
+            total_saved  += saved
+            total_errors += errs
+            master_bar.write(
+                f"  [{ds}] done — {saved} clip(s) saved"
+                + (f", {errs} error(s)" if errs else "")
+            )
+
+    print()
+    print("=" * 60)
+    print(f" Done.  {total_saved} clips written to {OUTPUT_DIR}")
+    if total_errors:
+        print(f" Errors : {total_errors} file(s) failed (see messages above)")
+    print("=" * 60)
+
+
+if __name__ == "__main__":
+    main()
