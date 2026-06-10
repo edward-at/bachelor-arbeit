@@ -213,6 +213,7 @@ def build_standard_frame(
     ax_raw=None, ay_raw=None, az_raw=None,
     roll_raw=None, pitch_raw=None, yaw_raw=None,
     yaw_rate_raw=None,
+    clean_gps=False,
 ):
     n = len(timestamp_ns)
     col_sources = {}
@@ -382,7 +383,18 @@ def build_standard_frame(
     col_sources["az"] = SRC_RAW if az_raw is not None else SRC_NA
 
     # ── 8. LONGITUDINAL / LATERAL ACCELERATION ───────────────────────────────
-    speed_smooth = smooth_sg(np.where(np.isnan(speed_arr), 0.0, speed_arr))
+    # When clean_gps=True (DurLAR): cap physically impossible speed values before
+    # SG smoothing. GPS spikes produce speeds >11,000 m/s which explode derivatives.
+    # Forward-fill NaNs instead of replacing with 0.0 to avoid artificial zero frames.
+    if clean_gps:
+        # Supervisor fix: median filter on speed before SG smooth → deriv.
+        # Rolling median (window=5) kills single-frame GPS spikes without
+        # spreading them the way SG would. ffill/bfill handles NaNs.
+        _spd = pd.Series(speed_arr.copy()).ffill().bfill().values
+        _spd = pd.Series(_spd).rolling(window=5, center=True, min_periods=1).median().values
+        speed_smooth = smooth_sg(_spd)
+    else:
+        speed_smooth = smooth_sg(np.where(np.isnan(speed_arr), 0.0, speed_arr))
     a_long = deriv(speed_smooth, dt_s)
     a_lat  = speed_arr * yaw_rate_arr
 
@@ -395,8 +407,16 @@ def build_standard_frame(
     col_sources["acc_mag"]      = SRC_DERIV
 
     # ── 9. JERK ──────────────────────────────────────────────────────────────
-    a_long_s = smooth_sg(np.where(np.isnan(a_long), 0.0, a_long))
-    a_lat_s  = smooth_sg(np.where(np.isnan(a_lat),  0.0, a_lat))
+    if clean_gps:
+        _al = pd.Series(a_long.copy()).ffill().bfill().values
+        _al = pd.Series(_al).rolling(window=21, center=True, min_periods=1).median().values
+        a_long_s = smooth_sg(_al)
+        _alt = pd.Series(a_lat.copy()).ffill().bfill().values
+        _alt = pd.Series(_alt).rolling(window=21, center=True, min_periods=1).median().values
+        a_lat_s = smooth_sg(_alt)
+    else:
+        a_long_s = smooth_sg(np.where(np.isnan(a_long), 0.0, a_long))
+        a_lat_s  = smooth_sg(np.where(np.isnan(a_lat),  0.0, a_lat))
     jerk_long     = deriv(a_long_s, dt_s)
     jerk_lat      = deriv(a_lat_s,  dt_s)
     jerk_mag      = np.sqrt(jerk_long**2 + jerk_lat**2)
@@ -573,13 +593,50 @@ def load_boreas(f):
     )
 
 
-def _median_filter_1d(arr, window=5):
-    """Rolling median filter for 1D numpy array.
-    Kills isolated GPS position spikes before differentiation.
-    Forward-fills NaNs first so the window always has real values.
+def _clean_gps_position(x, y, ts_ns, speed_max_ms=50.0):
     """
-    s = pd.Series(arr.astype(float)).ffill().bfill()
-    return s.rolling(window=window, center=True, min_periods=1).median().values
+    Remove GPS position outliers from DurLAR by detecting frames that produce
+    physically impossible speeds, then linearly interpolating over them.
+
+    DurLAR exhibits sustained GPS offsets spanning 60+ consecutive frames
+    (receiver locks onto a reflected signal). A rolling median cannot cover
+    windows this wide. Instead:
+      1. Compute instantaneous speed from position + timestamps
+      2. Flag frames where speed > speed_max_ms as outliers
+      3. Linearly interpolate x/y over flagged frames
+    """
+    x = np.array(x, dtype=float)
+    y = np.array(y, dtype=float)
+    ts = np.array(ts_ns, dtype=np.int64)
+    n = len(x)
+
+    # Compute instantaneous speed (forward difference)
+    dt = np.diff(ts) / 1e9
+    dx = np.diff(x)
+    dy = np.diff(y)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        speed = np.where(dt > 0, np.sqrt(dx**2 + dy**2) / dt, np.nan)
+
+    # Frame i is bad if the step FROM i TO i+1 is impossible
+    # Mark both endpoints of each bad step as outliers
+    bad = np.zeros(n, dtype=bool)
+    bad_steps = speed > speed_max_ms
+    bad[:-1] |= bad_steps
+    bad[1:]  |= bad_steps
+
+    if not bad.any():
+        return x, y
+
+    # Linear interpolation over bad frames using good neighbours
+    good_idx = np.where(~bad)[0]
+    if len(good_idx) < 2:
+        return x, y  # can't interpolate — return as-is
+
+    all_idx = np.arange(n)
+    x_clean = np.interp(all_idx, good_idx, x[good_idx])
+    y_clean = np.interp(all_idx, good_idx, y[good_idx])
+
+    return x_clean, y_clean
 
 
 def load_durlar(f):
@@ -588,23 +645,10 @@ def load_durlar(f):
     roll_r, pitch_r, yaw_r = quat_to_euler(
         raw["field.orientation.w"], raw["field.orientation.x"],
         raw["field.orientation.y"], raw["field.orientation.z"])
-    # Project lat/lon to metric x/y first, then median filter in metric space.
-    # Filtering in metric space is more effective than filtering lat/lon because
-    # GPS multipath spikes are amplified by the flat-earth projection — a 1e-5
-    # degree lat jump (~1m) becomes a cleaner spike to detect in metres.
-    # Passing x= and y= to build_standard_frame bypasses the internal
-    # latlon_to_xy call, so filtered coordinates feed directly into vx/vy derivation.
-    lat = raw["field.latitude"].values.astype(float)
-    lon = raw["field.longitude"].values.astype(float)
-    x_proj, y_proj = latlon_to_xy(lat, lon)
-    x_clean = _median_filter_1d(x_proj, window=5)
-    y_clean = _median_filter_1d(y_proj, window=5)
     return build_standard_frame(
         timestamp_ns = ts_ns.values,
-        x            = x_clean,
-        y            = y_clean,
-        lat          = lat,
-        lon          = lon,
+        lat          = raw["field.latitude"].values,
+        lon          = raw["field.longitude"].values,
         z            = raw["field.altitude"].values,
         ax_raw       = raw["field.linear_acceleration.x"].values,
         ay_raw       = raw["field.linear_acceleration.y"].values,
@@ -613,6 +657,7 @@ def load_durlar(f):
         pitch_raw    = pitch_r,
         yaw_raw      = yaw_r,
         yaw_rate_raw = raw["field.angular_velocity.z"].values,
+        clean_gps    = True,
     )
 
 
