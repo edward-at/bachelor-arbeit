@@ -1,6 +1,6 @@
 """
-Script 14: Standardize Ego-Motion / Inertial Data
-==================================================
+Script 14 v3: Standardize Ego-Motion / Inertial Data
+=====================================================
 Bachelor Thesis: "Identifying Dynamic Biases in Large-Scale Public Datasets
 via Distributional Analysis"
 
@@ -8,31 +8,46 @@ Input  : parquet_data/<dataset>/<any_subfolder>/**/*.parquet
 Output : inertial_data/<dataset>/clip_0001.parquet
                                   clip_0002.parquet  ...
 
-One input parquet file  →  one output clip (no windowing, no splitting).
-Clip identity is encoded in the folder path + sequential padded filename.
-Output naming is identical across all datasets: clip_XXXX.parquet
+─── PIPELINE (per clip) ────────────────────────────────────────────────────
+  1. Timestamp cleanup  — monotonic filter + Bucket B near-zero-dt drop
+  2. GPS cleaning       — DurLAR/NVIDIA sustained-offset interpolation
+  3. Velocity derivation— from LOW-PASSED positions (central differences)
+                          when no raw velocity exists
+  4. Hampel filter      — point-outlier removal on speed (preserves tails)
+  5. Gap policy         — interpolate gaps ≤ 0.5 s; mask longer gaps.
+                          BOTH gap kinds masked: timestamp gaps (dt > 0.5 s)
+                          AND NaN-runs (sensor dropout with ticking clock)
+  6. Anti-alias LP      — zero-phase 4th-order Butterworth at 3 Hz (native rate)
+  7. Resample → 10 Hz   — common uniform grid; masked gaps stay NaN in ALL
+                          level signals (no fabricated linear bridges)
+  8. SG derivatives     — savgol deriv=1/2 per contiguous valid segment
+  9. Derivative masking — NaN inside dilated gap regions + clip edge frames
+ 10. Curvature          — speed_min raised to 2.0 m/s
 
-─── COLUMN AVAILABILITY POLICY ────────────────────────────────────────────
-Every output file always contains all 43 columns, even if most values are
-NaN. Two reasons a column can be NaN:
-
-  NOT_AVAILABLE : the raw dataset does not carry this signal at all.
-  INVALID       : the signal exists but a value is unreliable at that frame
-                  (e.g. curvature at near-zero speed).
-
-The reason for each column is stored as Parquet file-level metadata under
-the key  "col_sources"  as a JSON string:
-  {"ax": "RAW", "ay": "RAW", "az": "NOT_AVAILABLE",
-   "curvature": "DERIVED", "curvature_valid": "FLAG", ...}
-
-Reading it back:
-  import json, pyarrow.parquet as pq
-  meta = pq.read_schema("clip_0001.parquet").metadata
-  sources = json.loads(meta[b"col_sources"])
-
-This means future scripts can do:
-  sources["ax"]  # → "NOT_AVAILABLE"
-without a KeyError and without adding extra columns to the table.
+─── v3 FIXES OVER v2 ───────────────────────────────────────────────────────
+  FIX 1  LOADERS registry restored (v2 only registered durlar — every other
+         dataset was silently skipped).
+  FIX 2  Gap masking applied to ALL gridded level signals, not only the five
+         derivative columns. v2's np.interp fabricated linear-bridge values
+         for speed/position/yaw inside every long timestamp gap.
+  FIX 3  NaN-run gaps (values missing while timestamps keep ticking) are now
+         detected per channel and masked. v2 only masked timestamp gaps, so
+         long sensor dropouts were bridged linearly and looked like clean data.
+  FIX 4  Wrapped `yaw` column re-wrapped from the interpolated unwrapped yaw
+         (arctan2(sin, cos)). v2 interpolated wrapped yaw across ±π jumps,
+         producing impossible mid-jump headings.
+  FIX 5  Position-derived velocity now computed from LOW-PASSED positions via
+         central differences (np.gradient) instead of raw backward differences.
+         Matters most for NVIDIA (position-only, 60M rows).
+  FIX 6  Oxford loader reverted to spec: removed clean_gps=True and the
+         hardcoded 5-frame rolling median (frame-based windows are banned;
+         the standard Hampel + 3 Hz LP path handles Oxford).
+  FIX 7  Edge masking no longer silently skipped for short clips: if a clip
+         is shorter than 2× the edge window, its derivative columns are fully
+         masked (honest NaN) rather than keeping filter edge artifacts.
+  FIX 8  Position-derived velocity fallback on the grid is gap/edge-masked
+         like every other derivative.
+  FIX 9  Dead code removed (v2's unused interp_onto_grid / gap_mask_native).
 
 ─── COLUMN ORDER (43 columns) ─────────────────────────────────────────────
   timestamp_ns, timestamp_s, t_rel_ns, t_rel_s, dt_ns, dt_s,
@@ -44,19 +59,11 @@ without a KeyError and without adding extra columns to the table.
   roll, pitch, yaw, yaw_unwrapped, yaw_rate,
   heading_change, abs_heading_change,
   curvature, abs_curvature, curvature_valid
-
-─── TRIAGE FIXES APPLIED (2026-06-09) ─────────────────────────────────────
-  Bucket B: drop frames with dt < DT_MIN_S (near-zero gaps cause derivative
-            explosion). Applied in build_standard_frame() after monotonic
-            filter. Affects boreas_rt, durlar, ford, nuscene, nvidia, waymo.
-  Bucket D: ZOD heading column is in degrees, not radians. Convert with
-            np.radians() in load_zod() before passing to build_standard_frame.
 """
 
 import json
 import math
 import os
-import threading
 import traceback
 import warnings
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -66,13 +73,37 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-from scipy.signal import savgol_filter
+from scipy.signal import butter, filtfilt, savgol_filter
 from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CONFIGURATION
+# GLOBAL PARAMETERS  (all time-based values in seconds — no frame-based windows)
+# ─────────────────────────────────────────────────────────────────────────────
+
+GRID_HZ         = 10        # common output sampling rate
+DT_GRID         = 0.1       # s — 1 / GRID_HZ
+F_CUT_HZ        = 3.0       # Butterworth low-pass cutoff (vehicle dynamics < 3 Hz)
+BUTTER_ORDER    = 4         # zero-phase via filtfilt → effective order 8
+HAMPEL_WINDOW_S = 0.5       # s — Hampel filter window in seconds
+HAMPEL_T0       = 3.0       # MAD multiplier threshold
+GAP_MAX_S       = 0.5       # s — gaps longer than this are masked, not interpolated
+SG_POLY         = 3         # Savitzky-Golay polynomial order
+W_D1            = 7         # frames @ 10 Hz, 1st-derivative window (0.7 s)
+W_D2            = 11        # frames @ 10 Hz, 2nd-derivative window (1.1 s)
+CURV_SPEED_MIN  = 2.0       # m/s — minimum speed for curvature validity
+DT_MIN_FRAC     = 0.1       # Bucket B: drop dt < 10% of median dt
+EDGE_MASK       = math.ceil(W_D2 / 2)        # frames NaN'd at clip edges (derivs)
+GAP_DILATION    = math.ceil(W_D2 / 2)        # frames NaN'd around gaps (derivs)
+GPS_SPEED_MAX   = 50.0      # m/s — impossible-speed threshold for GPS cleaning
+
+MAX_WORKERS = min(os.cpu_count() or 4, 8)
+
+PIPELINE_VERSION = "v3_10hz_common_grid"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PATHS
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _find_dataset_root() -> Path:
@@ -87,6 +118,7 @@ def _find_dataset_root() -> Path:
         script_dir.parent,
         Path.cwd().resolve() / "dataset",
         script_dir / "dataset",
+        Path.home() / "Downloads" / "dataset",
     ]
     for root in candidates:
         if (root / "parquet_data").is_dir():
@@ -94,34 +126,13 @@ def _find_dataset_root() -> Path:
     checked = "\n  ".join(str(c) for c in candidates)
     raise FileNotFoundError(
         "Could not find 'parquet_data/' in any of:\n  " + checked +
-        "\n\nFix options:"
-        "\n  1. cd into the folder that contains parquet_data/ and run from there:"
-        "\n       cd ~/Downloads/dataset && python ~/Downloads/standardize_inertial_data.py"
-        "\n  2. Pass the path as an argument:"
-        "\n       python standardize_inertial_data.py ~/Downloads/dataset"
+        "\nFix: python standardize_inertial_data.py ~/Downloads/dataset"
     )
 
-BASE_DIR    = _find_dataset_root()
-PARQUET_DIR = BASE_DIR / "parquet_data"
-OUTPUT_DIR  = BASE_DIR / "inertial_data"
-
-# Savitzky-Golay smoothing (speed → a_long, a_long/a_lat → jerk)
-SG_WINDOW = 11      # must be odd
-SG_POLY   = 3
-
-# Curvature validity threshold [m/s]
-CURV_SPEED_MIN = 0.5
-
-# ── BUCKET B FIX ─────────────────────────────────────────────────────────────
-# Frames with dt < DT_MIN_FRAC × median_dt are dropped before any derivative
-# is computed. Near-zero dt gaps (e.g. duplicate GPS/IMU packets with slightly
-# different nanosecond timestamps) cause d/dt to explode by thousands of times.
-# Using a relative fraction (10% of median dt) makes this adaptive across
-# datasets with different sampling rates (e.g. 2000 Hz 4seasons vs 100 Hz DurLAR).
-DT_MIN_FRAC = 0.1   # drop frames where dt < 10% of median dt
-
-# Worker threads for parallel file processing (I/O + CPU bound per file)
-MAX_WORKERS = min(os.cpu_count() or 4, 8)
+# Resolved lazily in main() so the module can be imported for testing.
+BASE_DIR: Path = None
+PARQUET_DIR: Path = None
+OUTPUT_DIR: Path = None
 
 # ─────────────────────────────────────────────────────────────────────────────
 # OUTPUT SCHEMA
@@ -176,28 +187,160 @@ def latlon_to_xy(lat, lon):
     return x, y
 
 
-def smooth_sg(arr):
-    """Savitzky-Golay filter; returns original if too short."""
-    arr = np.asarray(arr, dtype=float)
-    n = len(arr)
-    w = SG_WINDOW if SG_WINDOW <= n else (n if n % 2 == 1 else max(n - 1, 1))
-    if w < SG_POLY + 2 or w < 3:
-        return arr
-    try:
-        return savgol_filter(arr, w, SG_POLY)
-    except Exception:
-        return arr
+def hampel(x, native_dt, window_s=HAMPEL_WINDOW_S, t0=HAMPEL_T0):
+    """
+    Hampel identifier: replaces only statistical outliers (> t0 * 1.4826 * MAD
+    from rolling median). Preserves genuine extreme events (hard braking,
+    swerves) — unlike a blanket rolling median, which flattens them.
+    Window is specified in seconds and converted to frames using native_dt.
+    """
+    x = np.asarray(x, dtype=float)
+    k = max(5, int(round(window_s / native_dt)))
+    k = k if k % 2 == 1 else k + 1   # must be odd
+    s = pd.Series(x)
+    med = s.rolling(k, center=True, min_periods=1).median()
+    mad = 1.4826 * (s - med).abs().rolling(k, center=True, min_periods=1).median()
+    outlier = ((s - med).abs() > t0 * mad) & mad.notna() & (mad > 0)
+    y = x.copy()
+    y[outlier.values] = med.values[outlier.values]
+    return y
 
 
-def deriv(signal, dt_s):
-    """Finite-difference derivative; NaN for first frame and zero-dt frames."""
-    sig = np.asarray(signal, dtype=float)
-    dt  = np.asarray(dt_s,   dtype=float)
-    diff = np.diff(sig, prepend=np.nan)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        out = np.where(dt > 0, diff / dt, np.nan)
-    out[0] = np.nan
+def lowpass_segments(x, fs_native, fc=F_CUT_HZ, order=BUTTER_ORDER):
+    """
+    Zero-phase Butterworth low-pass, applied per contiguous non-NaN segment.
+    Segments shorter than 3 × filter length are left unfiltered. NaN frames
+    stay NaN.
+    """
+    x = np.asarray(x, dtype=float)
+    n = len(x)
+    if n < 4:
+        return x.copy()
+
+    nyq = fs_native / 2.0
+    if fc >= nyq:
+        return x.copy()   # cutoff at/above Nyquist — nothing to remove
+
+    b, a = butter(order, fc / nyq, btype="low")
+    min_len = 3 * max(len(a), len(b))
+
+    result = x.copy()
+    nan_mask = np.isnan(x)
+    changes = np.diff(nan_mask.astype(np.int8), prepend=1, append=1)
+    starts  = np.where(changes == -1)[0]
+    ends    = np.where(changes ==  1)[0]
+
+    for s, e in zip(starts, ends):
+        seg = x[s:e]
+        if len(seg) >= min_len:
+            try:
+                result[s:e] = filtfilt(b, a, seg, method="gust")
+            except Exception:
+                pass   # leave segment unfiltered on numerical failure
+
+    return result
+
+
+def sg_deriv(x, order, window, dt=DT_GRID, poly=SG_POLY):
+    """
+    Derivative via Savitzky-Golay polynomial differentiation — the derivative
+    is read off the local polynomial fit instead of finite-differencing,
+    which avoids the smooth-then-diff noise re-amplification cascade.
+    Operates per contiguous non-NaN segment; falls back to np.gradient
+    (central differences) on segments too short for the SG window.
+    """
+    x = np.asarray(x, dtype=float)
+    n = len(x)
+    result = np.full(n, np.nan)
+
+    nan_mask = np.isnan(x)
+    changes  = np.diff(nan_mask.astype(np.int8), prepend=1, append=1)
+    starts   = np.where(changes == -1)[0]
+    ends     = np.where(changes ==  1)[0]
+
+    for s, e in zip(starts, ends):
+        seg = x[s:e]
+        seg_len = len(seg)
+        if seg_len < window:
+            if order == 1 and seg_len >= 2:
+                result[s:e] = np.gradient(seg, dt)
+            # 2nd derivative on a segment shorter than the window: leave NaN
+            # (too little data for a trustworthy estimate)
+            continue
+        try:
+            result[s:e] = savgol_filter(seg, window, poly, deriv=order, delta=dt)
+        except Exception:
+            if order == 1 and seg_len >= 2:
+                result[s:e] = np.gradient(seg, dt)
+
+    return result
+
+
+def mask_derivative(deriv_arr, level_arr, edge_frames=EDGE_MASK,
+                    dilation=GAP_DILATION):
+    """
+    FIX 7/8 — NaN-out a derivative:
+      • wherever the underlying LEVEL signal is NaN, dilated by `dilation`
+        frames on each side (filter/SG edge effects leak across segment
+        boundaries),
+      • at the first/last `edge_frames` frames of the clip,
+      • entirely, if the clip is shorter than 2 × edge_frames (honest NaN
+        beats keeping edge artifacts).
+    """
+    out = np.asarray(deriv_arr, dtype=float).copy()
+    n = len(out)
+    if n == 0:
+        return out
+
+    if n <= 2 * edge_frames:
+        out[:] = np.nan
+        return out
+
+    nanpos = np.isnan(np.asarray(level_arr, dtype=float))
+    if nanpos.any():
+        kernel = np.ones(2 * dilation + 1)
+        dilated = np.convolve(nanpos.astype(float), kernel, mode="same") > 0
+        out[dilated] = np.nan
+
+    out[:edge_frames]  = np.nan
+    out[-edge_frames:] = np.nan
     return out
+
+
+def _clean_gps_position(x, y, ts_ns, speed_max_ms=GPS_SPEED_MAX):
+    """
+    DurLAR/NVIDIA sustained GPS offset correction.
+    Detects multi-frame position offsets producing impossible speeds,
+    then linearly interpolates x/y over the flagged region. (A Hampel/median
+    filter cannot cover 60+ frame sustained offsets — this can.)
+    """
+    x  = np.array(x,  dtype=float)
+    y  = np.array(y,  dtype=float)
+    ts = np.array(ts_ns, dtype=np.int64)
+    n  = len(x)
+
+    dt = np.diff(ts) / 1e9
+    dx = np.diff(x)
+    dy = np.diff(y)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        speed = np.where(dt > 0, np.sqrt(dx**2 + dy**2) / dt, np.nan)
+
+    bad = np.zeros(n, dtype=bool)
+    bad_step = speed > speed_max_ms
+    bad[:-1] |= bad_step
+    bad[1:]  |= bad_step
+
+    if not bad.any():
+        return x, y
+
+    good_idx = np.where(~bad)[0]
+    if len(good_idx) < 2:
+        return x, y
+
+    all_idx = np.arange(n)
+    x_clean = np.interp(all_idx, good_idx, x[good_idx])
+    y_clean = np.interp(all_idx, good_idx, y[good_idx])
+    return x_clean, y_clean
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -215,82 +358,114 @@ def build_standard_frame(
     yaw_rate_raw=None,
     clean_gps=False,
 ):
-    n = len(timestamp_ns)
     col_sources = {}
+    n_raw = len(timestamp_ns)
+    if n_raw < 2:
+        return None, {}, {}
 
-    def arr(v):
-        if v is None:
-            return np.full(n, np.nan)
-        a = np.asarray(v, dtype=float)
-        return a if len(a) == n else np.full(n, np.nan)
-
-    # ── 1. TIMESTAMPS ────────────────────────────────────────────────────────
+    # ── STEP 1: TIMESTAMP CLEANUP ─────────────────────────────────────────────
     ts_ns = np.asarray(timestamp_ns, dtype=np.int64)
 
-    # Step 1: keep strictly increasing timestamps (remove non-monotonic)
-    keep = np.ones(n, dtype=bool)
-    mx = ts_ns[0]
-    for i in range(1, n):
-        if ts_ns[i] > mx:
-            mx = ts_ns[i]
-        else:
-            keep[i] = False
+    # Vectorised strictly-monotonic filter
+    run_max = np.maximum.accumulate(ts_ns)
+    keep_mono = np.concatenate(([True], ts_ns[1:] > run_max[:-1]))
+    n_dropped_mono = int((~keep_mono).sum())
+    ts_mono = ts_ns[keep_mono]
+    if len(ts_mono) < 2:
+        return None, {}, {}
 
-    # ── BUCKET B FIX ─────────────────────────────────────────────────────────
-    # Step 2: after monotonic filter, drop frames where dt < DT_MIN_FRAC × median_dt.
-    # Near-zero dt gaps (duplicate GPS/IMU packets) cause d/dt to explode.
-    # Relative threshold adapts to dataset sampling rate automatically:
-    #   4seasons at 2000 Hz: median_dt=0.0005s → threshold=0.00005s → nothing dropped
-    #   DurLAR   at  100 Hz: median_dt=0.010s  → threshold=0.001s   → glitches dropped
-    ts_monotonic = ts_ns[keep]
-    dt_check = np.diff(ts_monotonic, prepend=ts_monotonic[0])
-    dt_check[0] = ts_monotonic[0]  # keep first frame always
-    dt_check_s = dt_check / 1e9
-    median_dt_s = float(np.median(dt_check_s[1:]))  # exclude first frame
-    dt_min_s = max(1e-9, median_dt_s * DT_MIN_FRAC)
-    keep_dt = dt_check_s >= dt_min_s
-    keep_dt[0] = True  # always keep first frame
+    # Bucket B: drop near-zero dt gaps (duplicate packets explode derivatives)
+    dt_mono = np.diff(ts_mono) / 1e9
+    median_dt_s = float(np.median(dt_mono))
+    if not np.isfinite(median_dt_s) or median_dt_s <= 0:
+        return None, {}, {}
+    native_hz = round(1.0 / median_dt_s)
+    dt_min_s  = max(1e-9, median_dt_s * DT_MIN_FRAC)
+    keep_dt = np.concatenate(([True], dt_mono >= dt_min_s))
+    n_dropped_dt = int((~keep_dt).sum())
 
-    # Combine both filters back to original indices
-    keep_indices = np.where(keep)[0]
-    final_keep = np.zeros(n, dtype=bool)
-    final_keep[keep_indices[keep_dt]] = True
+    native_indices  = np.where(keep_mono)[0][keep_dt]
+    final_keep_full = np.zeros(n_raw, dtype=bool)
+    final_keep_full[native_indices] = True
 
-    ts_ns = ts_ns[final_keep]
-    n = len(ts_ns)
+    ts_native   = ts_ns[final_keep_full]
+    n_native    = len(ts_native)
+    if n_native < 5:
+        return None, {}, {}
+    t_rel_s_nat = (ts_native - ts_native[0]) / 1e9
+    fs_native   = 1.0 / median_dt_s
+    gap_limit_frames = max(1, int(GAP_MAX_S / median_dt_s))
 
     def arr_k(v):
         if v is None:
-            return np.full(n, np.nan)
+            return np.full(n_native, np.nan)
         a_full = np.asarray(v, dtype=float)
-        if len(a_full) < len(final_keep):
-            tmp = np.full(len(final_keep), np.nan)
+        if len(a_full) < len(final_keep_full):
+            tmp = np.full(len(final_keep_full), np.nan)
             tmp[:len(a_full)] = a_full
             a_full = tmp
-        return a_full[final_keep]
+        return a_full[final_keep_full]
 
-    timestamp_s = ts_ns / 1e9
-    t_rel_ns    = ts_ns - ts_ns[0]
-    t_rel_s     = t_rel_ns / 1e9
+    # ── GRID DEFINITION + GAP MASKS ──────────────────────────────────────────
+    t_grid = np.arange(t_rel_s_nat[0], t_rel_s_nat[-1] + DT_GRID * 0.5, DT_GRID)
+    n_grid = len(t_grid)
+    if n_grid < 2:
+        return None, {}, {}
 
-    _dt_raw = np.empty(n, dtype=object)
-    _dt_raw[0] = pd.NA
-    _dt_raw[1:] = np.diff(ts_ns).astype(np.int64)
-    dt_ns_arr = pd.array(_dt_raw, dtype="Int64")
+    # Timestamp-gap mask: native dt > GAP_MAX_S (FIX 2 applies it to levels too)
+    dt_nat_arr = np.diff(t_rel_s_nat)
+    ts_gap_mask_grid = np.zeros(n_grid, dtype=bool)
+    for gi in np.where(dt_nat_arr > GAP_MAX_S)[0]:
+        ts_gap_mask_grid |= (t_grid > t_rel_s_nat[gi]) & (t_grid < t_rel_s_nat[gi + 1])
 
-    dt_s = np.empty(n)
-    dt_s[0] = np.nan
-    dt_s[1:] = np.diff(ts_ns) / 1e9
+    gap_fraction = float(dt_nat_arr[dt_nat_arr > GAP_MAX_S].sum() /
+                         t_rel_s_nat[-1]) if t_rel_s_nat[-1] > 0 else 0.0
 
-    for c in ["timestamp_ns","timestamp_s","t_rel_ns","t_rel_s","dt_ns","dt_s"]:
-        col_sources[c] = SRC_DERIV
+    def nan_run_mask_grid(x_nat_raw):
+        """FIX 3 — grid mask covering NaN runs longer than GAP_MAX_S
+        (sensor dropout while timestamps keep ticking)."""
+        isn = np.isnan(np.asarray(x_nat_raw, dtype=float))
+        mask = np.zeros(n_grid, dtype=bool)
+        if not isn.any():
+            return mask
+        d = np.diff(isn.astype(np.int8), prepend=0, append=0)
+        starts = np.where(d == 1)[0]
+        ends   = np.where(d == -1)[0]          # exclusive
+        for s, e in zip(starts, ends):
+            t0 = t_rel_s_nat[s]
+            t1 = t_rel_s_nat[min(e - 1, n_native - 1)]
+            if t1 - t0 > GAP_MAX_S:
+                mask |= (t_grid >= t0) & (t_grid <= t1)
+        return mask
 
-    # ── 2. POSITION ───────────────────────────────────────────────────────────
-    x_arr   = arr_k(x)
-    y_arr   = arr_k(y)
-    z_arr   = arr_k(z)
-    lat_arr = arr_k(lat)
-    lon_arr = arr_k(lon)
+    def prep_channel(x_nat_raw, do_lp=True):
+        """
+        Full level-signal path: interpolate short NaN gaps → low-pass at native
+        rate → resample onto the 10 Hz grid → mask timestamp gaps AND this
+        channel's long NaN runs (FIX 2 + FIX 3: no fabricated bridges).
+        """
+        x_nat_raw = np.asarray(x_nat_raw, dtype=float)
+        if np.all(np.isnan(x_nat_raw)):
+            return np.full(n_grid, np.nan)
+        ch_mask = nan_run_mask_grid(x_nat_raw)
+        filled = pd.Series(x_nat_raw).interpolate(
+            method="linear", limit=gap_limit_frames,
+            limit_direction="both").values
+        sig = lowpass_segments(filled, fs_native) if do_lp else filled
+        valid = ~np.isnan(sig)
+        if valid.sum() < 2:
+            return np.full(n_grid, np.nan)
+        g = np.interp(t_grid, t_rel_s_nat[valid], sig[valid],
+                      left=np.nan, right=np.nan)
+        g[ts_gap_mask_grid | ch_mask] = np.nan
+        return g
+
+    # ── STEP 2: POSITION (native rate) ───────────────────────────────────────
+    x_nat   = arr_k(x)
+    y_nat   = arr_k(y)
+    z_nat   = arr_k(z)
+    lat_nat = arr_k(lat)
+    lon_nat = arr_k(lon)
 
     col_sources["x"]   = SRC_RAW if x   is not None else SRC_NA
     col_sources["y"]   = SRC_RAW if y   is not None else SRC_NA
@@ -298,211 +473,298 @@ def build_standard_frame(
     col_sources["lat"] = SRC_RAW if lat is not None else SRC_NA
     col_sources["lon"] = SRC_RAW if lon is not None else SRC_NA
 
-    if np.all(np.isnan(x_arr)) and not np.all(np.isnan(lat_arr)):
-        x_arr, y_arr = latlon_to_xy(lat_arr, lon_arr)
+    if np.all(np.isnan(x_nat)) and not np.all(np.isnan(lat_nat)):
+        x_nat, y_nat = latlon_to_xy(lat_nat, lon_nat)
         col_sources["x"] = SRC_DERIV
         col_sources["y"] = SRC_DERIV
 
-    # ── 3. RELATIVE & ALIGNED TRAJECTORY ─────────────────────────────────────
-    x_rel = x_arr - x_arr[0] if not np.isnan(x_arr[0]) else x_arr.copy()
-    y_rel = y_arr - y_arr[0] if not np.isnan(y_arr[0]) else y_arr.copy()
+    if clean_gps and not np.all(np.isnan(x_nat)):
+        x_nat, y_nat = _clean_gps_position(x_nat, y_nat, ts_native)
 
-    yaw_r  = arr_k(yaw_raw)
-    yaw_uw = np.unwrap(yaw_r)
-
-    valid_yaw = ~np.isnan(yaw_uw)
-    if valid_yaw.any():
-        heading_initial = float(yaw_uw[valid_yaw][0])
-    else:
-        k = min(5, n - 1)
-        dx = x_arr[k] - x_arr[0]
-        dy = y_arr[k] - y_arr[0]
-        heading_initial = float(np.arctan2(dy, dx)) \
-            if not (np.isnan(dx) or np.isnan(dy)) else 0.0
-
-    rot = math.pi / 2.0 - heading_initial
-    x_aligned = x_rel * np.cos(rot) - y_rel * np.sin(rot)
-    y_aligned  = x_rel * np.sin(rot) + y_rel * np.cos(rot)
-
-    for c in ["x_rel","y_rel","x_aligned","y_aligned","heading_initial"]:
-        col_sources[c] = SRC_DERIV
-
-    # ── 4. VELOCITY ───────────────────────────────────────────────────────────
-    vx_arr = arr_k(vx)
-    vy_arr = arr_k(vy)
-    vz_arr = arr_k(vz)
+    # ── STEP 3: VELOCITY (native rate) ───────────────────────────────────────
+    vx_nat = arr_k(vx)
+    vy_nat = arr_k(vy)
+    vz_nat = arr_k(vz)
 
     col_sources["vx"] = SRC_RAW if vx is not None else SRC_NA
     col_sources["vy"] = SRC_RAW if vy is not None else SRC_NA
     col_sources["vz"] = SRC_RAW if vz is not None else SRC_NA
 
-    if np.all(np.isnan(vx_arr)) and not np.all(np.isnan(x_arr)):
-        vx_arr = deriv(x_arr, dt_s)
-        vy_arr = deriv(y_arr, dt_s)
+    def _lp_fill(sig):
+        filled = pd.Series(sig).interpolate(
+            method="linear", limit=gap_limit_frames,
+            limit_direction="both").values
+        return lowpass_segments(filled, fs_native)
+
+    # FIX 5 — derive velocity from LOW-PASSED positions via central
+    # differences (np.gradient handles non-uniform t), not raw backward diffs.
+    if np.all(np.isnan(vx_nat)) and not np.all(np.isnan(x_nat)):
+        x_lp_nat = _lp_fill(x_nat)
+        y_lp_nat = _lp_fill(y_nat)
+        with np.errstate(invalid="ignore"):
+            vx_nat = np.gradient(x_lp_nat, t_rel_s_nat)
+            vy_nat = np.gradient(y_lp_nat, t_rel_s_nat)
         col_sources["vx"] = SRC_DERIV
         col_sources["vy"] = SRC_DERIV
 
-    if np.all(np.isnan(vz_arr)) and not np.all(np.isnan(z_arr)):
-        vz_arr = deriv(z_arr, dt_s)
+    if np.all(np.isnan(vz_nat)) and not np.all(np.isnan(z_nat)):
+        z_lp_nat = _lp_fill(z_nat)
+        with np.errstate(invalid="ignore"):
+            vz_nat = np.gradient(z_lp_nat, t_rel_s_nat)
         col_sources["vz"] = SRC_DERIV
 
     if speed_raw is not None:
-        speed_arr = arr_k(speed_raw)
+        speed_nat = arr_k(speed_raw)
         col_sources["speed"] = SRC_RAW
     else:
-        speed_arr = np.sqrt(vx_arr**2 + vy_arr**2)
-        col_sources["speed"] = SRC_DERIV if not np.all(np.isnan(speed_arr)) else SRC_NA
+        speed_nat = np.sqrt(vx_nat**2 + vy_nat**2)
+        col_sources["speed"] = SRC_DERIV if not np.all(np.isnan(speed_nat)) else SRC_NA
 
-    speed_arr = np.where(speed_arr < 0, np.nan, speed_arr)
-    speed_kmh = speed_arr * 3.6
-    col_sources["speed_kmh"] = SRC_DERIV
+    speed_nat = np.where(speed_nat < 0, np.nan, speed_nat)
 
-    # ── 5. ORIENTATION ────────────────────────────────────────────────────────
-    roll_arr  = arr_k(roll_raw)
-    pitch_arr = arr_k(pitch_raw)
+    # ── STEP 4: HAMPEL point-outlier removal on speed ────────────────────────
+    if not np.all(np.isnan(speed_nat)) and n_native > 5:
+        speed_nat = hampel(speed_nat, median_dt_s)
+
+    # ── ORIENTATION (native rate) ────────────────────────────────────────────
+    roll_nat   = arr_k(roll_raw)
+    pitch_nat  = arr_k(pitch_raw)
+    yaw_nat    = arr_k(yaw_raw)
+    yaw_uw_nat = np.unwrap(yaw_nat)
 
     col_sources["roll"]          = SRC_RAW if roll_raw  is not None else SRC_NA
     col_sources["pitch"]         = SRC_RAW if pitch_raw is not None else SRC_NA
     col_sources["yaw"]           = SRC_RAW if yaw_raw   is not None else SRC_NA
     col_sources["yaw_unwrapped"] = SRC_DERIV
 
-    # ── 6. YAW RATE ───────────────────────────────────────────────────────────
-    if yaw_rate_raw is not None:
-        yaw_rate_arr = arr_k(yaw_rate_raw)
-        col_sources["yaw_rate"] = SRC_RAW
-    else:
-        yaw_rate_arr = deriv(yaw_uw, dt_s)
-        col_sources["yaw_rate"] = SRC_DERIV if not np.all(np.isnan(yaw_rate_arr)) else SRC_NA
-
-    # ── 7. RAW IMU ACCELERATIONS ─────────────────────────────────────────────
-    ax_arr = arr_k(ax_raw)
-    ay_arr = arr_k(ay_raw)
-    az_arr = arr_k(az_raw)
+    ax_nat = arr_k(ax_raw)
+    ay_nat = arr_k(ay_raw)
+    az_nat = arr_k(az_raw)
     col_sources["ax"] = SRC_RAW if ax_raw is not None else SRC_NA
     col_sources["ay"] = SRC_RAW if ay_raw is not None else SRC_NA
     col_sources["az"] = SRC_RAW if az_raw is not None else SRC_NA
 
-    # ── 8. LONGITUDINAL / LATERAL ACCELERATION ───────────────────────────────
-    # When clean_gps=True (DurLAR): cap physically impossible speed values before
-    # SG smoothing. GPS spikes produce speeds >11,000 m/s which explode derivatives.
-    # Forward-fill NaNs instead of replacing with 0.0 to avoid artificial zero frames.
-    if clean_gps:
-        # Supervisor fix: median filter on speed before SG smooth → deriv.
-        # Rolling median (window=5) kills single-frame GPS spikes without
-        # spreading them the way SG would. ffill/bfill handles NaNs.
-        _spd = pd.Series(speed_arr.copy()).ffill().bfill().values
-        _spd = pd.Series(_spd).rolling(window=5, center=True, min_periods=1).median().values
-        speed_smooth = smooth_sg(_spd)
+    # ── STEPS 5–7: GAP POLICY + LOW-PASS + RESAMPLE (per channel) ────────────
+    speed_g   = prep_channel(speed_nat)
+    x_g       = prep_channel(x_nat)
+    y_g       = prep_channel(y_nat)
+    z_g       = prep_channel(z_nat)
+    yaw_uw_g  = prep_channel(yaw_uw_nat)
+    vx_g      = prep_channel(vx_nat)
+    vy_g      = prep_channel(vy_nat)
+    vz_g      = prep_channel(vz_nat)
+    roll_g    = prep_channel(roll_nat)
+    pitch_g   = prep_channel(pitch_nat)
+    ax_g      = prep_channel(ax_nat)
+    ay_g      = prep_channel(ay_nat)
+    az_g      = prep_channel(az_nat)
+    # lat/lon: reference coordinates, never differentiated — no low-pass,
+    # but gap-masked like everything else (no fabricated GPS tracks).
+    lat_g     = prep_channel(lat_nat, do_lp=False)
+    lon_g     = prep_channel(lon_nat, do_lp=False)
+
+    # FIX 4 — wrapped yaw re-derived from clean unwrapped yaw. Interpolating
+    # the wrapped signal across ±π jumps fabricates impossible headings.
+    yaw_g = np.arctan2(np.sin(yaw_uw_g), np.cos(yaw_uw_g))
+
+    if yaw_rate_raw is not None:
+        yaw_rate_g = prep_channel(arr_k(yaw_rate_raw))
+        col_sources["yaw_rate"] = SRC_RAW
     else:
-        speed_smooth = smooth_sg(np.where(np.isnan(speed_arr), 0.0, speed_arr))
-    a_long = deriv(speed_smooth, dt_s)
-    a_lat  = speed_arr * yaw_rate_arr
+        yaw_rate_g = None   # derived below from yaw_uw_g
 
-    col_sources["a_long"] = SRC_DERIV if not np.all(np.isnan(a_long)) else SRC_NA
-    col_sources["a_lat"]  = SRC_DERIV if not np.all(np.isnan(a_lat))  else SRC_NA
+    # ── STEP 8: DERIVATIVES VIA SG POLYNOMIAL DIFFERENTIATION ────────────────
+    a_long_g    = sg_deriv(speed_g, order=1, window=W_D1)
+    jerk_long_g = sg_deriv(speed_g, order=2, window=W_D2)
 
-    deceleration = np.where(a_long < 0, -a_long, 0.0)
-    acc_mag      = np.sqrt(a_long**2 + a_lat**2)
+    if yaw_rate_g is None:
+        yaw_rate_g = sg_deriv(yaw_uw_g, order=1, window=W_D1)
+        yaw_rate_g = mask_derivative(yaw_rate_g, yaw_uw_g)
+        col_sources["yaw_rate"] = (SRC_DERIV if not np.all(np.isnan(yaw_rate_g))
+                                   else SRC_NA)
+
+    a_lat_g    = speed_g * yaw_rate_g
+    jerk_lat_g = sg_deriv(a_lat_g, order=1, window=W_D1)
+
+    # Velocity fallback from gridded positions (rare: only when native-rate
+    # derivation found nothing). FIX 8 — masked like every other derivative.
+    if np.all(np.isnan(vx_g)) and not np.all(np.isnan(x_g)):
+        vx_g = mask_derivative(sg_deriv(x_g, order=1, window=W_D1), x_g)
+        col_sources["vx"] = SRC_DERIV
+    if np.all(np.isnan(vy_g)) and not np.all(np.isnan(y_g)):
+        vy_g = mask_derivative(sg_deriv(y_g, order=1, window=W_D1), y_g)
+        col_sources["vy"] = SRC_DERIV
+    if np.all(np.isnan(vz_g)) and not np.all(np.isnan(z_g)):
+        vz_g = mask_derivative(sg_deriv(z_g, order=1, window=W_D1), z_g)
+        col_sources["vz"] = SRC_DERIV
+
+    # ── STEP 9: DERIVATIVE GAP + EDGE MASKING ────────────────────────────────
+    a_long_g    = mask_derivative(a_long_g,    speed_g)
+    jerk_long_g = mask_derivative(jerk_long_g, speed_g)
+    a_lat_g     = mask_derivative(a_lat_g,     a_lat_g)
+    jerk_lat_g  = mask_derivative(jerk_lat_g,  a_lat_g)
+
+    # ── DERIVED SIGNALS (after masking — NaN propagates honestly) ────────────
+    jerk_mag_g      = np.sqrt(jerk_long_g**2 + jerk_lat_g**2)
+    abs_jerk_long_g = np.abs(jerk_long_g)
+    abs_jerk_mag_g  = jerk_mag_g.copy()
+    acc_mag_g       = np.sqrt(a_long_g**2 + a_lat_g**2)
+
+    # NaN-preserving deceleration (NaN must NOT become a fake 0.0)
+    deceleration_g = np.where(
+        np.isnan(a_long_g), np.nan,
+        np.where(a_long_g < 0, -a_long_g, 0.0)
+    )
+
+    col_sources["a_long"]       = SRC_DERIV if not np.all(np.isnan(a_long_g)) else SRC_NA
+    col_sources["a_lat"]        = SRC_DERIV if not np.all(np.isnan(a_lat_g))  else SRC_NA
     col_sources["deceleration"] = col_sources["a_long"]
     col_sources["acc_mag"]      = SRC_DERIV
-
-    # ── 9. JERK ──────────────────────────────────────────────────────────────
-    if clean_gps:
-        _al = pd.Series(a_long.copy()).ffill().bfill().values
-        _al = pd.Series(_al).rolling(window=21, center=True, min_periods=1).median().values
-        a_long_s = smooth_sg(_al)
-        _alt = pd.Series(a_lat.copy()).ffill().bfill().values
-        _alt = pd.Series(_alt).rolling(window=21, center=True, min_periods=1).median().values
-        a_lat_s = smooth_sg(_alt)
-    else:
-        a_long_s = smooth_sg(np.where(np.isnan(a_long), 0.0, a_long))
-        a_lat_s  = smooth_sg(np.where(np.isnan(a_lat),  0.0, a_lat))
-    jerk_long     = deriv(a_long_s, dt_s)
-    jerk_lat      = deriv(a_lat_s,  dt_s)
-    jerk_mag      = np.sqrt(jerk_long**2 + jerk_lat**2)
-    abs_jerk_long = np.abs(jerk_long)
-    abs_jerk_mag  = jerk_mag.copy()
-
-    jerk_src = SRC_DERIV if not np.all(np.isnan(jerk_long)) else SRC_NA
-    for c in ["jerk_long","jerk_lat","jerk_mag","abs_jerk_long","abs_jerk_mag"]:
+    jerk_src = SRC_DERIV if not np.all(np.isnan(jerk_long_g)) else SRC_NA
+    for c in ["jerk_long", "jerk_lat", "jerk_mag", "abs_jerk_long", "abs_jerk_mag"]:
         col_sources[c] = jerk_src
 
-    # ── 10. HEADING CHANGE ───────────────────────────────────────────────────
-    heading_change     = np.diff(yaw_uw, prepend=np.nan)
-    heading_change[0]  = np.nan
-    abs_heading_change = np.abs(heading_change)
-    hc_src = SRC_DERIV if not np.all(np.isnan(heading_change)) else SRC_NA
+    # ── HEADING CHANGE (per 0.1 s grid frame) ────────────────────────────────
+    heading_change_g     = np.concatenate(([np.nan], np.diff(yaw_uw_g)))
+    abs_heading_change_g = np.abs(heading_change_g)
+    hc_src = SRC_DERIV if not np.all(np.isnan(heading_change_g)) else SRC_NA
     col_sources["heading_change"]     = hc_src
     col_sources["abs_heading_change"] = hc_src
 
-    # ── 11. CURVATURE ────────────────────────────────────────────────────────
-    curv_valid = speed_arr > CURV_SPEED_MIN
+    # ── TRAJECTORY ALIGNMENT ──────────────────────────────────────────────────
+    def _first_finite(a, default=np.nan):
+        f = a[np.isfinite(a)]
+        return float(f[0]) if len(f) else default
+
+    x0 = _first_finite(x_g)
+    y0 = _first_finite(y_g)
+    x_rel_g = x_g - x0 if np.isfinite(x0) else x_g.copy()
+    y_rel_g = y_g - y0 if np.isfinite(y0) else y_g.copy()
+
+    heading_initial = _first_finite(yaw_uw_g)
+    if not np.isfinite(heading_initial):
+        k = min(5, n_grid - 1)
+        dx0 = x_g[k] - x_g[0]
+        dy0 = y_g[k] - y_g[0]
+        heading_initial = float(np.arctan2(dy0, dx0)) \
+            if np.isfinite(dx0) and np.isfinite(dy0) else 0.0
+
+    rot = math.pi / 2.0 - heading_initial
+    x_aligned_g = x_rel_g * np.cos(rot) - y_rel_g * np.sin(rot)
+    y_aligned_g = x_rel_g * np.sin(rot) + y_rel_g * np.cos(rot)
+
+    for c in ["x_rel", "y_rel", "x_aligned", "y_aligned", "heading_initial"]:
+        col_sources[c] = SRC_DERIV
+
+    # ── STEP 10: CURVATURE ────────────────────────────────────────────────────
+    curv_valid_g = np.where(np.isnan(speed_g), False, speed_g > CURV_SPEED_MIN)
     with np.errstate(divide="ignore", invalid="ignore"):
-        curvature = np.where(curv_valid, yaw_rate_arr / speed_arr, np.nan)
-    abs_curvature = np.abs(curvature)
-    curv_src = SRC_DERIV if not np.all(np.isnan(curvature)) else SRC_NA
+        curvature_g = np.where(curv_valid_g, yaw_rate_g / speed_g, np.nan)
+    abs_curvature_g = np.abs(curvature_g)
+    curv_src = SRC_DERIV if not np.all(np.isnan(curvature_g)) else SRC_NA
     col_sources["curvature"]       = curv_src
     col_sources["abs_curvature"]   = curv_src
     col_sources["curvature_valid"] = SRC_FLAG
 
-    # ── 12. ASSEMBLE ─────────────────────────────────────────────────────────
+    # ── GRID TIMESTAMPS ───────────────────────────────────────────────────────
+    ts_ns_g    = (ts_native[0] + (t_grid * 1e9)).round().astype(np.int64)
+    ts_s_g     = ts_ns_g / 1e9
+    t_rel_ns_g = ts_ns_g - ts_ns_g[0]
+    t_rel_s_g  = t_rel_ns_g / 1e9
+
+    dt_ns_raw = np.empty(n_grid, dtype=object)
+    dt_ns_raw[0] = pd.NA
+    dt_ns_raw[1:] = np.diff(ts_ns_g).astype(np.int64)
+    dt_ns_arr = pd.array(dt_ns_raw, dtype="Int64")
+
+    dt_s_g = np.full(n_grid, np.nan)
+    dt_s_g[1:] = np.diff(ts_ns_g) / 1e9
+
+    for c in ["timestamp_ns", "timestamp_s", "t_rel_ns", "t_rel_s", "dt_ns", "dt_s"]:
+        col_sources[c] = SRC_DERIV
+
+    speed_kmh_g = speed_g * 3.6
+    col_sources["speed_kmh"] = SRC_DERIV
+
+    # ── ASSEMBLE ──────────────────────────────────────────────────────────────
     df = pd.DataFrame({
-        "timestamp_ns":       pd.array(ts_ns,      dtype="Int64"),
-        "timestamp_s":        timestamp_s,
-        "t_rel_ns":           pd.array(t_rel_ns,   dtype="Int64"),
-        "t_rel_s":            t_rel_s,
+        "timestamp_ns":       pd.array(ts_ns_g,    dtype="Int64"),
+        "timestamp_s":        ts_s_g,
+        "t_rel_ns":           pd.array(t_rel_ns_g, dtype="Int64"),
+        "t_rel_s":            t_rel_s_g,
         "dt_ns":              dt_ns_arr,
-        "dt_s":               dt_s,
-        "x":                  x_arr,
-        "y":                  y_arr,
-        "z":                  z_arr,
-        "lat":                lat_arr,
-        "lon":                lon_arr,
-        "x_rel":              x_rel,
-        "y_rel":              y_rel,
-        "x_aligned":          x_aligned,
-        "y_aligned":          y_aligned,
-        "heading_initial":    np.full(n, heading_initial),
-        "vx":                 vx_arr,
-        "vy":                 vy_arr,
-        "vz":                 vz_arr,
-        "speed":              speed_arr,
-        "speed_kmh":          speed_kmh,
-        "ax":                 ax_arr,
-        "ay":                 ay_arr,
-        "az":                 az_arr,
-        "a_long":             a_long,
-        "a_lat":              a_lat,
-        "deceleration":       deceleration,
-        "acc_mag":            acc_mag,
-        "jerk_long":          jerk_long,
-        "jerk_lat":           jerk_lat,
-        "jerk_mag":           jerk_mag,
-        "abs_jerk_long":      abs_jerk_long,
-        "abs_jerk_mag":       abs_jerk_mag,
-        "roll":               roll_arr,
-        "pitch":              pitch_arr,
-        "yaw":                yaw_r,
-        "yaw_unwrapped":      yaw_uw,
-        "yaw_rate":           yaw_rate_arr,
-        "heading_change":     heading_change,
-        "abs_heading_change": abs_heading_change,
-        "curvature":          curvature,
-        "abs_curvature":      abs_curvature,
-        "curvature_valid":    curv_valid,
+        "dt_s":               dt_s_g,
+        "x":                  x_g,
+        "y":                  y_g,
+        "z":                  z_g,
+        "lat":                lat_g,
+        "lon":                lon_g,
+        "x_rel":              x_rel_g,
+        "y_rel":              y_rel_g,
+        "x_aligned":          x_aligned_g,
+        "y_aligned":          y_aligned_g,
+        "heading_initial":    np.full(n_grid, heading_initial),
+        "vx":                 vx_g,
+        "vy":                 vy_g,
+        "vz":                 vz_g,
+        "speed":              speed_g,
+        "speed_kmh":          speed_kmh_g,
+        "ax":                 ax_g,
+        "ay":                 ay_g,
+        "az":                 az_g,
+        "a_long":             a_long_g,
+        "a_lat":              a_lat_g,
+        "deceleration":       deceleration_g,
+        "acc_mag":            acc_mag_g,
+        "jerk_long":          jerk_long_g,
+        "jerk_lat":           jerk_lat_g,
+        "jerk_mag":           jerk_mag_g,
+        "abs_jerk_long":      abs_jerk_long_g,
+        "abs_jerk_mag":       abs_jerk_mag_g,
+        "roll":               roll_g,
+        "pitch":              pitch_g,
+        "yaw":                yaw_g,
+        "yaw_unwrapped":      yaw_uw_g,
+        "yaw_rate":           yaw_rate_g,
+        "heading_change":     heading_change_g,
+        "abs_heading_change": abs_heading_change_g,
+        "curvature":          curvature_g,
+        "abs_curvature":      abs_curvature_g,
+        "curvature_valid":    curv_valid_g.astype(bool),
     })
 
-    return df[OUTPUT_COLUMNS], col_sources
+    processing_meta = {
+        "native_hz":                  int(native_hz),
+        "native_median_dt_s":         float(median_dt_s),
+        "n_frames_raw":               int(n_raw),
+        "n_frames_dropped_monotonic": int(n_dropped_mono),
+        "n_frames_dropped_dt":        int(n_dropped_dt),
+        "gap_fraction":               float(gap_fraction),
+        "grid_hz":                    int(GRID_HZ),
+        "f_cut_hz":                   float(F_CUT_HZ),
+        "butter_order":               int(BUTTER_ORDER),
+        "hampel_window_s":            float(HAMPEL_WINDOW_S),
+        "hampel_t0":                  float(HAMPEL_T0),
+        "gap_max_s":                  float(GAP_MAX_S),
+        "sg_poly":                    int(SG_POLY),
+        "w_d1":                       int(W_D1),
+        "w_d2":                       int(W_D2),
+        "edge_mask_frames":           int(EDGE_MASK),
+        "pipeline_version":           PIPELINE_VERSION,
+    }
+
+    return df[OUTPUT_COLUMNS], col_sources, processing_meta
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SAVE
 # ─────────────────────────────────────────────────────────────────────────────
 
-def save_clip(df, col_sources, out_path: Path):
+def save_clip(df, col_sources, processing_meta, out_path: Path):
     table = pa.Table.from_pandas(df, preserve_index=False)
     meta  = table.schema.metadata or {}
-    meta[b"col_sources"] = json.dumps(col_sources).encode()
+    meta[b"col_sources"]     = json.dumps(col_sources).encode()
+    meta[b"processing_meta"] = json.dumps(processing_meta).encode()
     table = table.replace_schema_metadata(meta)
     pq.write_table(table, out_path)
 
@@ -512,7 +774,6 @@ def save_clip(df, col_sources, out_path: Path):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def to_timestamp_ns(series):
-    import pandas as pd, numpy as np
     if pd.api.types.is_datetime64_any_dtype(series):
         return series.astype(np.int64)
     try:
@@ -591,52 +852,6 @@ def load_boreas(f):
         yaw_raw      = np.radians(raw["heading"].values) if "heading" in raw.columns else None,
         yaw_rate_raw = raw["angvel_z"].values  if "angvel_z"  in raw.columns else None,
     )
-
-
-def _clean_gps_position(x, y, ts_ns, speed_max_ms=50.0):
-    """
-    Remove GPS position outliers from DurLAR by detecting frames that produce
-    physically impossible speeds, then linearly interpolating over them.
-
-    DurLAR exhibits sustained GPS offsets spanning 60+ consecutive frames
-    (receiver locks onto a reflected signal). A rolling median cannot cover
-    windows this wide. Instead:
-      1. Compute instantaneous speed from position + timestamps
-      2. Flag frames where speed > speed_max_ms as outliers
-      3. Linearly interpolate x/y over flagged frames
-    """
-    x = np.array(x, dtype=float)
-    y = np.array(y, dtype=float)
-    ts = np.array(ts_ns, dtype=np.int64)
-    n = len(x)
-
-    # Compute instantaneous speed (forward difference)
-    dt = np.diff(ts) / 1e9
-    dx = np.diff(x)
-    dy = np.diff(y)
-    with np.errstate(divide="ignore", invalid="ignore"):
-        speed = np.where(dt > 0, np.sqrt(dx**2 + dy**2) / dt, np.nan)
-
-    # Frame i is bad if the step FROM i TO i+1 is impossible
-    # Mark both endpoints of each bad step as outliers
-    bad = np.zeros(n, dtype=bool)
-    bad_steps = speed > speed_max_ms
-    bad[:-1] |= bad_steps
-    bad[1:]  |= bad_steps
-
-    if not bad.any():
-        return x, y
-
-    # Linear interpolation over bad frames using good neighbours
-    good_idx = np.where(~bad)[0]
-    if len(good_idx) < 2:
-        return x, y  # can't interpolate — return as-is
-
-    all_idx = np.arange(n)
-    x_clean = np.interp(all_idx, good_idx, x[good_idx])
-    y_clean = np.interp(all_idx, good_idx, y[good_idx])
-
-    return x_clean, y_clean
 
 
 def load_durlar(f):
@@ -750,6 +965,8 @@ def load_nuscene(f):
 
 def load_nvidia(f):
     raw = pd.read_parquet(f)
+    # Drop first frame — bad initial timestamp gap (8–57ms vs normal 100ms)
+    raw = raw.iloc[1:].reset_index(drop=True)
     ts_ns = (raw["timestamp"].astype(np.int64) * 1_000)
     roll_r, pitch_r, yaw_r = quat_to_euler(
         raw["qw"], raw["qx"], raw["qy"], raw["qz"])
@@ -767,10 +984,13 @@ def load_nvidia(f):
         roll_raw     = roll_r,
         pitch_raw    = pitch_r,
         yaw_raw      = yaw_r,
+        clean_gps    = True,
     )
 
 
 def load_oxford(f):
+    # FIX 6 — reverted to spec: no clean_gps, no hardcoded frame-based rolling
+    # median. The standard Hampel + 3 Hz low-pass path handles Oxford.
     raw = pd.read_parquet(f)
     ts_ns = to_timestamp_ns(raw["timestamp"])
     return build_standard_frame(
@@ -807,7 +1027,7 @@ def load_waymo(f):
 
     clips = []
     for scen_id, grp in raw.groupby("scenario_id"):
-        grp = grp.sort_values("timestamp_s").reset_index(drop=True)
+        grp   = grp.sort_values("timestamp_s").reset_index(drop=True)
         ts_ns = (grp["timestamp_s"].astype(float) * 1e9).round().astype(np.int64)
         result = build_standard_frame(
             timestamp_ns = ts_ns.values,
@@ -823,19 +1043,34 @@ def load_waymo(f):
     return clips
 
 
+def _zod_yaw_rate(raw):
+    """ZOD UNIT FIX (diagnosed 2026-06-11): angularRateZ is stored in °/s,
+    not rad/s. Evidence: heading-derivative ratio test gave a median
+    |gyro| / |d(heading)/dt| of 57.26 ~= 180/pi across all sampled clips;
+    IMU cross-check |v*w| p95 = 1.39 m/s^2 (deg reading) vs 79.4 m/s^2
+    (rad reading) against measured |ay| p95 = 1.55 m/s^2.
+    Conversion is UNCONDITIONAL: per-file auto-detection would leave calm
+    clips unconverted and create mixed units across clips. A sanity warning
+    fires if the upstream convention ever changes."""
+    if "angularRateZ" not in raw.columns:
+        return None
+    gyro_dps = raw["angularRateZ"].values.astype(float)
+    gyro = np.radians(gyro_dps)
+    p999 = np.nanpercentile(np.abs(gyro), 99.9) if np.isfinite(gyro).any() else 0.0
+    if p999 > 4.0:   # > 229 deg/s sustained is physically impossible
+        print("  [WARN] ZOD: yaw_rate p99.9 = "
+              f"{p999:.1f} rad/s AFTER deg->rad conversion - upstream unit "
+              "convention may have changed; re-run diagnose_zod_yawrate.py")
+    return gyro
+
+
 def load_zod(f):
-    # ── BUCKET D FIX ─────────────────────────────────────────────────────────
-    # ZOD heading column is stored in degrees, not radians.
-    # Converting to radians here fixes yaw_rate, a_lat, and jerk_lat downstream
-    # since all three derive from yaw_rate = d(yaw_unwrapped)/dt and
-    # a_lat = speed * yaw_rate.
     raw = pd.read_parquet(f)
     ts_ns = to_timestamp_ns(raw["timestamp"])
 
-    # Check if heading is in degrees (max > 4 strongly indicates degrees)
     heading_col = raw["heading"].values if "heading" in raw.columns else None
     if heading_col is not None and np.nanmax(np.abs(heading_col)) > 4.0:
-        heading_col = np.radians(heading_col)   # deg → rad
+        heading_col = np.radians(heading_col)
 
     roll_col  = raw["roll"].values  if "roll"  in raw.columns else None
     pitch_col = raw["pitch"].values if "pitch" in raw.columns else None
@@ -859,12 +1094,12 @@ def load_zod(f):
         roll_raw     = roll_col,
         pitch_raw    = pitch_col,
         yaw_raw      = heading_col,
-        yaw_rate_raw = raw["angularRateZ"].values if "angularRateZ" in raw.columns else None,
+        yaw_rate_raw = _zod_yaw_rate(raw),
     )
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# LOADER REGISTRY
+# LOADER REGISTRY  (FIX 1 — fully restored; v2 only registered durlar)
 # ─────────────────────────────────────────────────────────────────────────────
 
 LOADERS = {
@@ -894,9 +1129,20 @@ def _process_one_file(args):
     try:
         result = loader(f)
         if isinstance(result, list):
-            return [item for item, _ in result]
-        return [result]
-    except Exception as e:
+            items = []
+            for item in result:
+                if isinstance(item, tuple) and len(item) == 2:
+                    # Waymo returns (build_result_3tuple, scen_id) — unwrap
+                    inner, _ = item
+                    if isinstance(inner, tuple) and len(inner) == 3:
+                        items.append(inner)
+                elif isinstance(item, tuple) and len(item) == 3:
+                    items.append(item)
+            return items
+        if isinstance(result, tuple) and len(result) == 3:
+            return [result]
+        return []
+    except Exception:
         return [f"ERROR::{f.name}::{traceback.format_exc()}"]
 
 
@@ -926,17 +1172,14 @@ def process_dataset(dataset_name: str, global_bar: tqdm):
             for i, f in enumerate(parquet_files)
         }
         with tqdm(
-            total=n_files,
-            desc=f"  {dataset_name:<12}",
-            unit="file",
-            leave=False,
-            dynamic_ncols=True,
+            total=n_files, desc=f"  {dataset_name:<12}", unit="file",
+            leave=False, dynamic_ncols=True,
             bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} files [{elapsed}<{remaining}]",
         ) as pbar:
             for future in as_completed(future_to_idx):
-                idx = future_to_idx[future]
+                idx       = future_to_idx[future]
                 clip_list = future.result()
-                ok, errs = [], []
+                ok, errs  = [], []
                 for item in clip_list:
                     if isinstance(item, str) and item.startswith("ERROR::"):
                         errs.append(item)
@@ -947,8 +1190,8 @@ def process_dataset(dataset_name: str, global_bar: tqdm):
                 pbar.update(1)
 
     for err in errors:
-        parts = err.split("::", 2)
-        fname = parts[1] if len(parts) > 1 else "?"
+        parts  = err.split("::", 2)
+        fname  = parts[1] if len(parts) > 1 else "?"
         detail = parts[2] if len(parts) > 2 else err
         global_bar.write(f"  [{dataset_name}] ERROR in {fname}:\n{detail}")
 
@@ -958,13 +1201,13 @@ def process_dataset(dataset_name: str, global_bar: tqdm):
         if not clip_list:
             continue
         for item in clip_list:
-            if not isinstance(item, tuple) or len(item) != 2:
+            if not isinstance(item, tuple) or len(item) != 3:
                 continue
-            df, col_sources = item
+            df, col_sources, processing_meta = item
             if df is None or df.empty:
                 continue
             out_name = f"clip_{clip_index:04d}.parquet"
-            save_clip(df, col_sources, out_dir / out_name)
+            save_clip(df, col_sources, processing_meta, out_dir / out_name)
             clip_index += 1
             saved += 1
 
@@ -973,42 +1216,41 @@ def process_dataset(dataset_name: str, global_bar: tqdm):
 
 
 def main():
+    global BASE_DIR, PARQUET_DIR, OUTPUT_DIR
+    BASE_DIR    = _find_dataset_root()
+    PARQUET_DIR = BASE_DIR / "parquet_data"
+    OUTPUT_DIR  = BASE_DIR / "inertial_data"
+
     print("=" * 60)
-    print(" Script 14 – Ego-Motion Standardization")
-    print(f" Bucket B fix : drop dt < {DT_MIN_FRAC*100:.0f}% of median dt (adaptive per dataset)")
-    print(f" Bucket D fix : ZOD heading deg→rad auto-detection")
-    print(f" Workers : {MAX_WORKERS} threads")
-    print(f" Input   : {PARQUET_DIR}")
-    print(f" Output  : {OUTPUT_DIR}")
+    print(" Script 14 v3 – Ego-Motion Standardization")
+    print(f" Grid      : {GRID_HZ} Hz  |  LP cutoff: {F_CUT_HZ} Hz  |  SG: W_D1={W_D1} W_D2={W_D2}")
+    print(f" Hampel    : window={HAMPEL_WINDOW_S}s  t0={HAMPEL_T0}")
+    print(f" Gap policy: interpolate ≤ {GAP_MAX_S}s, mask longer (timestamp AND NaN-run gaps)")
+    print(f" Workers   : {MAX_WORKERS} threads")
+    print(f" Input     : {PARQUET_DIR}")
+    print(f" Output    : {OUTPUT_DIR}")
     print("=" * 60)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    datasets = sorted(d.name for d in PARQUET_DIR.iterdir() if d.is_dir())
-
-    all_files = []
-    for ds in datasets:
-        src_dir = PARQUET_DIR / ds
-        files   = sorted(src_dir.rglob("*.parquet"))
-        all_files.extend(files)
-
+    datasets    = sorted(d.name for d in PARQUET_DIR.iterdir() if d.is_dir())
+    all_files   = [f for ds in datasets
+                   for f in sorted((PARQUET_DIR / ds).rglob("*.parquet"))]
     total_files = len(all_files)
+
     print(f" Datasets : {len(datasets)}")
     print(f" Files    : {total_files} total")
     print()
 
-    total_saved  = 0
-    total_errors = 0
+    total_saved = total_errors = 0
 
     with tqdm(
-        total=total_files,
-        desc="Overall",
-        unit="file",
+        total=total_files, desc="Overall", unit="file",
         dynamic_ncols=True,
         bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} files [{elapsed}<{remaining}, {rate_fmt}]",
     ) as master_bar:
         for ds in datasets:
             master_bar.set_postfix_str(ds)
-            saved, errs = process_dataset(ds, master_bar)
+            saved, errs   = process_dataset(ds, master_bar)
             total_saved  += saved
             total_errors += errs
             master_bar.write(
@@ -1020,7 +1262,7 @@ def main():
     print("=" * 60)
     print(f" Done.  {total_saved} clips written to {OUTPUT_DIR}")
     if total_errors:
-        print(f" Errors : {total_errors} file(s) failed (see messages above)")
+        print(f" Errors : {total_errors} file(s) failed")
     print("=" * 60)
 
 

@@ -1,9 +1,18 @@
 """
-ecdf_analysis.py
+ecdf_analysis.py  (v2)
 ────────────────────────────────────────────────────────────────────────────
 ECDF overlays for all 6 kinematic signals.
 One figure per signal, one curve per dataset on a shared axis.
 Three vertical threshold lines partition each plot into 4 dynamic regime bands.
+
+─── CHANGES vs v1 ──────────────────────────────────────────────────────────
+  1. BUGFIX: plotting referenced an undefined TUM_COLORS dict → NameError on
+     the first curve. Now uses DATASET_COLORS (with fallback).
+  2. DATASET_COLORS completed: durlar (gold) and zod (red) were missing and
+     would have collapsed onto the same fallback color in a 10-curve figure.
+  3. NOTE: THRESHOLDS were calibrated on pre-v3 (noisier) std values. After
+     the 10 Hz / 3 Hz-band-limited re-run, re-check them against the new
+     distributions before locking figures (see regime_classification.py).
 
 Output: figures/ecdf/ecdf_<signal_name>.png  (dpi=300)
 Input:  std_data/<dataset>.parquet
@@ -22,26 +31,23 @@ from pathlib import Path
 
 PROJECT_ROOT = Path("/Users/edward/Downloads")
 STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-OUT_DIR      = PROJECT_ROOT /"bachelor-arbeit"/"inertial_exploratory_analysis"/ "figures" / "ecdf"
+OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "inertial_exploratory_analysis" / "figures" / "ecdf"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DATASETS — heatmap rank-sum order (most dynamic → least dynamic)
+# NOTE: re-derive this order from the new summary heatmap after the v3 re-run;
+# the ranking was computed on pre-v3 data and may have changed.
 # ─────────────────────────────────────────────────────────────────────────────
 
 DATASETS = [
-    "zod",
-    "ford",
-    "waymo",
-    "oxford",
-    "kitti",
-    "kitti360",
-    "nuscene",
-    "durlar",
-    "boreas_rt",
-    "nvidia",
+    "4season", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
+    "nuscene", "nvidia", "oxford", "waymo", "zod",
 ]
 
 DATASET_DISPLAY = {
+    "4season":   "4 Season",
+    "a2d2":      "A2D2",
+    "hdd":       "HDD",
     "boreas_rt": "Boreas",
     "durlar":    "DurLAR",
     "ford":      "Ford",
@@ -55,13 +61,17 @@ DATASET_DISPLAY = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DATASET COLORS — one per dataset
+# DATASET COLORS — one per dataset (must match all other thesis scripts)
 # ─────────────────────────────────────────────────────────────────────────────
 
-from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_EXT
+from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_ACCENT, TUM_EXT
 
 DATASET_COLORS = {
+    "4season":   TUM_SECONDARY['blue2'],
+    "a2d2":      TUM_SECONDARY['dark_gray'],
+    "hdd":       TUM_SECONDARY['gray'],
     "boreas_rt": TUM_EXT['maroon'],
+    "durlar":    TUM_EXT['gold'],
     "ford":      TUM_EXT['orange'],
     "kitti":     TUM_EXT['yellow'],
     "kitti360":  TUM_EXT['olive'],
@@ -69,7 +79,9 @@ DATASET_COLORS = {
     "nvidia":    TUM_EXT['teal'],
     "oxford":    TUM_EXT['navy'],
     "waymo":     TUM_EXT['purple'],
+    "zod":       TUM_EXT['red'],
 }
+DATASET_COLOR_FALLBACK = TUM_SECONDARY['blue2']
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SIGNALS — (parquet_col, filename_slug, x_axis_label, x_max)
@@ -87,6 +99,7 @@ SIGNALS = [
 # ─────────────────────────────────────────────────────────────────────────────
 # REGIME THRESHOLDS — shared with regime_classification.py
 # (t1, t2, t3): three boundaries defining four regimes
+# CAUTION: calibrated on pre-v3 std values — re-check after the v3 re-run.
 # ─────────────────────────────────────────────────────────────────────────────
 
 THRESHOLDS = {
@@ -98,7 +111,10 @@ THRESHOLDS = {
     "std_yaw_rate":  (1.0,  5.0,  15.0),
 }
 
-REGIME_BAND_COLORS = ["#DDEEFF", "#D9EFD9", "#FFF3CC", "#FFE0CC"]
+# Light tints of the TUM regime colors (regime_classification.py)
+REGIME_BAND_COLORS = [TUM_ACCENT["blue"], TUM_ACCENT["green"],
+                      TUM_EXT["gold"], TUM_EXT["red"]]
+REGIME_BAND_ALPHA  = 0.12
 REGIME_LABELS      = ["Near-Stationary", "Low-Dynamic", "Medium-Dynamic", "High-Dynamic"]
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -141,7 +157,7 @@ def plot_ecdf_signal(col, slug, x_label, x_max, data, out_dir):
 
     # Shaded regime bands
     for i, (lo, hi) in enumerate(zip(boundaries[:-1], boundaries[1:])):
-        ax.axvspan(lo, hi, color=REGIME_BAND_COLORS[i], alpha=0.3)
+        ax.axvspan(lo, hi, color=REGIME_BAND_COLORS[i], alpha=REGIME_BAND_ALPHA)
 
     # Threshold vertical lines
     ax.axvline(t1, color="black", linewidth=1.0, linestyle="--")
@@ -155,7 +171,9 @@ def plot_ecdf_signal(col, slug, x_label, x_max, data, out_dir):
         x, y = compute_ecdf(data[ds][col].values)
         if len(x) == 0:
             continue
-        ax.plot(x, y, color=TUM_COLORS[ds], linewidth=1.8, label=DATASET_DISPLAY[ds])
+        ax.plot(x, y,
+                color=DATASET_COLORS.get(ds, DATASET_COLOR_FALLBACK),
+                linewidth=1.8, label=DATASET_DISPLAY[ds])
 
     ax.set_xlim(left=0.0, right=x_max)
     ax.set_ylim(-0.02, 1.05)

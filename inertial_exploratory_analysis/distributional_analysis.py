@@ -1,3 +1,23 @@
+"""
+distributional_analysis.py  (v2 — adapted to the 10 Hz common-grid pipeline)
+────────────────────────────────────────────────────────────────────────────
+Per-dataset signal histograms (thesis Section 4.5.1 / 8.1).
+
+─── CHANGES vs v1 ──────────────────────────────────────────────────────────
+  1. The 0.1 s temporal-downsampling windowing (_window_df) is REMOVED.
+     It existed to eliminate frame-rate bias across 10–200 Hz datasets;
+     the v3 standardization already resamples every dataset onto a common
+     uniform 10 Hz grid, so the windowing degenerated to an expensive no-op
+     (one frame per 0.1 s window, groupby over tens of millions of rows).
+     Histograms are now per-frame on the 10 Hz grid — same information,
+     none of the compute.
+  2. Streaming mode is leaner: bounds-filtering happens per batch and only
+     filtered float32 arrays are kept, instead of concatenating full frames.
+  3. DATASET_COLORS completed with durlar (gold) and zod (red) — previously
+     both silently fell back to the same blue.
+────────────────────────────────────────────────────────────────────────────
+"""
+
 import sys
 import warnings
 from pathlib import Path
@@ -58,7 +78,11 @@ SIGNAL_COLORS = {
 }
 
 DATASET_COLORS = {
+    "4season":   TUM_SECONDARY['blue2'],
+    "a2d2":      TUM_SECONDARY['dark_gray'],
+    "hdd":       TUM_SECONDARY['gray'],
     "boreas_rt": TUM_EXT['maroon'],
+    "durlar":    TUM_EXT['gold'],
     "ford":      TUM_EXT['orange'],
     "kitti":     TUM_EXT['yellow'],
     "kitti360":  TUM_EXT['olive'],
@@ -66,6 +90,7 @@ DATASET_COLORS = {
     "nvidia":    TUM_EXT['teal'],
     "oxford":    TUM_EXT['navy'],
     "waymo":     TUM_EXT['purple'],
+    "zod":       TUM_EXT['red'],
 }
 DATASET_COLOR_FALLBACK = TUM_SECONDARY['blue2']
 
@@ -141,21 +166,48 @@ FIG_H     = 6.0
 
 X_PAD_FRAC      = 0.10
 YLIN_CAP_FACTOR = 1.20
-WINDOW_S        = 0.1
+GRID_HZ         = 10        # sampling rate of v3 standardized clips
 
-LARGE_DATASET_THRESHOLD = 10_000
-BATCH_SIZE              = 5_000
+BATCH_SIZE = 5_000          # clip files concatenated per streaming batch
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DATA LOADING
+# DATA LOADING + SIGNAL EXTRACTION
 # ─────────────────────────────────────────────────────────────────────────────
 
-REQUIRED_COLS = {"timestamp_s", "speed_kmh", "a_long", "a_lat",
-                 "jerk_long", "jerk_lat", "yaw_rate"}
+SIGNAL_COLS = ["speed_kmh", "a_long", "a_lat", "jerk_long", "jerk_lat", "yaw_rate"]
+
+# (signal_key, parquet_col, lo, hi, rad→deg conversion)
+EXTRACT_SPEC = [
+    ("speed",     "speed_kmh",  0.0,   200.0, False),
+    ("lon_accel", "a_long",   -15.0,    15.0, False),
+    ("lat_accel", "a_lat",    -15.0,    15.0, False),
+    ("lon_jerk",  "jerk_long", -30.0,   30.0, False),
+    ("lat_jerk",  "jerk_lat",  -30.0,   30.0, False),
+    ("yaw_rate",  "yaw_rate",  -90.0,   90.0, True),   # bounds in °/s
+]
 
 
-def load_clips(dataset_dir: Path, dataset_name: str) -> tuple[pd.DataFrame | None, int]:
+def _extract_signal_values(df: pd.DataFrame) -> dict[str, np.ndarray]:
+    """Bounds-filter each signal (visualization-only masking) and return
+    compact float32 arrays. yaw_rate is converted rad/s → °/s first."""
+    out = {}
+    for key, col, lo, hi, to_deg in EXTRACT_SPEC:
+        a = df[col].to_numpy(dtype=float)
+        if to_deg:
+            a = a * (180.0 / np.pi)
+        a = a[(a >= lo) & (a <= hi) & ~np.isnan(a)]
+        out[key] = a.astype(np.float32)
+    return out
+
+
+def load_signal_values(dataset_dir: Path,
+                       dataset_name: str) -> tuple[dict[str, np.ndarray] | None, int]:
+    """
+    Read all clips in batches, extract + bounds-filter signals per batch,
+    keep only filtered float32 arrays (memory-lean for NVIDIA's 60M rows).
+    Returns ({signal_key: values}, n_total_frames).
+    """
     import pyarrow.parquet as pq
 
     parquet_files = sorted(dataset_dir.glob("clip_*.parquet"))
@@ -165,9 +217,9 @@ def load_clips(dataset_dir: Path, dataset_name: str) -> tuple[pd.DataFrame | Non
 
     try:
         first_schema = set(pq.read_schema(parquet_files[0]).names)
-        cols_to_read = list(REQUIRED_COLS & first_schema)
+        cols_to_read = [c for c in SIGNAL_COLS if c in first_schema]
     except Exception:
-        cols_to_read = list(REQUIRED_COLS)
+        cols_to_read = list(SIGNAL_COLS)
 
     missing_warned = False
 
@@ -178,29 +230,22 @@ def load_clips(dataset_dir: Path, dataset_name: str) -> tuple[pd.DataFrame | Non
         except Exception as e:
             print(f"  [WARN] Could not read {fp.name}: {e}")
             return None
-        missing = REQUIRED_COLS - set(df.columns)
+        missing = set(SIGNAL_COLS) - set(df.columns)
         if missing and not missing_warned:
             print(f"  [WARN] {dataset_name}: columns {missing} not found — filled with NaN")
             missing_warned = True
-        for col in REQUIRED_COLS:
+        for col in SIGNAL_COLS:
             if col not in df.columns:
                 df[col] = np.nan
-        return df[list(REQUIRED_COLS)]
+        return df[SIGNAL_COLS]
 
-    if len(parquet_files) <= LARGE_DATASET_THRESHOLD:
-        chunks = [r for fp in parquet_files if (r := _read_file(fp)) is not None]
-        if not chunks:
-            return None, 0
-        combined = pd.concat(chunks, ignore_index=True)
-        n_raw = len(combined)
-        if n_raw < 10:
-            print(f"  [WARN] {dataset_name}: only {n_raw} rows — skipping")
-            return None, 0
-        return combined, n_raw
-
-    print(f"  [INFO] {dataset_name}: {len(parquet_files):,} clips — streaming mode")
-    all_windowed = []
+    parts = {key: [] for key, *_ in EXTRACT_SPEC}
     n_raw = 0
+
+    n_batches = (len(parquet_files) + BATCH_SIZE - 1) // BATCH_SIZE
+    if n_batches > 1:
+        print(f"  [INFO] {dataset_name}: {len(parquet_files):,} clips — "
+              f"streaming in {n_batches} batches")
 
     for batch_start in range(0, len(parquet_files), BATCH_SIZE):
         batch = parquet_files[batch_start: batch_start + BATCH_SIZE]
@@ -209,75 +254,18 @@ def load_clips(dataset_dir: Path, dataset_name: str) -> tuple[pd.DataFrame | Non
             continue
         batch_df = pd.concat(chunks, ignore_index=True)
         n_raw += len(batch_df)
-        all_windowed.append(_window_df(batch_df, clip_id_offset=batch_start))
-        del batch_df, chunks
+        batch_vals = _extract_signal_values(batch_df)
+        for key, arr in batch_vals.items():
+            parts[key].append(arr)
+        del batch_df, chunks, batch_vals
 
-    if not all_windowed:
+    if n_raw < 10:
+        print(f"  [WARN] {dataset_name}: only {n_raw} rows — skipping")
         return None, 0
 
-    result = pd.concat(all_windowed, ignore_index=True)
-    return result, n_raw
-
-
-def _window_df(df: pd.DataFrame, clip_id_offset: int = 0) -> pd.DataFrame:
-    SIGNAL_COLS = ["speed_kmh", "a_long", "a_lat", "jerk_long", "jerk_lat", "yaw_rate"]
-
-    ts = np.asarray(df["timestamp_s"].to_numpy(dtype=float))
-
-    dt = np.empty_like(ts)
-    dt[0] = 0.0
-    dt[1:] = np.diff(ts)
-    clip_ids = np.zeros(len(ts), dtype=np.int64)
-    for b in np.where(np.abs(dt) > 1.0)[0]:
-        clip_ids[b:] += 1
-    clip_ids += clip_id_offset
-
-    t_rel = np.empty_like(ts)
-    for cid in np.unique(clip_ids):
-        mask = clip_ids == cid
-        t_rel[mask] = ts[mask] - ts[mask][0]
-
-    window_ids = (t_rel // WINDOW_S).astype(np.int64)
-    global_key = clip_ids * 1_000_000 + window_ids
-
-    df_work = pd.DataFrame({col: df[col].values.astype(float) for col in SIGNAL_COLS})
-    df_work["_key"] = global_key
-    return df_work.groupby("_key")[SIGNAL_COLS].mean().reset_index(drop=True)
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# SIGNAL EXTRACTION
-# ─────────────────────────────────────────────────────────────────────────────
-
-def compute_signals(df: pd.DataFrame) -> dict[str, np.ndarray]:
-    CLIP_LIMITS = {
-        "speed":      (0,     200.0),
-        "a_long":   (-15,     15),
-        "a_lat":    (-15,     15),
-        "jerk_long": (-30,    30),
-        "jerk_lat":  (-30,    30),
-        "yaw_rate":  (-90.0,  90.0),
-    }
-
-    def clip_valid(arr, lo, hi):
-        a = np.asarray(arr, dtype=float)
-        return a[(a >= lo) & (a <= hi) & ~np.isnan(a)]
-
-    if "timestamp_s" not in df.columns:
-        windowed = df
-    else:
-        windowed = _window_df(df, clip_id_offset=0)
-
-    yaw_deg = windowed["yaw_rate"].to_numpy(dtype=float) * (180.0 / np.pi)
-
-    return {
-        "speed":     clip_valid(windowed["speed_kmh"].values,  *CLIP_LIMITS["speed"]),
-        "lon_accel": clip_valid(windowed["a_long"].values,     *CLIP_LIMITS["a_long"]),
-        "lat_accel": clip_valid(windowed["a_lat"].values,      *CLIP_LIMITS["a_lat"]),
-        "lon_jerk":  clip_valid(windowed["jerk_long"].values,  *CLIP_LIMITS["jerk_long"]),
-        "lat_jerk":  clip_valid(windowed["jerk_lat"].values,   *CLIP_LIMITS["jerk_lat"]),
-        "yaw_rate":  clip_valid(yaw_deg,                       *CLIP_LIMITS["yaw_rate"]),
-    }
+    values = {key: (np.concatenate(p) if p else np.array([], dtype=np.float32))
+              for key, p in parts.items()}
+    return values, n_raw
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -352,6 +340,7 @@ def plot_signal(dataset_name: str,
                 ha="center", va="center",
                 transform=ax.transAxes, color="gray")
     else:
+        values = values.astype(np.float64)
         xlim_lo, xlim_hi = _data_xlim(values, lo, hi)
         bins    = np.linspace(xlim_lo, xlim_hi, N_BINS + 1)
         counts, edges = np.histogram(values, bins=bins)
@@ -378,7 +367,7 @@ def plot_signal(dataset_name: str,
         stats_text = (
             f"μ = {mean_v:+.3f}   σ = {std_v:.3f}\n"
             f"p05 = {p05_v:+.3f}   p95 = {p95_v:+.3f}\n"
-            f"n = {len(values):,} windows  |  {total_frames:,} raw frames"
+            f"n = {len(values):,} valid frames  |  {total_frames:,} total frames"
         )
         ax.text(
             0.97, 0.97, stats_text,
@@ -397,10 +386,10 @@ def plot_signal(dataset_name: str,
 
         ax.set_xlim(xlim_lo, xlim_hi)
 
-    window_label = f"{int(WINDOW_S * 1000)} ms"
-    ax.set_title(f"{sig['label']} Distribution — {dataset_name.upper()} ({window_label} windows)")
+    ax.set_title(f"{sig['label']} Distribution — {dataset_name.upper()} "
+                 f"({GRID_HZ} Hz grid)")
     ax.set_xlabel(sig["xlabel"])
-    ax.set_ylabel(f"Fraction of {int(WINDOW_S * 1000)} ms windows")
+    ax.set_ylabel("Fraction of frames")
     ax.grid(True)
     ax.set_axisbelow(True)
 
@@ -416,11 +405,9 @@ def plot_signal(dataset_name: str,
 def _process_dataset(args: tuple) -> dict | None:
     ds_dir, ds_name, fig_root, position = args
 
-    df, n_raw = load_clips(ds_dir, ds_name)
-    if df is None:
+    sig_data, n_raw = load_signal_values(ds_dir, ds_name)
+    if sig_data is None:
         return None
-
-    sig_data = compute_signals(df)
 
     results = []
     for sig in SIGNALS:
@@ -470,7 +457,8 @@ def main():
     total_plots = len(datasets) * N_SIGNALS
 
     print(f"\n{'='*60}")
-    print(f"  distributional_analysis.py — {N_SIGNALS} signals, {int(WINDOW_S*1000)} ms windows")
+    print(f"  distributional_analysis.py  (v2 — {GRID_HZ} Hz common grid)")
+    print(f"  {N_SIGNALS} signals, per-frame histograms")
     print(f"  Found {len(datasets)} dataset(s) → {total_plots} PNGs")
     print(f"  Workers: {n_workers}  (CPU cores: {os.cpu_count()})")
     print(f"  Input   → {inertial_root}")
@@ -496,11 +484,11 @@ def main():
                 continue
 
             print(f"── {ds_name.upper()} {'─' * max(1, 40 - len(ds_name))}  [{_now()}]")
-            print(f"   Raw frames: {_format_count(result['n_frames'])}  →  windowed at {int(WINDOW_S*1000)} ms")
+            print(f"   Frames: {_format_count(result['n_frames'])} on the {GRID_HZ} Hz grid")
             for r in result["signals"]:
                 mean_s = f"{r['mean']:+.3f}" if not np.isnan(r["mean"]) else "N/A"
                 print(f"   ✓ {r['fname']:<45}  "
-                      f"{r['n']:>9,} windows  "
+                      f"{r['n']:>9,} frames  "
                       f"mean={mean_s} {r['unit']}")
             print()
             summary_rows.append({

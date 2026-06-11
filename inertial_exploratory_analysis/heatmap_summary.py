@@ -46,16 +46,8 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────────────────────────
 
 DATASETS = [
-    "boreas_rt",
-    "durlar",
-    "ford",
-    "kitti",
-    "kitti360",
-    "nuscene",
-    "nvidia",
-    "oxford",
-    "waymo",
-    "zod",
+    "4season", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
+    "nuscene", "nvidia", "oxford", "waymo", "zod",
 ]
 
 # (parquet_column, display_label, unit_string)
@@ -242,6 +234,9 @@ def sort_by_rank_sum(matrix: pd.DataFrame, norm: pd.DataFrame) -> tuple[pd.DataF
 
 # Dataset display names (title-cased, consistent with rest of pipeline)
 DATASET_DISPLAY = {
+    "4season":   "4 Season",
+    "a2d2":      "A2D2",
+    "hdd":       "HDD",
     "boreas_rt": "Boreas",
     "durlar":    "DurLAR",
     "ford":      "Ford",

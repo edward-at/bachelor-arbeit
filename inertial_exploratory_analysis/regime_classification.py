@@ -1,11 +1,18 @@
 """
-regime_classification.py
+regime_classification.py  (v2 — TUM colors)
 ────────────────────────────────────────────────────────────────────────────
 Classifies every analysis window into one of four dynamic regimes using fixed
 absolute thresholds on within-window standard deviations.
 One stacked proportion bar chart per signal (6 total).
 
 Regimes: near-stationary | low-dynamic | medium-dynamic | high-dynamic
+
+v2 CHANGES:
+  1. Regime colors from the official TUM palette (were generic Office colors).
+  2. Per-segment label color chosen for contrast (black on green/gold).
+  3. Legend moved outside the axes (was overlapping the right-most bars).
+  4. CAUTION: THRESHOLDS were calibrated on pre-v3 std values — re-check
+     against the new ECDFs after the v3 re-run before locking figures.
 
 Output: figures/regime/regime_<signal_name>.png  (dpi=300)
 Input:  std_data/<dataset>.parquet
@@ -30,19 +37,14 @@ OUT_DIR      = PROJECT_ROOT /"bachelor-arbeit"/"inertial_exploratory_analysis"/ 
 # ─────────────────────────────────────────────────────────────────────────────
 
 DATASETS = [
-    "zod",
-    "ford",
-    "waymo",
-    "oxford",
-    "kitti",
-    "kitti360",
-    "nuscene",
-    "durlar",
-    "boreas_rt",
-    "nvidia",
+    "4season", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
+    "nuscene", "nvidia", "oxford", "waymo", "zod",
 ]
 
 DATASET_DISPLAY = {
+    "4season":   "4 Season",
+    "a2d2":      "A2D2",
+    "hdd":       "HDD",
     "boreas_rt": "Boreas",
     "durlar":    "DurLAR",
     "ford":      "Ford",
@@ -85,7 +87,13 @@ THRESHOLDS = {
 # REGIME COLORS AND LABELS
 # ─────────────────────────────────────────────────────────────────────────────
 
-REGIME_COLORS = ["#5B9BD5", "#70AD47", "#FFC000", "#C00000"]
+from tum_colors import TUM_ACCENT, TUM_EXT
+
+REGIME_COLORS      = [TUM_ACCENT["blue"],   # Near-Stationary  #64A0C8
+                      TUM_ACCENT["green"],  # Low-Dynamic      #A2AD00
+                      TUM_ACCENT["orange"], # Medium-Dynamic   #F6BA00
+                      TUM_EXT["red"]]       # High-Dynamic     #C4071B
+REGIME_TEXT_COLORS = ["black", "black", "black", "white"]
 REGIME_LABELS = ["Near-Stationary", "Low-Dynamic", "Medium-Dynamic", "High-Dynamic"]
 
 # Minimum segment height (percentage points) to print a label inside the bar
@@ -158,7 +166,7 @@ def plot_regime_signal(col, slug, title, data, out_dir):
                 bottoms[i] + h / 2.0,
                 f"{h:.1f}%",
                 ha="center", va="center",
-                color="white",
+                color=REGIME_TEXT_COLORS[r],
             )
         bottoms += heights
 
@@ -169,11 +177,11 @@ def plot_regime_signal(col, slug, title, data, out_dir):
     ax.set_title(f"Dynamic Regime Distribution — {title}")
     ax.grid(True, axis="y")
     ax.set_axisbelow(True)
-    ax.legend(loc="upper right")
+    ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0), frameon=True)
 
     plt.tight_layout()
     out_path = out_dir / f"regime_{slug}.png"
-    plt.savefig(out_path, dpi=300)
+    plt.savefig(out_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
     print(f"  [SAVED] {out_path}")
 

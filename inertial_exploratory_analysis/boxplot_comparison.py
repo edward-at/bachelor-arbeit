@@ -1,7 +1,17 @@
 """
-cross_dataset_boxplot.py
+cross_dataset_boxplot.py  (v2)
 ========================
 Section 4.5.3 — Cross-Dataset Variability Boxplots
+
+v2 CHANGES:
+  1. Violin KDE is trimmed to where density actually exists (was drawn over
+     the full physical-bound grid, producing a zero-density hairline spanning
+     the whole axis for every dataset).
+  2. Per-figure y-limit from a robust statistic (max of per-dataset p99,
+     never below the tallest whisker). Datasets whose tail exceeds the limit
+     get an explicit "▲ max ≈ X" annotation — tails are disclosed, not hidden.
+  3. DATASET_COLORS completed (durlar, zod were falling back to the same blue).
+  4. Optional LOG_SCALE toggle for a supplementary view.
 
 Reads pre-computed per-window std data from std_data/<dataset>.parquet and
 produces 6 publication-quality PNG figures (one per signal) comparing
@@ -50,11 +60,14 @@ MIN_STD_SPEED     = 0.05        # km/h — only applied when FILTER_STATIONARY=T
 # DATASETS
 # ---------------------------------------------------------------------------
 DATASETS = [
-    "boreas_rt", "durlar", "ford", "kitti", "kitti360",
+    "4season", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
     "nuscene", "nvidia", "oxford", "waymo", "zod",
 ]
 
 DISPLAY_NAMES = {
+    "4season":   "4 Season",
+    "a2d2":      "A2D2",
+    "hdd":       "HDD",
     "boreas_rt": "Boreas",
     "durlar":    "DurLAR",
     "ford":      "Ford",
@@ -73,7 +86,11 @@ DISPLAY_NAMES = {
 
 from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_ACCENT, TUM_EXT
 DATASET_COLORS = {
+    "4season":   TUM_SECONDARY['blue2'],
+    "a2d2":      TUM_SECONDARY['dark_gray'],
+    "hdd":       TUM_SECONDARY['gray'],
     "boreas_rt": TUM_EXT['maroon'],
+    "durlar":    TUM_EXT['gold'],
     "ford":      TUM_EXT['orange'],
     "kitti":     TUM_EXT['yellow'],
     "kitti360":  TUM_EXT['olive'],
@@ -81,6 +98,7 @@ DATASET_COLORS = {
     "nvidia":    TUM_EXT['teal'],
     "oxford":    TUM_EXT['navy'],
     "waymo":     TUM_EXT['purple'],
+    "zod":       TUM_EXT['red'],
 }
 DATASET_COLOR_FALLBACK = TUM_SECONDARY["blue2"]
 
@@ -166,6 +184,16 @@ MEDIAN_LW      = 2.2
 WHISKER_LW     = 1.4
 KDE_POINTS     = 400     # resolution of KDE curve
 
+# Y-axis limit policy (v2):
+#   y_top = HEADROOM × max over datasets of percentile(vals, Y_TOP_PCTL),
+#   raised to the tallest whisker if needed. Data above y_top is annotated.
+Y_TOP_PCTL     = 99.0
+CONSENSUS_PCTL = 80.0    # y_top from the 80th pctl of per-dataset p99s, so a
+                         # single pathological dataset cannot dictate the axis
+HEADROOM       = 1.08
+DENSITY_FLOOR  = 0.005   # violin drawn only where density > floor × max
+LOG_SCALE      = False   # True → symlog supplementary view (suffix _log)
+
 # ---------------------------------------------------------------------------
 # DATA LOADING
 # ---------------------------------------------------------------------------
@@ -202,8 +230,15 @@ def _draw_half_violin(ax, x_center: float, values: np.ndarray,
     if len(vals) < 10:
         return
 
-    # Build KDE over [clip_lo, clip_hi]
-    y_grid = np.linspace(clip_lo, clip_hi, KDE_POINTS)
+    # v2: KDE grid spans the DATA range (not the full physical-bound range) —
+    # evaluating up to clip_hi drew a zero-density hairline across the axis.
+    lo = max(clip_lo, float(vals.min()))
+    hi = min(clip_hi, float(np.percentile(vals, 99.5)))
+    if hi <= lo:
+        hi = min(clip_hi, float(vals.max()))
+    if hi <= lo:
+        return
+    y_grid = np.linspace(lo, hi, KDE_POINTS)
     try:
         kde = gaussian_kde(vals, bw_method="scott")
         density = kde(y_grid)
@@ -214,6 +249,14 @@ def _draw_half_violin(ax, x_center: float, values: np.ndarray,
     max_density = density.max()
     if max_density == 0:
         return
+
+    # v2: draw only where density is meaningfully non-zero
+    support = np.where(density > DENSITY_FLOOR * max_density)[0]
+    if len(support) == 0:
+        return
+    sl = slice(support.min(), support.max() + 1)
+    y_grid  = y_grid[sl]
+    density = density[sl]
     x_offsets = (density / max_density) * VIOLIN_WIDTH
 
     # Right side: x_center + offset
@@ -357,7 +400,47 @@ def plot_signal(sig: dict, data: dict[str, pd.DataFrame],
     ax.set_xticks(x_positions)
     ax.set_xticklabels(x_labels, fontsize=9)
     ax.set_xlim(0.3, len(order) + VIOLIN_WIDTH + 0.3)
-    ax.set_ylim(bottom=0)
+
+    # ── v2: robust y-limit + disclosure of clipped tails ─────────────────────
+    def _upper_whisker(vals):
+        q1, q3 = np.percentile(vals, [25, 75])
+        fence  = q3 + 1.5 * (q3 - q1)
+        inside = vals[vals <= fence]
+        return float(inside.max()) if len(inside) else float(q3)
+
+    # Consensus limit: a single pathological dataset (e.g. corrupted tails)
+    # is clipped + annotated instead of dictating the axis for all others.
+    p99_list  = [float(np.percentile(arrays[ds], Y_TOP_PCTL)) for ds in order]
+    whisk_list = [_upper_whisker(arrays[ds]) for ds in order]
+    med_list  = [float(np.median(arrays[ds])) for ds in order]
+    y_top = HEADROOM * max(
+        float(np.percentile(p99_list,  CONSENSUS_PCTL)),
+        float(np.percentile(whisk_list, CONSENSUS_PCTL)),
+        1.5 * max(med_list),          # every median always clearly visible
+    )
+    if not np.isfinite(y_top) or y_top <= 0:
+        y_top = clip_hi
+
+    if LOG_SCALE:
+        ax.set_yscale("symlog", linthresh=max(y_top * 1e-3, 1e-3))
+        ax.set_ylim(0, clip_hi)
+    else:
+        ax.set_ylim(0, y_top)
+        # Annotate datasets whose tail exceeds the visible range
+        def _fmt(v):
+            return f"{v:.0f}" if v >= 100 else (f"{v:.1f}" if v >= 10 else f"{v:.2f}")
+        for x_pos, ds in zip(x_positions, order):
+            vals  = arrays[ds]
+            v_max = float(vals.max())
+            if v_max > y_top:
+                v_med = float(np.median(vals))
+                v_q3  = float(np.percentile(vals, 75))
+                if v_q3 > y_top:   # even the box is clipped — disclose more
+                    note = f"▲ med {_fmt(v_med)} · q3 {_fmt(v_q3)} · max {_fmt(v_max)}"
+                else:
+                    note = f"▲ max ≈ {_fmt(v_max)}"
+                ax.text(x_pos, y_top * 0.985, note, ha="center", va="top",
+                        fontsize=7.5, color="black")
 
     # ── 6. Legend ────────────────────────────────────────────────────────────
     legend_elements = [
@@ -378,7 +461,8 @@ def plot_signal(sig: dict, data: dict[str, pd.DataFrame],
 
     # ── 7. Save ──────────────────────────────────────────────────────────────
     fig_dir.mkdir(parents=True, exist_ok=True)
-    out_path = fig_dir / f"boxplot_{sig['key']}.png"
+    suffix   = "_log" if LOG_SCALE else ""
+    out_path = fig_dir / f"boxplot_{sig['key']}{suffix}.png"
     fig.savefig(out_path, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     print(f"  ✓ saved: {out_path.name}")
