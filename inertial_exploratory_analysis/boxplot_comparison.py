@@ -60,16 +60,18 @@ MIN_STD_SPEED     = 0.05        # km/h — only applied when FILTER_STATIONARY=T
 # DATASETS
 # ---------------------------------------------------------------------------
 DATASETS = [
-    "4season", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
+    "4season", "a2d2", "boreas_rt",
+    #"hdd", "durlar",
+    "ford", "kitti", "kitti360", 
     "nuscene", "nvidia", "oxford", "waymo", "zod",
 ]
 
 DISPLAY_NAMES = {
     "4season":   "4 Season",
     "a2d2":      "A2D2",
-    "hdd":       "HDD",
+    #"hdd":       "HDD",
     "boreas_rt": "Boreas",
-    "durlar":    "DurLAR",
+    #"durlar":    "DurLAR",
     "ford":      "Ford",
     "kitti":     "KITTI",
     "kitti360":  "KITTI-360",
@@ -88,9 +90,9 @@ from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_ACCENT, TUM_EXT
 DATASET_COLORS = {
     "4season":   TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
-    "hdd":       TUM_SECONDARY['gray'],
+    #"hdd":       TUM_SECONDARY['gray'],
     "boreas_rt": TUM_EXT['maroon'],
-    "durlar":    TUM_EXT['gold'],
+    #"durlar":    TUM_EXT['gold'],
     "ford":      TUM_EXT['orange'],
     "kitti":     TUM_EXT['yellow'],
     "kitti360":  TUM_EXT['olive'],
