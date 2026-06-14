@@ -60,18 +60,18 @@ MIN_STD_SPEED     = 0.05        # km/h — only applied when FILTER_STATIONARY=T
 # DATASETS
 # ---------------------------------------------------------------------------
 DATASETS = [
-    "4season", "a2d2", "boreas_rt",
-    #"hdd", "durlar",
+    "4seasons", "a2d2", "boreas_rt",
+    "hdd", "durlar",
     "ford", "kitti", "kitti360", 
-    "nuscene", "nvidia", "oxford", "waymo", "zod",
+    "nuscene", "nvidia", "oxford", "waymo", "zod", "kitscenes",
 ]
 
 DISPLAY_NAMES = {
-    "4season":   "4 Season",
+    "4seasons":   "4 Seasons",
     "a2d2":      "A2D2",
-    #"hdd":       "HDD",
+    "hdd":       "HDD",
     "boreas_rt": "Boreas",
-    #"durlar":    "DurLAR",
+    "durlar":    "DurLAR",
     "ford":      "Ford",
     "kitti":     "KITTI",
     "kitti360":  "KITTI-360",
@@ -80,6 +80,7 @@ DISPLAY_NAMES = {
     "oxford":    "Oxford",
     "waymo":     "Waymo",
     "zod":       "ZOD",
+    "kitscenes": "KITScenes",
 }
 
 # ---------------------------------------------------------------------------
@@ -88,11 +89,12 @@ DISPLAY_NAMES = {
 
 from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_ACCENT, TUM_EXT
 DATASET_COLORS = {
-    "4season":   TUM_SECONDARY['blue2'],
+    "4seasons":   TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
-    #"hdd":       TUM_SECONDARY['gray'],
+    "hdd":       TUM_SECONDARY['gray'],
+    "kitscenes": TUM_SECONDARY['light_gray'],
     "boreas_rt": TUM_EXT['maroon'],
-    #"durlar":    TUM_EXT['gold'],
+    "durlar":    TUM_EXT['gold'],
     "ford":      TUM_EXT['orange'],
     "kitti":     TUM_EXT['yellow'],
     "kitti360":  TUM_EXT['olive'],
@@ -125,39 +127,12 @@ SIGNALS = [
         "yaw_conv":  False,
     },
     {
-        "key":       "a_long",
-        "col":       "std_a_long",
-        "title":     "Standard Deviation of Longitudinal Acceleration Comparison",
-        "ylabel":    "σ(a_long) [m/s²]",
+        "key":       "acc_mag",
+        "col":       "std_acc_mag",
+        "title":     "Standard Deviation of Acceleration Magnitude Comparison",
+        "ylabel":    "σ(acc_mag) [m/s²]",
         "clip_lo":   0.0,
         "clip_hi":   20.0,
-        "yaw_conv":  False,
-    },
-    {
-        "key":       "a_lat",
-        "col":       "std_a_lat",
-        "title":     "Standard Deviation of Lateral Acceleration Comparison",
-        "ylabel":    "σ(a_lat) [m/s²]",
-        "clip_lo":   0.0,
-        "clip_hi":   20.0,
-        "yaw_conv":  False,
-    },
-    {
-        "key":       "jerk_long",
-        "col":       "std_jerk_long",
-        "title":     "Standard Deviation of Longitudinal Jerk Comparison",
-        "ylabel":    "σ(jerk_long) [m/s³]",
-        "clip_lo":   0.0,
-        "clip_hi":   50.0,
-        "yaw_conv":  False,
-    },
-    {
-        "key":       "jerk_lat",
-        "col":       "std_jerk_lat",
-        "title":     "Standard Deviation of Lateral Jerk Comparison",
-        "ylabel":    "σ(jerk_lat) [m/s³]",
-        "clip_lo":   0.0,
-        "clip_hi":   50.0,
         "yaw_conv":  False,
     },
     {

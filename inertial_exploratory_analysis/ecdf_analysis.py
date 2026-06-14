@@ -40,12 +40,12 @@ OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "inertial_exploratory_analysis
 # ─────────────────────────────────────────────────────────────────────────────
 
 DATASETS = [
-    "4season", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
-    "nuscene", "nvidia", "oxford", "waymo", "zod",
+    "4seasons", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
+    "nuscene", "nvidia", "oxford", "waymo", "zod", "kitscenes",
 ]
 
 DATASET_DISPLAY = {
-    "4season":   "4 Season",
+    "4seasons":   "4 Seasons",
     "a2d2":      "A2D2",
     "hdd":       "HDD",
     "boreas_rt": "Boreas",
@@ -58,6 +58,7 @@ DATASET_DISPLAY = {
     "oxford":    "Oxford",
     "waymo":     "Waymo",
     "zod":       "ZOD",
+    "kitscenes": "KITScenes",
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -67,7 +68,7 @@ DATASET_DISPLAY = {
 from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_ACCENT, TUM_EXT
 
 DATASET_COLORS = {
-    "4season":   TUM_SECONDARY['blue2'],
+    "4seasons":   TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
     "hdd":       TUM_SECONDARY['gray'],
     "boreas_rt": TUM_EXT['maroon'],
@@ -80,6 +81,7 @@ DATASET_COLORS = {
     "oxford":    TUM_EXT['navy'],
     "waymo":     TUM_EXT['purple'],
     "zod":       TUM_EXT['red'],
+    "kitscenes": TUM_SECONDARY['light_gray'],
 }
 DATASET_COLOR_FALLBACK = TUM_SECONDARY['blue2']
 
@@ -89,10 +91,7 @@ DATASET_COLOR_FALLBACK = TUM_SECONDARY['blue2']
 
 SIGNALS = [
     ("std_speed_kmh", "speed_kmh",  "Within-Window Std of Speed (km/h)",                  30.0),
-    ("std_a_long",    "a_long",     "Within-Window Std of Long. Acceleration (m/s²)",       4.0),
-    ("std_a_lat",     "a_lat",      "Within-Window Std of Lat. Acceleration (m/s²)",        3.0),
-    ("std_jerk_long", "jerk_long",  "Within-Window Std of Long. Jerk (m/s³)",               6.0),
-    ("std_jerk_lat",  "jerk_lat",   "Within-Window Std of Lat. Jerk (m/s³)",                4.0),
+    ("std_acc_mag",   "acc_mag",    "Within-Window Std of Accel. Magnitude (m/s²)",         4.0),
     ("std_yaw_rate",  "yaw_rate",   "Within-Window Std of Yaw Rate (°/s)",                 40.0),
 ]
 
@@ -104,10 +103,7 @@ SIGNALS = [
 
 THRESHOLDS = {
     "std_speed_kmh": (1.0,  5.0,  15.0),
-    "std_a_long":    (0.2,  0.5,   1.5),
-    "std_a_lat":     (0.1,  0.3,   0.8),
-    "std_jerk_long": (0.3,  0.8,   2.0),
-    "std_jerk_lat":  (0.2,  0.5,   1.5),
+    "std_acc_mag":   (0.2,  0.5,   1.5),   # PLACEHOLDER (never calibrated) — keep in sync with regime_classification.py
     "std_yaw_rate":  (1.0,  5.0,  15.0),
 }
 

@@ -4,10 +4,12 @@ compute_std.py  (v3 — bounds-masked stds on the 10 Hz common grid)
 Reads inertial_data/<dataset>/clip_XXXX.parquet (10 Hz uniform grid, v3
 standardization) and computes per-window standard deviations.
 
-Output schema (unchanged from v1 — downstream scripts keep working):
+Output schema (3-signal variant — speed, accel-magnitude, yaw rate):
   clip_id, window_idx, window_start_s, window_end_s, n_frames,
-  std_speed_kmh, std_a_long, std_a_lat, std_jerk_long, std_jerk_lat,
-  std_yaw_rate
+  std_speed_kmh, std_acc_mag, std_yaw_rate
+
+  acc_mag is read directly from the standardized clips (computed upstream as
+  sqrt(a_long^2 + a_lat^2)); only the physical-validity bound is applied here.
 
 ─── CHANGES vs v1 ──────────────────────────────────────────────────────────
   1. MIN_VALID_FRAC rule: a signal's std is NaN unless at least
@@ -60,10 +62,7 @@ APPLY_BOUNDS   = True   # mask physically impossible values before std
 # boundary-coverage audit, so nothing is hidden by this masking.
 BOUNDS = {
     "speed_kmh": (0.0,   200.0),
-    "a_long":    (-15.0,  15.0),
-    "a_lat":     (-15.0,  15.0),
-    "jerk_long": (-30.0,  30.0),
-    "jerk_lat":  (-30.0,  30.0),
+    "acc_mag":   (0.0,    21.3),   # = sqrt(15^2 + 15^2): magnitude implied by the ±15 per-axis bound
     "yaw_rate":  (-1.57,   1.57),
 }
 
@@ -78,9 +77,11 @@ STD_ROOT      = Path("/Users/edward/Downloads/dataset/std_data")
 # SIGNAL COLUMNS
 # ─────────────────────────────────────────────────────────────────────────────
 
-SIGNAL_COLS = ["speed_kmh", "a_long", "a_lat", "jerk_long", "jerk_lat", "yaw_rate"]
-STD_COLS    = ["std_speed_kmh", "std_a_long", "std_a_lat",
-               "std_jerk_long", "std_jerk_lat", "std_yaw_rate"]
+# Output signals whose within-window std is written to std_data.
+# acc_mag is read directly from the standardized clips (computed there as
+# sqrt(a_long^2 + a_lat^2), already gap/edge-masked) — not recomputed here.
+SIGNAL_COLS = ["speed_kmh", "acc_mag", "yaw_rate"]
+STD_COLS    = ["std_speed_kmh", "std_acc_mag", "std_yaw_rate"]
 NEEDED_COLS = ["t_rel_s"] + SIGNAL_COLS
 
 # ─────────────────────────────────────────────────────────────────────────────

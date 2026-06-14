@@ -272,3 +272,4 @@ No.,Dataset,Year,Paper Link,Dataset Link,Issuing Country,Recording Country,Real 
 119,4Seasons,2020,https://arxiv.org/abs/2009.06364,https://github.com/pmwenzel/4seasons-dataset/tree/main,Germany,Germany,Real,Public-Free,Original,No,Yes,No,No,No,No,No,Yes,Yes,Yes,No,Yes
 120,A2D2 (Audi Autonomous Driving Dataset),2020,https://arxiv.org/abs/2004.06320,https://www.a2d2.audi/,Germany,Germany,Real,Public-Free,Original,Yes,No,Yes,No,No,Yes,No,Yes,Yes,Yes,Yes,Yes
 79,A*3D,2019,https://arxiv.org/abs/1909.07541,https://github.com/I2RDL2/ASTAR-3D,Singapore,Singapore,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,No,No,No,No,No,No
+274,KIT Scenes Multimodal,2026,https://arxiv.org/abs/2606.02956,https://kitscenes.com/multimodal/,Germany,Germany,Real,Public-Free,Original,No,Yes,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes

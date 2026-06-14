@@ -46,18 +46,15 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────────────────────────
 
 DATASETS = [
-    "4season", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
-    "nuscene", "nvidia", "oxford", "waymo", "zod",
+    "4seasons", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
+    "nuscene", "nvidia", "oxford", "waymo", "zod", "kitscenes",
 ]
 
 # (parquet_column, display_label, unit_string)
 SIGNALS = [
-    ("std_speed_kmh",  "σ(speed)",     "km/h"),
-    ("std_a_long",     "σ(a_long)",    "m/s²"),
-    ("std_a_lat",      "σ(a_lat)",     "m/s²"),
-    ("std_jerk_long",  "σ(jerk_long)", "m/s³"),
-    ("std_jerk_lat",   "σ(jerk_lat)",  "m/s³"),
-    ("std_yaw_rate",   "σ(yaw_rate)",  "°/s"),
+    ("std_speed_kmh",  "σ(speed)",    "km/h"),
+    ("std_acc_mag",    "σ(acc_mag)",  "m/s²"),
+    ("std_yaw_rate",   "σ(yaw_rate)", "°/s"),
 ]
 
 # Physical validity bounds — applied at visualization time only (NaN masking).
@@ -65,10 +62,7 @@ SIGNALS = [
 # All other bounds in native signal units. Never modifies source data.
 SIGNAL_BOUNDS = {
     "std_speed_kmh":  (0.0, 200.0),
-    "std_a_long":     (0.0,  20.0),
-    "std_a_lat":      (0.0,  20.0),
-    "std_jerk_long":  (0.0,  50.0),
-    "std_jerk_lat":   (0.0,  50.0),
+    "std_acc_mag":    (0.0,  20.0),
 }
 # Yaw rate bound expressed in °/s — applied after rad→deg conversion
 YAW_RATE_BOUND_DEG = 90.0
@@ -234,7 +228,7 @@ def sort_by_rank_sum(matrix: pd.DataFrame, norm: pd.DataFrame) -> tuple[pd.DataF
 
 # Dataset display names (title-cased, consistent with rest of pipeline)
 DATASET_DISPLAY = {
-    "4season":   "4 Season",
+    "4seasons":   "4 Seasons",
     "a2d2":      "A2D2",
     "hdd":       "HDD",
     "boreas_rt": "Boreas",
@@ -247,6 +241,7 @@ DATASET_DISPLAY = {
     "oxford":    "Oxford",
     "waymo":     "Waymo",
     "zod":       "ZOD",
+    "kitscenes": "KITScenes",
 }
 
 # Unit lookup for annotation

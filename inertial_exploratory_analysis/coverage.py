@@ -73,12 +73,12 @@ BOUNDS = {
 DATASET_ORDER = [
     "4seasons", "a2d2", "boreas_rt", "durlar", "ford",
     "hdd", "kitti", "kitti360", "nuscene", "nvidia",
-    "oxford", "waymo", "zod",
+    "oxford", "waymo", "zod", "kitscenes"
 ]
 
 # Sample at most this many frames per dataset to keep runtime reasonable.
 # Set to None to read all frames (slow for NVIDIA/HDD/Boreas).
-MAX_FRAMES_PER_DATASET = 2_000_000
+MAX_FRAMES_PER_DATASET = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -905,16 +905,25 @@ def load_ford(f):
 def load_hdd(f):
     raw = pd.read_parquet(f)
     ts_ns = to_timestamp_ns(raw["timestamp"])
-    x_arr, y_arr = latlon_to_xy(raw["lat"].values, raw["lng"].values) \
-        if "lat" in raw.columns else (None, None)
+    # HDD has swapped column names: 'lat' contains longitude values (-122°)
+    # and 'lng' contains latitude values (37°). Confirmed: 'lat' violates
+    # the ±90° latitude constraint. Swap corrected here before projection.
+    has_coords = "lat" in raw.columns and "lng" in raw.columns
+    if has_coords:
+        true_lat = raw["lng"].values   # mislabeled as 'lng', actually latitude
+        true_lon = raw["lat"].values   # mislabeled as 'lat', actually longitude
+        x_arr, y_arr = latlon_to_xy(true_lat, true_lon)
+    else:
+        true_lat, true_lon, x_arr, y_arr = None, None, None, None
+    yaw_rad = np.radians(raw["yaw"].values) if "yaw" in raw.columns else None
     return build_standard_frame(
         timestamp_ns = ts_ns.values,
         x            = x_arr,
         y            = y_arr,
-        lat          = raw["lat"].values if "lat" in raw.columns else None,
-        lon          = raw["lng"].values if "lng" in raw.columns else None,
-        speed_raw    = raw["vel"].values if "vel" in raw.columns else None,
-        yaw_raw      = raw["yaw"].values if "yaw" in raw.columns else None,
+        lat          = true_lat,
+        lon          = true_lon,
+        speed_raw    = raw["vel"].values / 3.6 if "vel" in raw.columns else None,  # vel is in km/h
+        yaw_raw      = yaw_rad,
     )
 
 
@@ -981,6 +990,24 @@ def load_nvidia(f):
         ax_raw       = raw["ax"].values if "ax" in raw.columns else None,
         ay_raw       = raw["ay"].values if "ay" in raw.columns else None,
         az_raw       = raw["az"].values if "az" in raw.columns else None,
+        roll_raw     = roll_r,
+        pitch_raw    = pitch_r,
+        yaw_raw      = yaw_r,
+        clean_gps    = True,
+    )
+
+
+def load_kitscenes(f):
+    raw = pd.read_parquet(f)
+    # KitScenes timestamp is already in seconds.
+    ts_ns = (raw["timestamp"].astype(float) * 1e9).round().astype(np.int64)
+    roll_r, pitch_r, yaw_r = quat_to_euler(
+        raw["qw"], raw["qx"], raw["qy"], raw["qz"])
+    return build_standard_frame(
+        timestamp_ns = ts_ns.values,
+        x            = raw["x"].values if "x" in raw.columns else None,
+        y            = raw["y"].values if "y" in raw.columns else None,
+        z            = raw["z"].values if "z" in raw.columns else None,
         roll_raw     = roll_r,
         pitch_raw    = pitch_r,
         yaw_raw      = yaw_r,
@@ -1113,6 +1140,7 @@ LOADERS = {
     "kitti360":  load_kitti_generic,
     "nuscene":   load_nuscene,
     "nuscenes":  load_nuscene,
+    "kitscenes": load_kitscenes,
     "nvidia":    load_nvidia,
     "oxford":    load_oxford,
     "waymo":     load_waymo,

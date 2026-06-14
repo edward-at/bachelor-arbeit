@@ -78,9 +78,10 @@ SIGNAL_COLORS = {
 }
 
 DATASET_COLORS = {
-    "4season":   TUM_SECONDARY['blue2'],
+    "4seasons":  TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
     "hdd":       TUM_SECONDARY['gray'],
+    "kitscenes": TUM_SECONDARY['light_gray'],
     "boreas_rt": TUM_EXT['maroon'],
     "durlar":    TUM_EXT['gold'],
     "ford":      TUM_EXT['orange'],
