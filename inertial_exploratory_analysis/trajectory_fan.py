@@ -53,12 +53,7 @@ PROJECT_ROOT  = Path("/Users/edward/Downloads")
 INERTIAL_ROOT = PROJECT_ROOT / "dataset" / "inertial_data"
 FIG_ROOT      = PROJECT_ROOT / "bachelor-arbeit" / "inertial_exploratory_analysis" / "figures" / "trajectory_fans"
 
-DATASETS = ["4seasons", "a2d2", "boreas_rt",
-    "hdd", "durlar",
-    "ford", "kitti", "kitti360", 
-    "nuscene", "oxford", "zod", "kitscenes","waymo",
-    #"nvidia"
-    ]   # None -> auto-discover EVERY folder under inertial_data/ (all 14, any
+DATASETS = None   # None -> auto-discover EVERY folder under inertial_data/ (all 14, any
                   #         spelling). Or hard-code a list, e.g. ["boreas_rt", "oxford", ...].
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -66,16 +61,17 @@ DATASETS = ["4seasons", "a2d2", "boreas_rt",
 # ═════════════════════════════════════════════════════════════════════════════
 SPEED_COL = "speed_kmh"
 YAW_COL   = "yaw_rate"     # rad/s
-AMAG_COL = "acc_mag"       # m/s² (optional; derived from speed if absent)
-TIME_COL  = None           # seconds column if present; else SAMPLE_HZ
+ACCEL_COL = "acc_mag"      # acceleration magnitude = sqrt(a_long²+a_lat²); derived from speed if absent
+TIME_COL  = "t_rel_s"      # real relative-seconds column in your clips (uniform 10 Hz grid).
+                           # Falls back to GRID_HZ only if this column is absent.
 
-SAMPLE_HZ = 10
-DEFAULT_HZ = 10
+GRID_HZ = 10               # uniform grid rate of the standardized clips. ONLY a fallback if
+                           # TIME_COL is missing; with t_rel_s present this is never used.
 
 # ═════════════════════════════════════════════════════════════════════════════
 # WINDOWING  (the decision you wanted to make first — sweep WINDOW_S to compare)
 # ═════════════════════════════════════════════════════════════════════════════
-WINDOW_S         = 19.0    # seconds per window. Try 10 / 20 / 30. Recommended: 20.
+WINDOW_S         = 20.0    # seconds per window. Try 10 / 20 / 30. Recommended: 20.
 MIN_WINDOW_FRAC  = 0.5     # drop a trailing window shorter than this fraction of WINDOW_S
                            #   (non-overlapping: step == WINDOW_S, so windows never share frames)
 
@@ -142,9 +138,9 @@ def load_frames(fp, ds):
     if TIME_COL is not None and TIME_COL in df.columns:
         t = df[TIME_COL].to_numpy(dtype=float); t = t - t[0]; dt = np.gradient(t)
     else:
-        hz = SAMPLE_HZ.get(ds, DEFAULT_HZ)
+        hz = GRID_HZ
         dt = np.full(len(v_ms), 1.0 / hz); t = np.cumsum(dt) - dt[0]
-    a = df[AMAG_COL].to_numpy(dtype=float) if AMAG_COL in df.columns else None
+    a = df[ACCEL_COL].to_numpy(dtype=float) if ACCEL_COL in df.columns else None
 
     m = np.isfinite(v_ms) & np.isfinite(yaw) & np.isfinite(t)
     if m.sum() < 5:
@@ -154,21 +150,27 @@ def load_frames(fp, ds):
 
 
 def window_records(frames, ds):
-    """Slice masked clip arrays into non-overlapping WINDOW_S windows -> list of records."""
+    """Slice clip into non-overlapping WINDOW_S windows -> records.
+    O(N) (immune to giant/time-corrupt clips); keeps a short clip as one window."""
     v_ms, yaw, t, dt, a = frames
     rel = t - t[0]
-    total = rel[-1]
+    total = float(rel[-1])
+    n = len(rel)
+
+    if total < WINDOW_S:
+        groups = [np.arange(n)]                       # short clip: whole clip = one window
+    else:
+        win_id = (rel / WINDOW_S).astype(np.int64)    # which 20 s bin each frame falls in
+        cut    = np.flatnonzero(np.diff(win_id)) + 1  # boundaries between bins  (single pass)
+        groups = np.split(np.arange(n), cut)
+
     recs = []
-    k = 0
-    while k * WINDOW_S < total + 1e-9:
-        lo_t, hi_t = k * WINDOW_S, (k + 1) * WINDOW_S
-        idx = np.where((rel >= lo_t) & (rel < hi_t))[0]
-        k += 1
+    for idx in groups:
         if idx.size < 5:
             continue
         span = rel[idx[-1]] - rel[idx[0]]
-        if span < MIN_WINDOW_FRAC * WINDOW_S:
-            continue
+        if total >= WINDOW_S and span < MIN_WINDOW_FRAC * WINDOW_S:
+            continue                                  # drop only a too-short trailing window
 
         vv, ww, dd = v_ms[idx], yaw[idx], dt[idx]
         tl = rel[idx] - rel[idx[0]]
@@ -202,7 +204,7 @@ def check_schema(fp, ds):
     if miss:
         print(f"  [SCHEMA] {ds}: MISSING {miss}  ->  skipped   (present: {cols})")
         return False
-    print(f"  [SCHEMA] {ds}: ok (a_long={'present' if AMAG_COL in cols else 'derived'})")
+    print(f"  [SCHEMA] {ds}: ok (acc_mag={'present' if ACCEL_COL in cols else 'derived from speed'})")
     return True
 
 
@@ -298,7 +300,7 @@ def plot_speed_time_fan(per_ds, out_path):
 
     sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
     cbar = fig.colorbar(sm, ax=axes.tolist(), fraction=0.02, pad=0.02)
-    cbar.set_label("Peak |acceleration| (m/s\u00b2)")
+    cbar.set_label("Peak acceleration magnitude (m/s\u00b2)")
     fig.suptitle(f"Speed profiles per dataset  (window = {WINDOW_S:g}s; slope = acceleration)")
     plt.savefig(out_path, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
@@ -326,7 +328,7 @@ def main():
     print(f"{'='*72}\n")
 
     per_ds = {}
-    print(f"  {'dataset':<12} {'windows':>8} {'med path(m)':>12} {'95p path(m)':>12} {'med |dθ|(rad)':>14}")
+    print(f"  {'dataset':<12} {'windows':>8} {'med dur(s)':>11} {'med path(m)':>12} {'95p path(m)':>12} {'med |dθ|(rad)':>14}")
     for ds in datasets:
         clips = list_clips(ds)
         if not clips:
@@ -348,10 +350,11 @@ def main():
             recs = random.sample(recs, N_SAMPLE)
         per_ds[ds] = recs
 
-        # path-length stats help you judge the WINDOW_S choice
+        # path-length + duration stats help you judge the WINDOW_S choice
         plen = np.array([float(np.hypot(np.diff(r["x"]), np.diff(r["y"])).sum()) for r in recs])
         dth  = np.array([r["heading_change"] for r in recs])
-        print(f"  {ds:<12} {len(recs):>8} {np.median(plen):>12.1f} "
+        wdur = np.array([float(r["t"][-1]) for r in recs])
+        print(f"  {ds:<12} {len(recs):>8} {np.median(wdur):>11.1f} {np.median(plen):>12.1f} "
               f"{np.percentile(plen,95):>12.1f} {np.median(dth):>14.3f}")
 
     if not per_ds:

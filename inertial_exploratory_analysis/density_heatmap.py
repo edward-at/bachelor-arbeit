@@ -48,35 +48,29 @@ PROJECT_ROOT  = Path("/Users/edward/Downloads")
 INERTIAL_ROOT = PROJECT_ROOT / "dataset" / "inertial_data"
 FIG_ROOT      = PROJECT_ROOT / "bachelor-arbeit" / "inertial_exploratory_analysis" / "figures" / "density_heatmap"
 
-DATASETS = ["4seasons", "a2d2", "boreas_rt",
-    "hdd", "durlar",
-    "ford", "kitti", "kitti360", 
-    "nuscene", "oxford", "zod", "kitscenes","waymo","nvidia"
-    ]   # None -> auto-discover EVERY folder under inertial_data/ (all 14).
+DATASETS = None   # None -> auto-discover EVERY folder under inertial_data/ (all 14).
 
 # ═════════════════════════════════════════════════════════════════════════════
 # COLUMN NAMES  ── confirm against the [SCHEMA] print, then edit
 # ═════════════════════════════════════════════════════════════════════════════
 SPEED_COL = "speed_kmh"
 YAW_COL   = "yaw_rate"     # rad/s
-TIME_COL  = None           # seconds column if present; else SAMPLE_HZ
+TIME_COL  = "t_rel_s"      # real relative-seconds column (uniform 10 Hz grid). Falls back to
+                           # GRID_HZ only if absent.
 
-SAMPLE_HZ = 10
-DEFAULT_HZ = 10
+GRID_HZ = 10               # uniform grid rate of the standardized clips. ONLY a fallback if
+                           # TIME_COL is missing; with t_rel_s present this is never used.
 
 # ═════════════════════════════════════════════════════════════════════════════
 # WINDOWING  (same definition as trajectory_fans.py)
 # ═════════════════════════════════════════════════════════════════════════════
-WINDOW_S        = 19.0     # seconds per window (non-overlapping)
+WINDOW_S        = 20.0     # seconds per window (non-overlapping)
 MIN_WINDOW_FRAC = 0.5      # drop a trailing window shorter than this fraction of WINDOW_S
 
 # ═════════════════════════════════════════════════════════════════════════════
 # WHAT TO PLOT
 # ═════════════════════════════════════════════════════════════════════════════
-N_SAMPLE     = ["4seasons","a2d2","boreas_rt","hdd","durlar","ford","kitti","kitti360", 
-                "nuscene", "oxford", "zod", "kitscenes","waymo",
-                #"nvidia"
-                ]      # max WINDOWS per dataset (None = all; density handles volume)
+N_SAMPLE     = None        # max WINDOWS per dataset (None = all; density handles volume)
 SEED         = 0
 N_WORKERS    = 8           # threads for reading parquet in parallel (reading is I/O-bound)
 DENSITY_MODE = "fraction"  # "fraction" | "time" | "count"
@@ -134,7 +128,7 @@ def load_frames(fp, ds):
     if TIME_COL is not None and TIME_COL in df.columns:
         t = df[TIME_COL].to_numpy(dtype=float); t = t - t[0]; dt = np.gradient(t)
     else:
-        hz = SAMPLE_HZ.get(ds, DEFAULT_HZ)
+        hz = GRID_HZ
         dt = np.full(len(v_ms), 1.0 / hz); t = np.cumsum(dt) - dt[0]
 
     m = np.isfinite(v_ms) & np.isfinite(yaw) & np.isfinite(t)
@@ -144,18 +138,25 @@ def load_frames(fp, ds):
 
 
 def window_paths(frames):
-    """Yield (x, y, dt) for each non-overlapping WINDOW_S window, anchored at origin."""
+    """Yield (x, y, dt) per non-overlapping WINDOW_S window, anchored at origin.
+    O(N) (immune to giant/time-corrupt clips); keeps a short clip as one window."""
     v_ms, yaw, t, dt = frames
     rel = t - t[0]
-    total = rel[-1]
-    k = 0
-    while k * WINDOW_S < total + 1e-9:
-        lo_t, hi_t = k * WINDOW_S, (k + 1) * WINDOW_S
-        idx = np.where((rel >= lo_t) & (rel < hi_t))[0]
-        k += 1
+    total = float(rel[-1])
+    n = len(rel)
+
+    if total < WINDOW_S:
+        groups = [np.arange(n)]
+    else:
+        win_id = (rel / WINDOW_S).astype(np.int64)
+        cut    = np.flatnonzero(np.diff(win_id)) + 1
+        groups = np.split(np.arange(n), cut)
+
+    for idx in groups:
         if idx.size < 5:
             continue
-        if (rel[idx[-1]] - rel[idx[0]]) < MIN_WINDOW_FRAC * WINDOW_S:
+        span = rel[idx[-1]] - rel[idx[0]]
+        if total >= WINDOW_S and span < MIN_WINDOW_FRAC * WINDOW_S:
             continue
         vv, ww, dd = v_ms[idx], yaw[idx], dt[idx]
         theta = np.cumsum(ww * dd); theta -= theta[0]
