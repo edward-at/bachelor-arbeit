@@ -78,8 +78,12 @@ MIN_WINDOW_FRAC  = 0.5     # drop a trailing window shorter than this fraction o
 # ═════════════════════════════════════════════════════════════════════════════
 # SAMPLING / VISIBILITY
 # ═════════════════════════════════════════════════════════════════════════════
-N_SAMPLE   = 1500     # max WINDOWS drawn per dataset (None = all). Lines get dense fast.
-SEED       = 0
+N_SAMPLE   = None     # how many random windows (= lines) to draw per dataset:
+                      #   integer (e.g. 1500, 3000, 500) -> that many RANDOM windows
+                      #   None                           -> use ALL windows (every line)
+                      # Must be an int or None — never a list. All-data is very dense and
+                      # slow to render for huge datasets (nvidia 298k clips, waymo 70k).
+SEED       = 0        # change this to draw a DIFFERENT random subset (same N_SAMPLE)
 N_WORKERS  = 8        # threads for reading parquet in parallel (reading is I/O-bound)
 ALPHA      = 0.16
 LINEWIDTH  = 0.8
@@ -280,20 +284,24 @@ def plot_xy_fan(per_ds, out_path):
 def plot_speed_time_fan(per_ds, out_path):
     cmap = plt.get_cmap(COLORMAP)
     norm = _norm([r["peak_acc"] for recs in per_ds.values() for r in recs])
-    vmax = np.percentile([float(r["speed_kmh"].max()) for recs in per_ds.values() for r in recs], SPEED_PCT)
-    vmax = max(vmax, 1.0)
+    # speed CHANGE from each window's start: isolates within-window dynamics from the
+    # baseline cruising speed, so accel/decel shape is visible instead of a flat band.
+    dvals = [float(np.abs(r["speed_kmh"] - r["speed_kmh"][0]).max())
+             for recs in per_ds.values() for r in recs if r["speed_kmh"].size]
+    vmax = max(float(np.percentile(dvals, SPEED_PCT)), 1.0)
 
     nrows, ncols = _grid(len(per_ds))
     fig, axes = plt.subplots(nrows, ncols, figsize=(PANEL_IN * 1.15 * ncols, PANEL_IN * nrows), squeeze=False)
     axes = axes.ravel()
     for ax, ds in zip(axes, per_ds.keys()):
         for r in order_records(per_ds[ds], "peak_acc", ST_SORT):
-            ax.plot(r["t"], r["speed_kmh"], color=cmap(norm(r["peak_acc"])),
-                    linewidth=LINEWIDTH, alpha=ALPHA)
+            ax.plot(r["t"], r["speed_kmh"] - r["speed_kmh"][0],
+                    color=cmap(norm(r["peak_acc"])), linewidth=LINEWIDTH, alpha=ALPHA)
+        ax.axhline(0, color="0.5", linewidth=0.8, zorder=1)
         ax.set_title(ds)
         ax.set_xlabel("Time within window (s)")
-        ax.set_ylabel("Speed (km/h)")
-        ax.set_xlim(0, WINDOW_S); ax.set_ylim(0, vmax * 1.05)
+        ax.set_ylabel("Speed change from start (km/h)")
+        ax.set_xlim(0, WINDOW_S); ax.set_ylim(-vmax * 1.05, vmax * 1.05)
         ax.grid(True); ax.set_axisbelow(True)
     for ax in axes[len(per_ds):]:
         ax.axis("off")
@@ -301,7 +309,7 @@ def plot_speed_time_fan(per_ds, out_path):
     sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
     cbar = fig.colorbar(sm, ax=axes.tolist(), fraction=0.02, pad=0.02)
     cbar.set_label("Peak acceleration magnitude (m/s\u00b2)")
-    fig.suptitle(f"Speed profiles per dataset  (window = {WINDOW_S:g}s; slope = acceleration)")
+    fig.suptitle(f"Speed change per window  (window = {WINDOW_S:g}s; 0 = speed at window start)")
     plt.savefig(out_path, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
 
@@ -363,13 +371,13 @@ def main():
 
     print(f"\n  Plotting ... [{_now()}]")
     plot_xy_fan(per_ds, FIG_ROOT / f"trajectory_fan_xy_w{int(WINDOW_S)}.png")
-    plot_speed_time_fan(per_ds, FIG_ROOT / f"speed_time_fan_w{int(WINDOW_S)}.png")
+    plot_speed_time_fan(per_ds, FIG_ROOT / f"speed_change_fan_w{int(WINDOW_S)}.png")
 
     dt = (datetime.now() - t_start).total_seconds()
     print(f"\n{'='*72}")
     print(f"  \u2713 DONE  —  {len(per_ds)} datasets  \u00b7  window {WINDOW_S:g}s  \u00b7  {dt:.1f}s  \u00b7  {_now()}")
     print(f"  \u2192 trajectory_fan_xy_w{int(WINDOW_S)}.png")
-    print(f"  \u2192 speed_time_fan_w{int(WINDOW_S)}.png")
+    print(f"  \u2192 speed_change_fan_w{int(WINDOW_S)}.png")
     print(f"{'='*72}\n")
 
 

@@ -167,7 +167,7 @@ def plot_ecdf_signal(col, slug, x_label, x_max, data, out_dir):
         x, y = compute_ecdf(data[ds][col].values)
         if len(x) == 0:
             continue
-        ax.plot(x, y,
+        ax.plot(x,y,
                 color=DATASET_COLORS.get(ds, DATASET_COLOR_FALLBACK),
                 linewidth=1.8, label=DATASET_DISPLAY[ds])
 

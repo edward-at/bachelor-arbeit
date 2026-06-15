@@ -70,8 +70,13 @@ MIN_WINDOW_FRAC = 0.5      # drop a trailing window shorter than this fraction o
 # ═════════════════════════════════════════════════════════════════════════════
 # WHAT TO PLOT
 # ═════════════════════════════════════════════════════════════════════════════
-N_SAMPLE     = None        # max WINDOWS per dataset (None = all; density handles volume)
-SEED         = 0
+N_SAMPLE     = None        # how many random windows to use per dataset:
+                           #   None                -> use ALL windows (recommended here;
+                           #                          density aggregates, so more = smoother)
+                           #   integer (e.g. 5000) -> cap to that many RANDOM windows
+                           #                          (faster on nvidia 298k / waymo 70k clips)
+                           # Must be an int or None — never a list.
+SEED         = 0           # change this to draw a DIFFERENT random subset
 N_WORKERS    = 8           # threads for reading parquet in parallel (reading is I/O-bound)
 DENSITY_MODE = "fraction"  # "fraction" | "time" | "count"
 
