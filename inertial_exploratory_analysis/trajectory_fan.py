@@ -78,7 +78,7 @@ MIN_WINDOW_FRAC  = 0.5     # drop a trailing window shorter than this fraction o
 # ═════════════════════════════════════════════════════════════════════════════
 # SAMPLING / VISIBILITY
 # ═════════════════════════════════════════════════════════════════════════════
-N_SAMPLE   = None     # how many random windows (= lines) to draw per dataset:
+N_SAMPLE   = 5000     # how many random windows (= lines) to draw per dataset:
                       #   integer (e.g. 1500, 3000, 500) -> that many RANDOM windows
                       #   None                           -> use ALL windows (every line)
                       # Must be an int or None — never a list. All-data is very dense and
@@ -101,6 +101,10 @@ NCOLS    = 5
 PANEL_IN = 3.4
 COLORMAP = "viridis"
 DPI      = 300
+SEPARATE_FILES  = True         # True  = ONE PNG per dataset (avoids tiny panels / label overlap)
+                               # False = all datasets in one combined grid PNG
+SINGLE_IN_XY    = (8.0, 5.0)   # figure size (inches) for a single-dataset X-Y fan
+SINGLE_IN_SPEED = (8.0, 4.5)   # figure size for a single-dataset speed-change fan
 ASPECT_EQUAL = True   # True  = 1 m in x equals 1 m in y (no distortion). Forward-heavy
                       #         datasets then render as WIDE STRIPS (geometrically honest).
                       # False = each panel fills a square box (paper-like, compact) but a
@@ -243,7 +247,19 @@ def _norm(values):
 # ═════════════════════════════════════════════════════════════════════════════
 # FIGURE 1 — X-Y trajectory fan (origin at left-middle)
 # ═════════════════════════════════════════════════════════════════════════════
-def plot_xy_fan(per_ds, out_path):
+def _draw_xy_panel(ax, recs, cmap, norm, xlim, ylim):
+    for r in order_records(recs, "heading_change", XY_SORT):
+        ax.plot(r["x"], r["y"], color=cmap(norm(r["heading_change"])),
+                linewidth=LINEWIDTH, alpha=ALPHA)
+    ax.set_xlabel("X position (m)")
+    ax.set_ylabel("Y position (m)")
+    ax.set_xlim(xlim); ax.set_ylim(ylim)
+    if ASPECT_EQUAL:
+        ax.set_aspect("equal")
+    ax.grid(True); ax.set_axisbelow(True)
+
+
+def plot_xy_fan(per_ds, out_dir):
     cmap = plt.get_cmap(COLORMAP)
     norm = _norm([r["heading_change"] for recs in per_ds.values() for r in recs])
 
@@ -252,36 +268,51 @@ def plot_xy_fan(per_ds, out_path):
     xmax = max(xmax, 1.0); ymax = max(ymax, 1.0)
     xlim = (-0.05 * xmax, xmax * 1.05)     # origin sits at the LEFT-MIDDLE
     ylim = (-ymax * 1.05, ymax * 1.05)
+    label = "Absolute total heading change (rad)"
+
+    # shared norm + shared extent ⇒ per-dataset figures stay directly comparable
+    if SEPARATE_FILES:
+        for ds in per_ds:
+            fig, ax = plt.subplots(figsize=SINGLE_IN_XY)
+            _draw_xy_panel(ax, per_ds[ds], cmap, norm, xlim, ylim)
+            sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
+            fig.colorbar(sm, ax=ax, fraction=0.046, pad=0.02).set_label(label)
+            ax.set_title(f"Trajectory distribution — {ds}  (window = {WINDOW_S:g}s)")
+            fig.savefig(out_dir / f"trajectory_fan_xy_{ds}_w{int(WINDOW_S)}.png",
+                        dpi=DPI, bbox_inches="tight")
+            plt.close(fig)
+        return
 
     nrows, ncols = _grid(len(per_ds))
     fig, axes = plt.subplots(nrows, ncols, figsize=(PANEL_IN * ncols, PANEL_IN * nrows), squeeze=False)
     axes = axes.ravel()
     for ax, ds in zip(axes, per_ds.keys()):
-        for r in order_records(per_ds[ds], "heading_change", XY_SORT):
-            ax.plot(r["x"], r["y"], color=cmap(norm(r["heading_change"])),
-                    linewidth=LINEWIDTH, alpha=ALPHA)
+        _draw_xy_panel(ax, per_ds[ds], cmap, norm, xlim, ylim)
         ax.set_title(ds)
-        ax.set_xlabel("X position (m)")
-        ax.set_ylabel("Y position (m)")
-        ax.set_xlim(xlim); ax.set_ylim(ylim)
-        if ASPECT_EQUAL:
-            ax.set_aspect("equal")
-        ax.grid(True); ax.set_axisbelow(True)
     for ax in axes[len(per_ds):]:
         ax.axis("off")
-
     sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
-    cbar = fig.colorbar(sm, ax=axes.tolist(), fraction=0.02, pad=0.02)
-    cbar.set_label("Absolute total heading change (rad)")
+    fig.colorbar(sm, ax=axes.tolist(), fraction=0.02, pad=0.02).set_label(label)
     fig.suptitle(f"Trajectory distribution per dataset  (window = {WINDOW_S:g}s, non-overlapping)")
-    plt.savefig(out_path, dpi=DPI, bbox_inches="tight")
+    plt.savefig(out_dir / f"trajectory_fan_xy_w{int(WINDOW_S)}.png", dpi=DPI, bbox_inches="tight")
     plt.close(fig)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
 # FIGURE 2 — speed-vs-time fan
 # ═════════════════════════════════════════════════════════════════════════════
-def plot_speed_time_fan(per_ds, out_path):
+def _draw_speed_panel(ax, recs, cmap, norm, vmax):
+    for r in order_records(recs, "peak_acc", ST_SORT):
+        ax.plot(r["t"], r["speed_kmh"] - r["speed_kmh"][0],
+                color=cmap(norm(r["peak_acc"])), linewidth=LINEWIDTH, alpha=ALPHA)
+    ax.axhline(0, color="0.5", linewidth=0.8, zorder=1)
+    ax.set_xlabel("Time within window (s)")
+    ax.set_ylabel("Speed change from start (km/h)")
+    ax.set_xlim(0, WINDOW_S); ax.set_ylim(-vmax * 1.05, vmax * 1.05)
+    ax.grid(True); ax.set_axisbelow(True)
+
+
+def plot_speed_time_fan(per_ds, out_dir):
     cmap = plt.get_cmap(COLORMAP)
     norm = _norm([r["peak_acc"] for recs in per_ds.values() for r in recs])
     # speed CHANGE from each window's start: isolates within-window dynamics from the
@@ -289,28 +320,32 @@ def plot_speed_time_fan(per_ds, out_path):
     dvals = [float(np.abs(r["speed_kmh"] - r["speed_kmh"][0]).max())
              for recs in per_ds.values() for r in recs if r["speed_kmh"].size]
     vmax = max(float(np.percentile(dvals, SPEED_PCT)), 1.0)
+    label = "Peak acceleration magnitude (m/s\u00b2)"
+
+    if SEPARATE_FILES:
+        for ds in per_ds:
+            fig, ax = plt.subplots(figsize=SINGLE_IN_SPEED)
+            _draw_speed_panel(ax, per_ds[ds], cmap, norm, vmax)
+            sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
+            fig.colorbar(sm, ax=ax, fraction=0.046, pad=0.02).set_label(label)
+            ax.set_title(f"Speed change per window — {ds}  (window = {WINDOW_S:g}s)")
+            fig.savefig(out_dir / f"speed_change_fan_{ds}_w{int(WINDOW_S)}.png",
+                        dpi=DPI, bbox_inches="tight")
+            plt.close(fig)
+        return
 
     nrows, ncols = _grid(len(per_ds))
     fig, axes = plt.subplots(nrows, ncols, figsize=(PANEL_IN * 1.15 * ncols, PANEL_IN * nrows), squeeze=False)
     axes = axes.ravel()
     for ax, ds in zip(axes, per_ds.keys()):
-        for r in order_records(per_ds[ds], "peak_acc", ST_SORT):
-            ax.plot(r["t"], r["speed_kmh"] - r["speed_kmh"][0],
-                    color=cmap(norm(r["peak_acc"])), linewidth=LINEWIDTH, alpha=ALPHA)
-        ax.axhline(0, color="0.5", linewidth=0.8, zorder=1)
+        _draw_speed_panel(ax, per_ds[ds], cmap, norm, vmax)
         ax.set_title(ds)
-        ax.set_xlabel("Time within window (s)")
-        ax.set_ylabel("Speed change from start (km/h)")
-        ax.set_xlim(0, WINDOW_S); ax.set_ylim(-vmax * 1.05, vmax * 1.05)
-        ax.grid(True); ax.set_axisbelow(True)
     for ax in axes[len(per_ds):]:
         ax.axis("off")
-
     sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
-    cbar = fig.colorbar(sm, ax=axes.tolist(), fraction=0.02, pad=0.02)
-    cbar.set_label("Peak acceleration magnitude (m/s\u00b2)")
+    fig.colorbar(sm, ax=axes.tolist(), fraction=0.02, pad=0.02).set_label(label)
     fig.suptitle(f"Speed change per window  (window = {WINDOW_S:g}s; 0 = speed at window start)")
-    plt.savefig(out_path, dpi=DPI, bbox_inches="tight")
+    plt.savefig(out_dir / f"speed_change_fan_w{int(WINDOW_S)}.png", dpi=DPI, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -370,14 +405,20 @@ def main():
         sys.exit(1)
 
     print(f"\n  Plotting ... [{_now()}]")
-    plot_xy_fan(per_ds, FIG_ROOT / f"trajectory_fan_xy_w{int(WINDOW_S)}.png")
-    plot_speed_time_fan(per_ds, FIG_ROOT / f"speed_change_fan_w{int(WINDOW_S)}.png")
+    plot_xy_fan(per_ds, FIG_ROOT)
+    plot_speed_time_fan(per_ds, FIG_ROOT)
 
     dt = (datetime.now() - t_start).total_seconds()
+    n = len(per_ds)
     print(f"\n{'='*72}")
-    print(f"  \u2713 DONE  —  {len(per_ds)} datasets  \u00b7  window {WINDOW_S:g}s  \u00b7  {dt:.1f}s  \u00b7  {_now()}")
-    print(f"  \u2192 trajectory_fan_xy_w{int(WINDOW_S)}.png")
-    print(f"  \u2192 speed_change_fan_w{int(WINDOW_S)}.png")
+    print(f"  \u2713 DONE  —  {n} datasets  \u00b7  window {WINDOW_S:g}s  \u00b7  {dt:.1f}s  \u00b7  {_now()}")
+    if SEPARATE_FILES:
+        print(f"  \u2192 {n} files  trajectory_fan_xy_<dataset>_w{int(WINDOW_S)}.png")
+        print(f"  \u2192 {n} files  speed_change_fan_<dataset>_w{int(WINDOW_S)}.png")
+    else:
+        print(f"  \u2192 trajectory_fan_xy_w{int(WINDOW_S)}.png")
+        print(f"  \u2192 speed_change_fan_w{int(WINDOW_S)}.png")
+    print(f"  \u2192 in {FIG_ROOT}")
     print(f"{'='*72}\n")
 
 

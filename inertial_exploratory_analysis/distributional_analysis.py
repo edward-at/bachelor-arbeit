@@ -387,8 +387,7 @@ def plot_signal(dataset_name: str,
 
         ax.set_xlim(xlim_lo, xlim_hi)
 
-    ax.set_title(f"{sig['label']} Distribution — {dataset_name.upper()} "
-                 f"({GRID_HZ} Hz grid)")
+    ax.set_title(f"{sig['label']} Distribution — {dataset_name.upper()} ")
     ax.set_xlabel(sig["xlabel"])
     ax.set_ylabel("Fraction of frames")
     ax.grid(True)
