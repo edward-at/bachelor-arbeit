@@ -94,7 +94,7 @@ DATASET_COLORS = {
     "hdd":       TUM_SECONDARY['gray'],
     "kitscenes": TUM_SECONDARY['light_gray'],
     "boreas_rt": TUM_EXT['maroon'],
-    "durlar":    TUM_EXT['gold'],
+    "durlar":    TUM_SECONDARY['blue1'],
     "ford":      TUM_EXT['orange'],
     "kitti":     TUM_EXT['yellow'],
     "kitti360":  TUM_EXT['olive'],

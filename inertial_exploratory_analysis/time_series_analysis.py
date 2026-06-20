@@ -40,14 +40,8 @@ FIG_ROOT      = Path("/Users/edward/Downloads/bachelor-arbeit/inertial_explorato
 # ─────────────────────────────────────────────────────────────────────────────
 
 SIGNALS = [
-    {"col": "speed_kmh",  "std_col": "std_speed_kmh",   "label": "Speed",                    "unit": "km/h",  "clip_lo":   0.0, "clip_hi": 200.0},
-    {"col": "a_long",     "std_col": "std_a_long",      "label": "Longitudinal Acceleration","unit": "m/s²",  "clip_lo": -15.0, "clip_hi":  15.0},
-    {"col": "a_lat",      "std_col": "std_a_lat",       "label": "Lateral Acceleration",     "unit": "m/s²",  "clip_lo": -15.0, "clip_hi":  15.0},
-    {"col": "jerk_long",  "std_col": "std_jerk_long",   "label": "Longitudinal Jerk",        "unit": "m/s³",  "clip_lo": -30.0, "clip_hi":  30.0},
-    {"col": "jerk_lat",   "std_col": "std_jerk_lat",    "label": "Lateral Jerk",             "unit": "m/s³",  "clip_lo": -30.0, "clip_hi":  30.0},
-    {"col": "yaw_rate",   "std_col": "std_yaw_rate",    "label": "Yaw Rate",                 "unit": "°/s",   "clip_lo": -90.0, "clip_hi":  90.0},
+    {"col": "speed_kmh",  "std_col": "std_speed_kmh","label": "Speed","unit": "km/h","clip_lo":0.0,"clip_hi": 200.0},
 ]
-
 TIER_LABELS = ["Low Dynamic", "Medium Dynamic", "High Dynamic"]
 
 # ─────────────────────────────────────────────────────────────────────────────

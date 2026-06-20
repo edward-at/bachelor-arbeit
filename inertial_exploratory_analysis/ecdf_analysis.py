@@ -71,8 +71,9 @@ DATASET_COLORS = {
     "4seasons":   TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
     "hdd":       TUM_SECONDARY['gray'],
+    "kitscenes": TUM_SECONDARY['light_gray'],
     "boreas_rt": TUM_EXT['maroon'],
-    "durlar":    TUM_EXT['gold'],
+    "durlar":    TUM_SECONDARY['blue1'],
     "ford":      TUM_EXT['orange'],
     "kitti":     TUM_EXT['yellow'],
     "kitti360":  TUM_EXT['olive'],
@@ -81,7 +82,6 @@ DATASET_COLORS = {
     "oxford":    TUM_EXT['navy'],
     "waymo":     TUM_EXT['purple'],
     "zod":       TUM_EXT['red'],
-    "kitscenes": TUM_SECONDARY['light_gray'],
 }
 DATASET_COLOR_FALLBACK = TUM_SECONDARY['blue2']
 
@@ -109,7 +109,7 @@ THRESHOLDS = {
 
 # Light tints of the TUM regime colors (regime_classification.py)
 REGIME_BAND_COLORS = [TUM_ACCENT["blue"], TUM_ACCENT["green"],
-                      TUM_EXT["gold"], TUM_EXT["red"]]
+                      TUM_ACCENT["orange"], TUM_EXT["red"]]
 REGIME_BAND_ALPHA  = 0.12
 REGIME_LABELS      = ["Near-Stationary", "Low-Dynamic", "Medium-Dynamic", "High-Dynamic"]
 
