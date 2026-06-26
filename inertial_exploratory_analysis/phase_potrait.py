@@ -1,9 +1,9 @@
 """
-extra_plot_a10_phase_portrait.py
+phase_potrait.py
 ────────────────────────────────────────────────────────────────────────────
 A10 — Per-dataset kinematic state-space occupancy. For each dataset, TWO
 figures: speed × longitudinal acceleration, and speed × yaw rate
-(13 datasets × 2 = 26 figures). Supports RQ1 (calm-biased datasets concentrate
+(14 datasets × 2 = 28 figures). Supports RQ1 (calm-biased datasets concentrate
 near low speed / near-zero accel|yaw) and RQ2 (dense regions ~ dynamic regimes).
 
 Shared bins and (by default) a shared cross-dataset log color scale so the 26
@@ -81,7 +81,7 @@ DISPLAY_NAMES = {
     "oxford": "Oxford", "waymo": "Waymo", "zod": "ZOD",
     "4seasons": "4Seasons", "hdd": "HDD", "a2d2": "A2D2", "kitscenes": "KITScenes"
 }
-DATASET_ORDER = list(DISPLAY_NAMES.keys())   # 13 datasets
+DATASET_ORDER = list(DISPLAY_NAMES.keys())   # 14 datasets
 
 DATASET_COLORS = {
     "4seasons":   TUM_SECONDARY['blue2'],
@@ -159,7 +159,7 @@ def render(folder, view, hist, norm):
                    marker=CENTROID_MARKER, linewidths=CENTROID_LW)
     ax.set_xlabel("speed [m/s]")
     ax.set_ylabel(view["y_label"])
-    ax.set_title(f"{DISPLAY_NAMES.get(folder, folder)} — {view['title']}")
+    ax.set_title(f"{view['title']} ({DISPLAY_NAMES.get(folder, folder)})")
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("fraction of frames (log)")
     fig.tight_layout()
@@ -191,7 +191,7 @@ def main():
                     if hists[f][view["tag"]].max() > 0), default=1.0)
         shared_norm[view["tag"]] = LogNorm(vmin=vmax / VMIN_RATIO, vmax=vmax)
 
-    # Pass 2 — render the 26 figures (single-threaded)
+    # Pass 2 — render the 28 figures (single-threaded)
     count = 0
     for folder in DATASET_ORDER:
         if folder not in hists:

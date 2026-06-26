@@ -1,15 +1,15 @@
 """
 ecdf_analysis.py  (v2)
 ────────────────────────────────────────────────────────────────────────────
-ECDF overlays for all 6 kinematic signals.
+ECDF overlays for the 3 windowed signals (speed, accel-magnitude, yaw rate).
 One figure per signal, one curve per dataset on a shared axis.
 Three vertical threshold lines partition each plot into 4 dynamic regime bands.
 
 ─── CHANGES vs v1 ──────────────────────────────────────────────────────────
   1. BUGFIX: plotting referenced an undefined TUM_COLORS dict → NameError on
      the first curve. Now uses DATASET_COLORS (with fallback).
-  2. DATASET_COLORS completed: durlar (gold) and zod (red) were missing and
-     would have collapsed onto the same fallback color in a 10-curve figure.
+  2. DATASET_COLORS completed: durlar (blue1) and zod (red) were missing and
+     would have collapsed onto the same fallback color in a 14-curve figure.
   3. NOTE: THRESHOLDS were calibrated on pre-v3 (noisier) std values. After
      the 10 Hz / 3 Hz-band-limited re-run, re-check them against the new
      distributions before locking figures (see regime_classification.py).
@@ -34,7 +34,7 @@ STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
 OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "inertial_exploratory_analysis" / "figures" / "ecdf"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DATASETS — heatmap rank-sum order (most dynamic → least dynamic)
+# DATASETS — fixed display order; NOT auto-synced to the heatmap rank-sum order.
 # NOTE: re-derive this order from the new summary heatmap after the v3 re-run;
 # the ranking was computed on pre-v3 data and may have changed.
 # ─────────────────────────────────────────────────────────────────────────────
@@ -45,10 +45,10 @@ DATASETS = [
 ]
 
 DATASET_DISPLAY = {
-    "4seasons":   "4 Seasons",
+    "4seasons":  "4 Seasons",
     "a2d2":      "A2D2",
     "hdd":       "HDD",
-    "boreas_rt": "Boreas",
+    "boreas_rt": "Boreas RT",
     "durlar":    "DurLAR",
     "ford":      "Ford",
     "kitti":     "KITTI",
@@ -71,7 +71,7 @@ DATASET_COLORS = {
     "4seasons":   TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
     "hdd":       TUM_SECONDARY['gray'],
-    "kitscenes": TUM_SECONDARY['light_gray'],
+    "kitscenes": TUM_PRIMARY['black'],
     "boreas_rt": TUM_EXT['maroon'],
     "durlar":    TUM_SECONDARY['blue1'],
     "ford":      TUM_EXT['orange'],
@@ -92,7 +92,7 @@ DATASET_COLOR_FALLBACK = TUM_SECONDARY['blue2']
 SIGNALS = [
     ("std_speed_kmh", "speed_kmh",  "Within-Window Std of Speed (km/h)",                  30.0),
     ("std_acc_mag",   "acc_mag",    "Within-Window Std of Accel. Magnitude (m/s²)",         4.0),
-    ("std_yaw_rate",  "yaw_rate",   "Within-Window Std of Yaw Rate (°/s)",                 40.0),
+    ("std_yaw_rate",  "yaw_rate",   "Within-Window Std of Yaw Rate (°/s)",                 25.0),
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ def plot_ecdf_signal(col, slug, x_label, x_max, data, out_dir):
     ax.set_ylim(-0.02, 1.05)
     ax.set_xlabel(x_label)
     ax.set_ylabel("Cumulative Fraction of Windows")
-    ax.set_title(f"ECDF — {x_label}")
+    ax.set_title(f"ECDF {x_label}")
     ax.grid(True)
     ax.set_axisbelow(True)
     ax.legend(loc="lower right")

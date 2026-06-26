@@ -1,15 +1,24 @@
 """
-regime_classification.py  (v2 — TUM colors)
+regime_classification.py  (v3 — variability tiers)
 ────────────────────────────────────────────────────────────────────────────
-Classifies every analysis window into one of four dynamic regimes using fixed
+Sorts every analysis window into one of four VARIABILITY TIERS using fixed
 absolute thresholds on within-window standard deviations.
-One stacked proportion bar chart per signal (6 total).
+One stacked proportion bar chart per signal (3 total).
 
-Regimes: near-stationary | low-dynamic | medium-dynamic | high-dynamic
+Tiers: near-stationary | low-dynamic | medium-dynamic | high-dynamic
 
+These are a descriptive, single-signal device (fixed cuts on one variability
+signal) — NOT the multivariate behavioural regimes recovered by clustering in
+the regime-discovery stage (RQ2). The term "regime" is reserved for those; here
+everything is a "tier". (The script filename and the figures/regime output
+folder are kept unchanged for path stability.)
+
+v3 CHANGES:
+  1. Terminology: "regime" -> "variability tier" throughout (labels, title,
+     identifiers, docstring) to avoid clashing with the RQ2 clustering chapter.
 v2 CHANGES:
-  1. Regime colors from the official TUM palette (were generic Office colors).
-  2. Per-segment label color chosen for contrast (black on green/gold).
+  1. Tier colors from the official TUM palette (were generic Office colors).
+  2. Per-segment label color chosen for contrast (black on green/orange).
   3. Legend moved outside the axes (was overlapping the right-most bars).
   4. CAUTION: THRESHOLDS were calibrated on pre-v3 std values — re-check
      against the new ECDFs after the v3 re-run before locking figures.
@@ -33,7 +42,7 @@ STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
 OUT_DIR      = PROJECT_ROOT /"bachelor-arbeit"/"inertial_exploratory_analysis"/ "figures" / "regime"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DATASETS — heatmap rank-sum order (most dynamic → least dynamic)
+# DATASETS — fixed display order; NOT auto-synced to the heatmap rank-sum order.
 # ─────────────────────────────────────────────────────────────────────────────
 
 DATASETS = [
@@ -69,7 +78,7 @@ SIGNALS = [
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# REGIME THRESHOLDS — shared with ecdf_analysis.py
+# TIER THRESHOLDS — shared with ecdf_analysis.py
 # ─────────────────────────────────────────────────────────────────────────────
 
 THRESHOLDS = {
@@ -79,17 +88,17 @@ THRESHOLDS = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# REGIME COLORS AND LABELS
+# TIER COLORS AND LABELS
 # ─────────────────────────────────────────────────────────────────────────────
 
 from tum_colors import TUM_ACCENT, TUM_EXT
 
-REGIME_COLORS      = [TUM_ACCENT["blue"],   # Near-Stationary  #64A0C8
-                      TUM_ACCENT["green"],  # Low-Dynamic      #A2AD00
-                      TUM_ACCENT["orange"], # Medium-Dynamic   #F6BA00
-                      TUM_EXT["red"]]       # High-Dynamic     #C4071B
-REGIME_TEXT_COLORS = ["black", "black", "black", "white"]
-REGIME_LABELS = ["Near-Stationary", "Low-Dynamic", "Medium-Dynamic", "High-Dynamic"]
+TIER_COLORS      = [TUM_ACCENT["blue"],   # Near-Stationary  #64A0C8
+                    TUM_ACCENT["green"],  # Low-Dynamic      #A2AD00
+                    TUM_ACCENT["orange"], # Medium-Dynamic   #F6BA00
+                    TUM_EXT["red"]]       # High-Dynamic     #C4071B
+TIER_TEXT_COLORS = ["black", "black", "black", "white"]
+TIER_LABELS = ["Near-Stationary", "Low-Dynamic", "Medium-Dynamic", "High-Dynamic"]
 
 # Minimum segment height (percentage points) to print a label inside the bar
 MIN_LABEL_PCT = 6.0
@@ -113,7 +122,7 @@ def load_std_data() -> dict:
     return data
 
 
-def regime_fractions(values: np.ndarray, t1, t2, t3) -> list:
+def tier_fractions(values: np.ndarray, t1, t2, t3) -> list:
     v = values[~np.isnan(values)]
     if len(v) == 0:
         return [float("nan")] * 4
@@ -130,7 +139,7 @@ def regime_fractions(values: np.ndarray, t1, t2, t3) -> list:
 # PLOT
 # ─────────────────────────────────────────────────────────────────────────────
 
-def plot_regime_signal(col, slug, title, data, out_dir):
+def plot_tier_signal(col, slug, title, data, out_dir):
     t1, t2, t3 = THRESHOLDS[col]
 
     present = [ds for ds in DATASETS if ds in data and col in data[ds].columns]
@@ -138,7 +147,7 @@ def plot_regime_signal(col, slug, title, data, out_dir):
         print(f"  [SKIP] no data for {col}")
         return
 
-    fracs = {ds: regime_fractions(data[ds][col].values, t1, t2, t3) for ds in present}
+    fracs = {ds: tier_fractions(data[ds][col].values, t1, t2, t3) for ds in present}
     x_pos   = np.arange(len(present))
     x_labels = [DATASET_DISPLAY[ds] for ds in present]
 
@@ -149,8 +158,8 @@ def plot_regime_signal(col, slug, title, data, out_dir):
         heights = np.array([fracs[ds][r] for ds in present])
         bars = ax.bar(
             x_pos, heights, bottom=bottoms,
-            color=REGIME_COLORS[r], edgecolor="white",
-            linewidth=0.6, label=REGIME_LABELS[r],
+            color=TIER_COLORS[r], edgecolor="white",
+            linewidth=0.6, label=TIER_LABELS[r],
         )
         # Percentage label inside segment
         for i, (bar, h) in enumerate(zip(bars, heights)):
@@ -161,7 +170,7 @@ def plot_regime_signal(col, slug, title, data, out_dir):
                 bottoms[i] + h / 2.0,
                 f"{h:.1f}%",
                 ha="center", va="center",
-                color=REGIME_TEXT_COLORS[r],
+                color=TIER_TEXT_COLORS[r],
             )
         bottoms += heights
 
@@ -169,7 +178,7 @@ def plot_regime_signal(col, slug, title, data, out_dir):
     ax.set_xticklabels(x_labels, rotation=30, ha="right")
     ax.set_ylim(0, 105)
     ax.set_ylabel("Proportion of Windows (%)")
-    ax.set_title(f"Dynamic Regime Distribution — {title}")
+    ax.set_title(f"Variability-Tier Distribution {title}")
     ax.grid(True, axis="y")
     ax.set_axisbelow(True)
     ax.legend(loc="upper left", bbox_to_anchor=(1.01, 1.0), frameon=True)
@@ -185,10 +194,10 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     print("Loading std_data …")
     data = load_std_data()
-    print(f"\nGenerating regime classification plots …")
+    print(f"\nGenerating variability-tier classification plots …")
     for col, slug, title in SIGNALS:
         print(f"  {slug}")
-        plot_regime_signal(col, slug, title, data, OUT_DIR)
+        plot_tier_signal(col, slug, title, data, OUT_DIR)
     print(f"\nDone → {OUT_DIR}")
 
 

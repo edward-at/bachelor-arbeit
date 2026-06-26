@@ -328,7 +328,7 @@ def plot_speed_time_fan(per_ds, out_dir):
             _draw_speed_panel(ax, per_ds[ds], cmap, norm, vmax)
             sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
             fig.colorbar(sm, ax=ax, fraction=0.046, pad=0.02).set_label(label)
-            ax.set_title(f"Speed change per window — {ds}  (window = {WINDOW_S:g}s)")
+            ax.set_title(f"Speed change per {WINDOW_S:g}s window ({ds})")
             fig.savefig(out_dir / f"speed_change_fan_{ds}_w{int(WINDOW_S)}.png",
                         dpi=DPI, bbox_inches="tight")
             plt.close(fig)

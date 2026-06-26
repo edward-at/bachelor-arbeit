@@ -69,13 +69,13 @@ DISPLAY_NAMES = {
     "oxford": "Oxford", "waymo": "Waymo", "zod": "ZOD",
     "4seasons": "4Seasons", "hdd": "HDD", "a2d2": "A2D2", "kitscenes": "KITScenes"
 }
-DATASET_ORDER = list(DISPLAY_NAMES.keys())   # 13 datasets
+DATASET_ORDER = list(DISPLAY_NAMES.keys())   # 14 datasets
 
 DATASET_COLORS = {
     "4seasons":   TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
     "hdd":       TUM_SECONDARY['gray'],
-    "kitscenes": TUM_SECONDARY['light_gray'],
+    "kitscenes": TUM_PRIMARY['black'],
     "boreas_rt": TUM_EXT['maroon'],
     "durlar":    TUM_SECONDARY['blue1'],
     "ford":      TUM_EXT['orange'],
@@ -171,7 +171,7 @@ def draw_ridgeline(data, std_col, tag, label, unit, rad_to_deg):
     ax.set_ylim(-0.3, n - 1 + ROW_OVERLAP + 0.2)
     ax.set_xlim(0.0, x_cap)
     ax.set_xlabel(f"{label} per 20 s window [{unit}]")
-    ax.set_title(f"Per-window variability across datasets — {label}")
+    ax.set_title(f"Per-window variability across datasets {label}")
     ax.grid(True, axis="x", alpha=GRID_ALPHA)
     ax.set_axisbelow(True)
     fig.tight_layout()
@@ -180,13 +180,13 @@ def draw_ridgeline(data, std_col, tag, label, unit, rad_to_deg):
     out = OUT_DIR / f"ridgeline_{tag}.png"
     fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
-    print(f"[A2] saved {out}")
+    print(f"Saved {out}")
 
 
 def main():
     data = load_std_data()
     if not data:
-        print(f"[A2] no std_data parquets found in {STD_DATA_DIR}")
+        print(f"No std_data parquets found in {STD_DATA_DIR}")
         return
     for std_col, tag, label, unit, r2d in SIGNALS:
         draw_ridgeline(data, std_col, tag, label, unit, r2d)

@@ -80,18 +80,18 @@ SIGNAL_COLS = [s["col"] for s in SIGNALS]
 NEEDED_COLS = ["t_rel_s"] + SIGNAL_COLS
 
 DISPLAY_NAMES = {
-    "boreas_rt": "Boreas", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
+    "boreas_rt": "Boreas RT", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
     "kitti360": "KITTI-360", "nuscene": "nuScenes", "nvidia": "NVIDIA",
     "oxford": "Oxford", "waymo": "Waymo", "zod": "ZOD",
     "4seasons": "4Seasons", "hdd": "HDD", "a2d2": "A2D2", "kitscenes": "KITScenes"
 }
-DATASET_ORDER = list(DISPLAY_NAMES.keys())   # 13 datasets
+DATASET_ORDER = list(DISPLAY_NAMES.keys())   # 14 datasets
 
 DATASET_COLORS = {
     "4seasons":  TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
     "hdd":       TUM_SECONDARY['gray'],
-    "kitscenes": TUM_SECONDARY['light_gray'],
+    "kitscenes": TUM_PRIMARY['black'],
     "boreas_rt": TUM_EXT['maroon'],
     "durlar":    TUM_SECONDARY['blue1'],
     "ford":      TUM_EXT['orange'],
@@ -215,7 +215,7 @@ def render(folder, arrays, n_windows):
 
     axes[-1].set_xlabel("time within window [s]")
     axes[0].legend(loc="upper right", framealpha=0.9)
-    fig.suptitle(f"{DISPLAY_NAMES.get(folder, folder)} — multi-signal density bands "
+    fig.suptitle(f"{DISPLAY_NAMES.get(folder, folder)} multi-signal density bands "
                  f"across {n_windows} windows")
     fig.tight_layout()
 

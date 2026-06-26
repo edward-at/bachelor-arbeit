@@ -321,21 +321,21 @@ def main():
 
     _plot_heatmap(
         mat_coverage, row_labels, col_labels,
-        title="Signal Coverage — % Non-NaN Values",
+        title="Signal Coverage Percentage Non-NaN Values",
         out_path=fig_root / "signal_coverage.png",
         cmap="RdYlGn",
     )
 
     _plot_heatmap(
         mat_nonzero, row_labels, col_labels,
-        title="Non-Zero Coverage — % Non-Zero Values (of all frames)",
+        title="Non-Zero Coverage Percentage Non-Zero Values (of all frames)",
         out_path=fig_root / "non_zero.png",
         cmap="RdYlGn",
     )
 
     _plot_heatmap(
         mat_boundary, row_labels, col_labels,
-        title="Boundary Coverage — % Values Within Physical Bounds",
+        title="Boundary Coverage Percentage Values Within Physical Bounds",
         out_path=fig_root / "boundary.png",
         cmap="RdYlGn",
     )

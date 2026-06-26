@@ -1,384 +1,311 @@
 """
-Script: heatmap_analysis.py
-============================
-Bachelor Thesis: "Identifying Dynamic Biases in Large-Scale Public Datasets
-via Distributional Analysis"
+heatmap_summary.py  —  Chapter-8 "scorecard" heatmap.
 
-Section 4.5.4 — Summary Heatmap
+A single summary figure for the whole exploratory chapter.
 
-Reads per-window std data from:
-    std_data/<dataset>.parquet
+  Rows    : the auto-discovered datasets (one std_data parquet each).
+  Columns : one headline metric per facet, GROUPED and traceable to a section
+            in 8.1-8.8, oriented so that "more dynamic" -> darker.
+  Spine   : a Dynamic-Index column (mean of the per-column normalised
+            intensities) that sets the row order.
+  Colour  : per-column min-max normalised intensity, Blues colormap
+            (darker = more dynamic). The REAL value is printed in every cell;
+            colour only encodes the within-column ranking.
 
-For each dataset × signal:
-    - Computes median(std(window)) → 10×6 raw matrix (real physical units)
-    - Applies per-column min-max normalization → drives colormap
-    - Sorts rows by rank-sum (most dynamic on top)
+Most columns are cheap and come straight from std_data, which is the single
+source of truth for windowed analysis. Two facets that std_data simply cannot
+express -- frame-level stationarity (8.1) and state-space occupancy (8.5) --
+need one streaming pass over the frame layer. Set COMPUTE_FRAME_METRICS = False
+to skip that pass entirely and drop those two columns for a fast,
+std_data-only run.
 
-Cell annotation:
-    - Line 1 (large): normalized value (0.00–1.00)
-    - Line 2 (small): real median std value with unit
+Honest caveats (carried into the §8.9 methodology):
+  * The columns are correlated by construction (a calm dataset is calm on most
+    of them). That redundancy is a finding, not a bug -- the eye should SEE the
+    same light/dark stripe repeat across a row.
+  * Per-column min-max stretches the contrast: a column where all datasets are
+    nearly identical still spans light->dark. That is why the real value is
+    printed in every cell -- read the numbers, not just the shade.
+  * sigma Yaw (8.6) doubles as the cornering / geometry proxy for 8.4, and IQR
+    of sigma-speed (8.3) is a homogeneity proxy, not the literal per-time band
+    width.
 
-Single shared colorbar on the right (YlOrRd).
-
-Output:
-    figures/heatmap/summary_heatmap.png
-
-Usage:
-    python heatmap_analysis.py
-    python heatmap_analysis.py /path/to/inertial_exploratory_analysis
+Strict matplotlib: pure defaults, dpi=300. The only deliberate deviation is a
+single small font size for in-cell text and the column-group labels, which is
+the documented latitude every packed grid figure in this thesis uses.
 """
 
-import sys
-import warnings
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
-warnings.filterwarnings("ignore")
+try:
+    from tqdm import tqdm
+except Exception:  # tqdm is optional -> degrade to a no-op
+    def tqdm(x, **kwargs):
+        return x
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CONFIGURATION
-# ─────────────────────────────────────────────────────────────────────────────
+# ────────────────────────────── paths ──────────────────────────────
+PROJECT_ROOT = Path("/Users/edward/Downloads")
+INERTIAL_DIR = PROJECT_ROOT / "dataset" / "inertial_data"
+STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
+OUT_DIR = PROJECT_ROOT / "bachelor-arbeit" / "inertial_exploratory_analysis" / "figures" / "summary"
 
-DATASETS = [
-    "4seasons", "a2d2", "hdd", "boreas_rt", "durlar", "ford", "kitti", "kitti360",
-    "nuscene", "nvidia", "oxford", "waymo", "zod", "kitscenes",
-]
-
-# (parquet_column, display_label, unit_string)
-SIGNALS = [
-    ("std_speed_kmh",  "σ(speed)",    "km/h"),
-    ("std_acc_mag",    "σ(acc_mag)",  "m/s²"),
-    ("std_yaw_rate",   "σ(yaw_rate)", "°/s"),
-]
-
-# Physical validity bounds — applied at visualization time only (NaN masking).
-# std_yaw_rate bound is in °/s (applied AFTER rad→deg conversion).
-# All other bounds in native signal units. Never modifies source data.
-SIGNAL_BOUNDS = {
-    "std_speed_kmh":  (0.0, 200.0),
-    "std_acc_mag":    (0.0,  20.0),
-}
-# Yaw rate bound expressed in °/s — applied after rad→deg conversion
-YAW_RATE_BOUND_DEG = 90.0
-
-# Yaw rate: stored in rad/s in std_data → convert to °/s for display
-YAW_RATE_COL = "std_yaw_rate"
-RAD_TO_DEG   = 180.0 / np.pi
-
-# Stationary window filter (toggle — keep False to preserve true bias)
-FILTER_STATIONARY = False
-MIN_STD_SPEED_KMH = 0.5   # only used if FILTER_STATIONARY = True
-
-WINDOW_S = 20
-STEP_S   = 10
-DPI      = 300
-
-COLORMAP = "Blues"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# PATH RESOLUTION
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _find_roots() -> tuple[Path, Path]:
-    """
-    Returns (project_root, data_root).
-    project_root → bachelor-arbeit/inertial_exploratory_analysis/
-    data_root    → dataset/std_data/
-    """
-    if len(sys.argv) > 1:
-        project_root = Path(sys.argv[1]).expanduser().resolve()
-    else:
-        script_dir = Path(__file__).resolve().parent
-        candidates = [
-            script_dir,
-            script_dir.parent,
-            Path.home() / "Downloads" / "bachelor-arbeit" / "inertial_exploratory_analysis",
-        ]
-        project_root = next(
-            (p for p in candidates if (p / "figures").exists() or p.name == "inertial_exploratory_analysis"),
-            script_dir,
-        )
-
-    # std_data lives in the dataset folder, sibling to bachelor-arbeit
-    data_candidates = [
-        project_root.parent.parent / "dataset" / "std_data",
-        project_root.parent / "dataset" / "std_data",
-        Path.home() / "Downloads" / "dataset" / "std_data",
-    ]
-    data_root = next((p for p in data_candidates if p.exists()), data_candidates[-1])
-
-    return project_root, data_root
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# DATA LOADING
-# ─────────────────────────────────────────────────────────────────────────────
-
-def load_std_data(data_root: Path) -> dict[str, pd.DataFrame]:
-    """Load std_data parquet for each dataset. Returns dict dataset → DataFrame."""
-    data = {}
-    for ds in DATASETS:
-        path = data_root / f"{ds}.parquet"
-        if not path.exists():
-            print(f"  [WARN] Missing: {path} — skipping {ds}")
-            continue
-        df = pd.read_parquet(path)
-
-        # Apply physical validity bounds (NaN masking — source data never modified)
-        for col, (lo, hi) in SIGNAL_BOUNDS.items():
-            if col in df.columns:
-                mask = (df[col] < lo) | (df[col] > hi)
-                n_masked = mask.sum()
-                if n_masked > 0:
-                    df.loc[mask, col] = np.nan
-                    print(f"  [BOUNDS] {ds}.{col}: masked {n_masked:,} out-of-range values")
-
-        # Convert yaw_rate rad/s → °/s, then apply °/s bound
-        if YAW_RATE_COL in df.columns:
-            df[YAW_RATE_COL] = df[YAW_RATE_COL] * RAD_TO_DEG
-            mask = df[YAW_RATE_COL] > YAW_RATE_BOUND_DEG
-            n_masked = mask.sum()
-            if n_masked > 0:
-                df.loc[mask, YAW_RATE_COL] = np.nan
-                print(f"  [BOUNDS] {ds}.{YAW_RATE_COL}: masked {n_masked:,} values > {YAW_RATE_BOUND_DEG}°/s")
-
-        # Optional stationary filter
-        if FILTER_STATIONARY and "std_speed_kmh" in df.columns:
-            before = len(df)
-            df = df[df["std_speed_kmh"] >= MIN_STD_SPEED_KMH]
-            after = len(df)
-            if before > after:
-                print(f"  [FILTER] {ds}: removed {before - after:,} stationary windows "
-                      f"({100*(before-after)/before:.1f}%)")
-
-        data[ds] = df
-        print(f"  [OK] {ds}: {len(df):,} windows loaded")
-
-    return data
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# BUILD RAW MATRIX
-# ─────────────────────────────────────────────────────────────────────────────
-
-def build_raw_matrix(data: dict[str, pd.DataFrame]) -> pd.DataFrame:
-    """
-    Build 10×6 raw matrix of median(std(window)) per dataset per signal.
-    Rows = datasets, columns = signal display labels.
-    Values in real physical units.
-    """
-    rows = {}
-    for ds in DATASETS:
-        if ds not in data:
-            rows[ds] = {label: np.nan for _, label, _ in SIGNALS}
-            continue
-        df = data[ds]
-        row = {}
-        for col, label, _ in SIGNALS:
-            if col in df.columns:
-                row[label] = df[col].median()
-            else:
-                print(f"  [WARN] {ds}: column '{col}' not found — NaN")
-                row[label] = np.nan
-        rows[ds] = row
-
-    matrix = pd.DataFrame(rows).T   # datasets × signals
-    matrix.index.name = "dataset"
-    return matrix
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# NORMALIZE & SORT
-# ─────────────────────────────────────────────────────────────────────────────
-
-def normalize_per_column(matrix: pd.DataFrame) -> pd.DataFrame:
-    """Per-column min-max normalization → all values in [0, 1]."""
-    norm = matrix.copy()
-    for col in norm.columns:
-        col_min = norm[col].min()
-        col_max = norm[col].max()
-        denom = col_max - col_min
-        if denom == 0:
-            norm[col] = 0.0
-        else:
-            norm[col] = (norm[col] - col_min) / denom
-    return norm
-
-
-def sort_by_rank_sum(matrix: pd.DataFrame, norm: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Sort rows by sum of per-column ranks (descending = most dynamic on top).
-    Applies same order to both raw matrix and normalized matrix.
-    """
-    ranks = norm.rank(axis=0, ascending=True, na_option="bottom")
-    rank_sums = ranks.sum(axis=1)
-    order = rank_sums.sort_values(ascending=False).index
-    return matrix.loc[order], norm.loc[order]
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# PLOT
-# ─────────────────────────────────────────────────────────────────────────────
-
-# Dataset display names (title-cased, consistent with rest of pipeline)
-DATASET_DISPLAY = {
-    "4seasons":   "4 Seasons",
-    "a2d2":      "A2D2",
-    "hdd":       "HDD",
-    "boreas_rt": "Boreas",
-    "durlar":    "DurLAR",
-    "ford":      "Ford",
-    "kitti":     "KITTI",
-    "kitti360":  "KITTI-360",
-    "nuscene":   "nuScenes",
-    "nvidia":    "NVIDIA",
-    "oxford":    "Oxford",
-    "waymo":     "Waymo",
-    "zod":       "ZOD",
-    "kitscenes": "KITScenes",
+# ───────────────────────── display names ───────────────────────────
+DISPLAY_NAMES = {
+    "boreas_rt": "Boreas", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
+    "kitti360": "KITTI-360", "nuscene": "nuScenes", "nvidia": "NVIDIA",
+    "oxford": "Oxford", "waymo": "Waymo", "zod": "ZOD",
+    "4seasons": "4Seasons", "hdd": "HDD", "a2d2": "A2D2", "kitscenes": "KITScenes",
 }
 
-# Unit lookup for annotation
-SIGNAL_UNITS = {label: unit for _, label, unit in SIGNALS}
+# ───────────────── tier thresholds (speed sigma, km/h) ──────────────
+# near-stationary < t1 ; low [t1,t2) ; medium [t2,t3) ; high >= t3
+T1_SPEED, T2_SPEED, T3_SPEED = 1.0, 5.0, 15.0
+
+# ─────────────────────── frame-pass config ─────────────────────────
+COMPUTE_FRAME_METRICS = True     # False -> skip the frame layer, drop Stat % and Occ
+FRAME_SAMPLE_CLIPS = 3000        # cap clips read per dataset (None = all). Estimates
+                                 # for Stat % / occupancy are stable under sampling, and
+                                 # this keeps NVIDIA (~298k clips) and Waymo tractable.
+N_FRAME_WORKERS = 8
+STATIONARY_KMH = 0.5             # a frame is "stationary" below this speed (8.1)
+
+# occupancy 2-D histogram (speed in m/s) x (a_long in m/s^2) for the 8.5 spread
+OCC_SPEED_BINS = np.linspace(0.0, 40.0, 41)    # 0 - 144 km/h
+OCC_ALONG_BINS = np.linspace(-6.0, 6.0, 41)
+
+# ────────────── physical-validity bounds (NaN-mask only) ────────────
+SPEED_MAX_KMH = 200.0
+RAD2DEG = 180.0 / np.pi
+
+# ──────────────────────────── render ───────────────────────────────
+DPI = 300
+CELL_FS = 8                      # documented heatmap exception: in-cell + group-label font
+
+# ─────────────────────── column definitions ────────────────────────
+# key, on-figure label, section, facet group, invert?, needs frame layer?, print format
+COLUMNS = [
+    dict(key="stat_frac",     label="Stat %",  sec="4.5.1", group="Stationarity", invert=True,  frame=True,  fmt="%.1f"),
+    dict(key="ns_pct",        label="NS %",    sec="4.5.7", group="Stationarity", invert=True,  frame=False, fmt="%.0f"),
+    dict(key="med_sig_speed", label="\u03c3 Spd",  sec="4.5.2", group="Central \u03c3", invert=False, frame=False, fmt="%.1f"),
+    dict(key="med_sig_acc",   label="\u03c3 Acc",  sec="4.5.6", group="Central \u03c3", invert=False, frame=False, fmt="%.2f"),
+    dict(key="med_sig_yaw",   label="\u03c3 Yaw",  sec="4.5.6", group="Central \u03c3", invert=False, frame=False, fmt="%.1f"),
+    dict(key="high_pct",      label="High %",  sec="4.5.7", group="Tail",         invert=False, frame=False, fmt="%.0f"),
+    dict(key="iqr_sig_speed", label="IQR Spd", sec="4.5.3", group="Homog.",       invert=False, frame=False, fmt="%.1f"),
+    dict(key="occ_spread",    label="Occ",     sec="4.5.5", group="Coverage",     invert=False, frame=True,  fmt="%.2f"),
+]
 
 
-def plot_heatmap(matrix: pd.DataFrame, norm: pd.DataFrame, out_path: Path) -> None:
-    """
-    Plot the 10×6 summary heatmap.
-    Color driven by normalized values, cell annotation shows both.
-    """
-    n_rows, n_cols = matrix.shape
+# ══════════════════════════ std_data metrics ═══════════════════════
+def std_metrics(parquet_path):
+    """Cheap per-window-sigma summaries from one dataset's std_data parquet."""
+    df = pd.read_parquet(parquet_path, columns=["std_speed_kmh", "std_acc_mag", "std_yaw_rate"])
+    spd = df["std_speed_kmh"].to_numpy(dtype=float)
+    acc = df["std_acc_mag"].to_numpy(dtype=float)
+    yaw = df["std_yaw_rate"].to_numpy(dtype=float) * RAD2DEG  # rad/s -> deg/s
 
-    fig, ax = plt.subplots(figsize=(13, 7))
+    spd = spd[np.isfinite(spd)]
+    acc = acc[np.isfinite(acc)]
+    yaw = yaw[np.isfinite(yaw)]
 
-    # ── draw colored cells ──────────────────────────────────────────────────
-    cmap = plt.get_cmap(COLORMAP)
-    norm_vals = norm.values.astype(float)   # shape (n_rows, n_cols)
+    out = {k: np.nan for k in
+           ("ns_pct", "high_pct", "med_sig_speed", "med_sig_acc", "med_sig_yaw", "iqr_sig_speed")}
+    if spd.size:
+        out["ns_pct"] = 100.0 * float(np.mean(spd < T1_SPEED))
+        out["high_pct"] = 100.0 * float(np.mean(spd >= T3_SPEED))
+        out["med_sig_speed"] = float(np.median(spd))
+        q25, q75 = np.percentile(spd, [25, 75])
+        out["iqr_sig_speed"] = float(q75 - q25)
+    if acc.size:
+        out["med_sig_acc"] = float(np.median(acc))
+    if yaw.size:
+        out["med_sig_yaw"] = float(np.median(yaw))
+    return out
 
-    for r in range(n_rows):
-        for c in range(n_cols):
-            nv = norm_vals[r, c]
-            color = cmap(nv) if not np.isnan(nv) else (0.85, 0.85, 0.85, 1.0)
-            rect = plt.Rectangle([c, r], 1, 1, color=color)
-            ax.add_patch(rect)
 
-            # ── cell text ───────────────────────────────────────────────────
-            raw_val  = matrix.values[r, c]
-            col_name = matrix.columns[c]
-            unit     = SIGNAL_UNITS.get(col_name, "")
+# ═══════════════════════════ frame metrics ═════════════════════════
+def _accum_clip(clip_path):
+    """Return (n_low_speed, n_valid, occupancy_hist) for one clip."""
+    try:
+        df = pd.read_parquet(clip_path, columns=["speed_kmh", "a_long"])
+    except Exception:
+        df = pd.read_parquet(clip_path)
 
-            # text color: white on dark cells, black on light cells
-            text_color = "white" if (not np.isnan(nv) and nv > 0.5) else "black"
+    spd = df["speed_kmh"].to_numpy(dtype=float) if "speed_kmh" in df.columns else np.empty(0)
+    along = df["a_long"].to_numpy(dtype=float) if "a_long" in df.columns else np.full(spd.shape, np.nan)
 
-            if np.isnan(raw_val):
-                ax.text(c + 0.5, r + 0.5, "N/A",
-                        ha="center", va="center",
-                        fontsize=9, color=text_color)
-            else:
-                # Line 1 (top, bold): normalized value — drives color
-                ax.text(c + 0.5, r + 0.65, f"{nv:.2f}",
-                        ha="center", va="center",
-                        fontsize=10, fontweight="bold", color=text_color)
-                # Line 2 (bottom, small): real value + unit — reference
-                ax.text(c + 0.5, r + 0.30, f"{raw_val:.2f} {unit}",
-                        ha="center", va="center",
-                        fontsize=7.5, color=text_color)
+    valid_spd = np.isfinite(spd) & (spd >= 0.0) & (spd <= SPEED_MAX_KMH)
+    n_valid = int(valid_spd.sum())
+    n_low = int((valid_spd & (spd < STATIONARY_KMH)).sum())
 
-    # ── axes setup ──────────────────────────────────────────────────────────
-    ax.set_xlim(0, n_cols)
-    ax.set_ylim(0, n_rows)
+    sp_ms = spd / 3.6
+    m = np.isfinite(sp_ms) & np.isfinite(along) & (spd <= SPEED_MAX_KMH)
+    H, _, _ = np.histogram2d(sp_ms[m], along[m], bins=[OCC_SPEED_BINS, OCC_ALONG_BINS])
+    return n_low, n_valid, H
 
-    # x-axis: signal labels
-    ax.set_xticks(np.arange(n_cols) + 0.5)
-    ax.set_xticklabels(matrix.columns, fontsize=10)
-    ax.xaxis.set_ticks_position("top")
-    ax.xaxis.set_label_position("top")
 
-    # y-axis: dataset display names (bottom row = index 0 in imshow coords,
-    #         but we drew row 0 at y=0 and the most dynamic is first in matrix)
-    # Flip so most dynamic (row 0) appears at the top visually
-    ax.set_yticks(np.arange(n_rows) + 0.5)
-    ax.set_yticklabels(
-        [DATASET_DISPLAY.get(ds, ds) for ds in matrix.index],
-        fontsize=10
-    )
-    ax.invert_yaxis()   # row 0 → top (most dynamic)
+def _occupancy_entropy(H):
+    """Normalised Shannon entropy of a 2-D occupancy histogram, in [0, 1]."""
+    p = H.ravel()
+    total = p.sum()
+    if total <= 0:
+        return np.nan
+    p = p[p > 0] / total
+    ent = -np.sum(p * np.log(p))
+    return float(ent / np.log(H.size))  # divide by max entropy (uniform over all bins)
 
-    # white grid lines between cells
-    for x in range(n_cols + 1):
-        ax.axvline(x, color="white", linewidth=1.5)
-    for y in range(n_rows + 1):
-        ax.axhline(y, color="white", linewidth=1.5)
 
-    ax.set_xlabel("Kinematic Signal", fontsize=11, labelpad=8)
-    ax.xaxis.set_label_position("top")
-    ax.set_ylabel("Dataset", fontsize=11, labelpad=8)
+def frame_metrics(dataset_dir):
+    """Stat % (8.1) and occupancy spread (8.5) from one streaming pass over clips."""
+    clips = sorted(dataset_dir.glob("clip_*.parquet"))
+    if not clips:
+        return {"stat_frac": np.nan, "occ_spread": np.nan}
 
-    # remove default ticks
-    ax.tick_params(left=False, top=False)
-    for spine in ax.spines.values():
-        spine.set_visible(False)
+    if FRAME_SAMPLE_CLIPS and len(clips) > FRAME_SAMPLE_CLIPS:
+        rng = np.random.default_rng(0)
+        pick = sorted(rng.choice(len(clips), size=FRAME_SAMPLE_CLIPS, replace=False))
+        clips = [clips[i] for i in pick]
 
-    # ── colorbar ────────────────────────────────────────────────────────────
-    sm = plt.cm.ScalarMappable(cmap=cmap, norm=mcolors.Normalize(vmin=0, vmax=1))
-    sm.set_array([])
-    cbar = fig.colorbar(sm, ax=ax, fraction=0.03, pad=0.02)
-    cbar.set_label("Normalized median σ (per signal)", fontsize=9)
-    cbar.set_ticks([0.0, 0.25, 0.50, 0.75, 1.0])
-    cbar.set_ticklabels(["0.00\n(min)", "0.25", "0.50", "0.75", "1.00\n(max)"])
+    n_low = n_valid = 0
+    Hacc = np.zeros((OCC_SPEED_BINS.size - 1, OCC_ALONG_BINS.size - 1), dtype=float)
+    with ThreadPoolExecutor(max_workers=N_FRAME_WORKERS) as ex:
+        for nl, nv, H in tqdm(ex.map(_accum_clip, clips), total=len(clips),
+                              desc=f"frames:{dataset_dir.name}", leave=False):
+            n_low += nl
+            n_valid += nv
+            Hacc += H
 
-    # ── title ────────────────────────────────────────────────────────────────
-    fig.suptitle(
-        f"Per-Dataset Dynamic Variability — Median Within-Window σ "
-        f"({WINDOW_S}s windows, {STEP_S}s step)",
-        fontsize=11, y=1.02
-    )
+    stat = 100.0 * n_low / n_valid if n_valid else np.nan
+    return {"stat_frac": stat, "occ_spread": _occupancy_entropy(Hacc)}
 
+
+# ══════════════════════════════ build ══════════════════════════════
+def build_table():
+    datasets = [p.stem for p in sorted(STD_DATA_DIR.glob("*.parquet"))]
+    if not datasets:
+        raise SystemExit(f"No std_data parquet files found in {STD_DATA_DIR}")
+
+    records = {}
+    for ds in tqdm(datasets, desc="datasets"):
+        rec = std_metrics(STD_DATA_DIR / f"{ds}.parquet")
+        if COMPUTE_FRAME_METRICS:
+            rec.update(frame_metrics(INERTIAL_DIR / ds))
+        records[ds] = rec
+
+    cols = [c for c in COLUMNS if (COMPUTE_FRAME_METRICS or not c["frame"])]
+    raw = np.array([[records[ds].get(c["key"], np.nan) for c in cols] for ds in datasets], dtype=float)
+    return datasets, cols, raw
+
+
+def normalise(raw, cols):
+    """Per-column min-max -> dynamism intensity in [0, 1]; index = row mean."""
+    inten = np.full_like(raw, np.nan)
+    for j, c in enumerate(cols):
+        col = raw[:, j]
+        finite = np.isfinite(col)
+        if not finite.any():
+            continue
+        lo, hi = np.nanmin(col), np.nanmax(col)
+        t = (col - lo) / (hi - lo) if hi > lo else np.zeros_like(col)
+        if c["invert"]:
+            t = 1.0 - t
+        t = np.asarray(t, dtype=float)
+        t[~finite] = np.nan          # keep missing cells missing, never count them as 0
+        inten[:, j] = t
+    index = np.nanmean(inten, axis=1)
+    return inten, index
+
+
+# ═════════════════════════════ render ══════════════════════════════
+def render(datasets, cols, raw, inten, index):
+    # order rows by the Dynamic Index (descending); NaN-index datasets sink to the bottom
+    key = np.where(np.isfinite(index), index, -np.inf)
+    order = np.argsort(-key)
+    datasets = [datasets[i] for i in order]
+    raw, inten, index = raw[order], inten[order], index[order]
+
+    n_ds, n_col = len(datasets), len(cols)
+    disp = np.column_stack([inten, index])  # last column = the index spine
+
+    fig_w = max(11.0, 1.15 * (n_col + 1) + 3.0)
+    fig_h = max(6.0, 0.46 * n_ds + 2.2)
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h))
+
+    im = ax.imshow(disp, cmap="Blues", vmin=0.0, vmax=1.0, aspect="auto")
+
+    # axis ticks / labels
+    xpos = np.arange(n_col + 1)
+    xlabels = [f'{c["label"]}\n({c["sec"]})' for c in cols] + ["Index\n(0\u2013100)"]
+    ax.set_xticks(xpos)
+    ax.set_xticklabels(xlabels)
+    ax.set_yticks(np.arange(n_ds))
+    ax.set_yticklabels([DISPLAY_NAMES.get(d, d) for d in datasets])
+
+    # headroom above row 0 for the facet-group labels (origin is upper => top is negative)
+    ax.set_ylim(n_ds - 0.5, -1.5)
+
+    # in-cell real values
+    for i in range(n_ds):
+        for j, c in enumerate(cols):
+            v = raw[i, j]
+            if np.isfinite(v):
+                tc = "white" if disp[i, j] > 0.55 else "black"
+                ax.text(j, i, c["fmt"] % v, ha="center", va="center", color=tc, fontsize=CELL_FS)
+        iv = index[i]
+        if np.isfinite(iv):
+            tc = "white" if iv > 0.55 else "black"
+            ax.text(n_col, i, "%.0f" % (iv * 100.0), ha="center", va="center", color=tc, fontsize=CELL_FS)
+
+    # facet-group separators + labels
+    spans, start = [], 0
+    for j in range(1, n_col + 1):
+        if j == n_col or cols[j]["group"] != cols[start]["group"]:
+            spans.append((cols[start]["group"], start, j - 1))
+            start = j
+    for _, a, b in spans[1:]:
+        ax.axvline(a - 0.5, color="black", linewidth=1)
+    ax.axvline(n_col - 0.5, color="black", linewidth=2)  # divide facets from the index spine
+
+    ax.axhline(-1.5, color="black", linewidth=1)   # top border
+    ax.axhline(-0.5, color="black", linewidth=1)   # line between labels and heatmap
+
+    for name, a, b in spans:
+        ax.text((a + b) / 2.0, -0.95, name, ha="center", va="center", fontsize=CELL_FS)
+    ax.text(n_col, -0.95, "Index", ha="center", va="center", fontsize=CELL_FS)
+
+    cbar = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02)
+    cbar.set_label("column-normalised intensity (darker = more dynamic)")
+
+    ax.set_title("Dynamic-content summary across datasets")
     fig.tight_layout()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = OUT_DIR / "heatmap_summary.png"
     fig.savefig(out_path, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
+    return out_path
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# MAIN
-# ─────────────────────────────────────────────────────────────────────────────
-
+# ═══════════════════════════════ main ══════════════════════════════
 def main():
-    project_root, data_root = _find_roots()
-    out_path = project_root / "figures" / "heatmap" / "summary_heatmap.png"
+    datasets, cols, raw = build_table()
 
-    print(f"Project root : {project_root}")
-    print(f"std_data root: {data_root}")
-    print(f"Output       : {out_path}")
-    print()
+    # echo the assembled numbers so they can be eyeballed and reused in prose
+    table = pd.DataFrame(raw, index=[DISPLAY_NAMES.get(d, d) for d in datasets],
+                         columns=[c["key"] for c in cols])
+    inten, index = normalise(raw, cols)
+    table["INDEX_0_100"] = np.round(index * 100.0, 1)
+    table = table.sort_values("INDEX_0_100", ascending=False)
+    pd.set_option("display.width", 200, "display.max_columns", 50)
+    print("\nSummary metrics (real values):\n")
+    print(table.round(3).to_string())
 
-    print("Loading std_data...")
-    data = load_std_data(data_root)
-    print()
-
-    print("Building raw matrix (median per dataset per signal)...")
-    matrix = build_raw_matrix(data)
-    print(matrix.to_string())
-    print()
-
-    print("Normalizing per column (min-max)...")
-    norm = normalize_per_column(matrix)
-
-    print("Sorting rows by rank-sum (most dynamic on top)...")
-    matrix, norm = sort_by_rank_sum(matrix, norm)
-    print("Row order:", list(matrix.index))
-    print()
-
-    print("Plotting heatmap...")
-    plot_heatmap(matrix, norm, out_path)
-    print(f"✓ Heatmap saved → {out_path}")
+    out_path = render(datasets, cols, raw, inten, index)
+    print(f"\nOutput: {out_path}")
 
 
 if __name__ == "__main__":

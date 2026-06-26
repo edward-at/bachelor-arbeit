@@ -14,8 +14,8 @@ v2 CHANGES:
   4. Optional LOG_SCALE toggle for a supplementary view.
 
 Reads pre-computed per-window std data from std_data/<dataset>.parquet and
-produces 6 publication-quality PNG figures (one per signal) comparing
-within-window signal variability across all 10 qualified datasets.
+produces 3 publication-quality PNG figures (one per signal) comparing
+within-window signal variability across all 14 datasets.
 
 Plot design per figure:
   - Half-violin (right side, KDE clipped at physical bounds) in dataset color
@@ -67,10 +67,10 @@ DATASETS = [
 ]
 
 DISPLAY_NAMES = {
-    "4seasons":   "4 Seasons",
+    "4seasons":  "4 Seasons",
     "a2d2":      "A2D2",
     "hdd":       "HDD",
-    "boreas_rt": "Boreas",
+    "boreas_rt": "Boreas RT",
     "durlar":    "DurLAR",
     "ford":      "Ford",
     "kitti":     "KITTI",
@@ -92,7 +92,7 @@ DATASET_COLORS = {
     "4seasons":   TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
     "hdd":       TUM_SECONDARY['gray'],
-    "kitscenes": TUM_SECONDARY['light_gray'],
+    "kitscenes": TUM_PRIMARY['black'],
     "boreas_rt": TUM_EXT['maroon'],
     "durlar":    TUM_SECONDARY['blue1'],
     "ford":      TUM_EXT['orange'],
@@ -132,7 +132,7 @@ SIGNALS = [
         "title":     "Standard Deviation of Acceleration Magnitude Comparison",
         "ylabel":    "σ(acc_mag) [m/s²]",
         "clip_lo":   0.0,
-        "clip_hi":   20.0,
+        "clip_hi":   21.3,
         "yaw_conv":  False,
     },
     {

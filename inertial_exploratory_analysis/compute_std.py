@@ -1,15 +1,23 @@
 """
-compute_std.py  (v3 — bounds-masked stds on the 10 Hz common grid)
+compute_std.py  (v4 — per-window variability stds + feature means on the 10 Hz grid)
 ────────────────────────────────────────────────────────────────────────────
 Reads inertial_data/<dataset>/clip_XXXX.parquet (10 Hz uniform grid, v3
-standardization) and computes per-window standard deviations.
+standardization) and computes, in a SINGLE per-window pass, BOTH:
+  • within-window standard deviations  — the variability signature (Chapter 8)
+  • within-window feature means         — the regime feature vector (Chapter 9)
 
-Output schema (3-signal variant — speed, accel-magnitude, yaw rate):
+Output schema:
   clip_id, window_idx, window_start_s, window_end_s, n_frames,
-  std_speed_kmh, std_acc_mag, std_yaw_rate
+  # variability channels (Chapter 8):
+  std_speed_kmh, std_acc_mag, std_yaw_rate,
+  # feature-mean channels (Chapter 9):
+  mean_speed_kmh, mean_acc_pos, mean_acc_neg,
+  mean_abs_a_lat, mean_abs_yaw_rate, mean_abs_jerk
 
-  acc_mag is read directly from the standardized clips (computed upstream as
-  sqrt(a_long^2 + a_lat^2)); only the physical-validity bound is applied here.
+  acc_mag and jerk_mag are read DIRECTLY from the standardized clips (computed
+  upstream as sqrt(a_long^2 + a_lat^2) and sqrt(jerk_long^2 + jerk_lat^2)) and
+  are never re-derived here. The longitudinal accel/decel split is taken as the
+  positive and negative parts of a_long.
 
 ─── CHANGES vs v1 ──────────────────────────────────────────────────────────
   1. MIN_VALID_FRAC rule: a signal's std is NaN unless at least
@@ -27,6 +35,23 @@ Output schema (3-signal variant — speed, accel-magnitude, yaw rate):
      visualization layer) applied per signal before windowing. Residual
      impossible values (e.g. one 5,000 km/h frame) no longer inflate window
      stds; the MIN_VALID rule then governs windows that lose too many frames.
+
+─── CHANGES vs v3 ──────────────────────────────────────────────────────────
+  5. FEATURE MEANS: the same per-window pass now ALSO emits six mean_*
+     channels that form the per-window feature vector consumed by the regime
+     clustering of Chapter 9. Windowing is UNCHANGED (20 s / 10 s / 50 %
+     overlap); only extra columns are written, so every existing Chapter 8
+     consumer of std_data is unaffected.
+  6. The variability channels collapse acceleration to a single magnitude
+     (std_acc_mag); the feature channels instead RE-SEPARATE longitudinal
+     acceleration (mean_acc_pos), longitudinal deceleration (mean_acc_neg)
+     and lateral acceleration (mean_abs_a_lat), because the clustering needs
+     the directional decomposition that a single magnitude erases.
+  7. acc_mag and jerk_mag are read PRECOMPUTED (never re-derived). The
+     component bounds a_long, a_lat in [-15, 15] and the implied magnitude
+     bound jerk_mag in [0, 42.43] (= sqrt(30^2 + 30^2)) are now also masked
+     before any statistic is taken.
+  8. The MIN_VALID rule governs EVERY per-window statistic — std OR mean.
 ────────────────────────────────────────────────────────────────────────────
 """
 
@@ -50,20 +75,28 @@ WINDOW_S       = 20.0   # window size in seconds
 STEP_S         = 10.0   # step size in seconds (50% overlap)
 GRID_HZ        = 10     # sampling rate of v3 standardized clips (uniform)
 MIN_VALID_FRAC = 0.5    # per signal: min fraction of expected frames that
-                        # must be non-NaN, else std = NaN for that signal
-MIN_VALID_ABS  = 2      # absolute floor (std needs >= 2 points regardless)
-APPLY_BOUNDS   = True   # mask physically impossible values before std
+                        # must be non-NaN, else the statistic = NaN for that signal
+MIN_VALID_ABS  = 2      # absolute floor (a statistic needs >= 2 points regardless)
+APPLY_BOUNDS   = True   # mask physically impossible values before any statistic
 
-# Physical-validity bounds (identical to the visualization layer; yaw_rate in
-# rad/s as stored). Applied as NaN masking at READ time, never modifying the
+# Magnitude bound implied by the per-component jerk bound (±30 m/s^3 per axis),
+# exactly parallel to acc_mag's 21.3 = sqrt(15^2 + 15^2).
+JERK_MAG_BOUND = round(float(np.hypot(30.0, 30.0)), 2)   # 42.43 m/s^3
+
+# Physical-validity bounds (identical to the visualization / frame layer; yaw_rate
+# in rad/s as stored). Applied as NaN masking at READ time, never modifying the
 # source clips. Rationale: a single residual 5,000 km/h frame in a 200-frame
-# window inflates that window's std by orders of magnitude and poisons every
+# window inflates that window's statistic by orders of magnitude and poisons every
 # downstream figure; out-of-bounds fractions remain quantified by the
 # boundary-coverage audit, so nothing is hidden by this masking.
 BOUNDS = {
     "speed_kmh": (0.0,   200.0),
     "acc_mag":   (0.0,    21.3),   # = sqrt(15^2 + 15^2): magnitude implied by the ±15 per-axis bound
-    "yaw_rate":  (-1.57,   1.57),
+    "yaw_rate":  (-1.57,   1.57),  # rad/s, as stored
+    # ── feature-channel sources (v4) ──
+    "a_long":    (-15.0,  15.0),   # per-axis longitudinal acceleration bound
+    "a_lat":     (-15.0,  15.0),   # per-axis lateral acceleration bound
+    "jerk_mag":  (0.0, JERK_MAG_BOUND),
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -74,15 +107,25 @@ INERTIAL_ROOT = Path("/Users/edward/Downloads/dataset/inertial_data")
 STD_ROOT      = Path("/Users/edward/Downloads/dataset/std_data")
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SIGNAL COLUMNS
+# SIGNAL / OUTPUT COLUMNS
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Output signals whose within-window std is written to std_data.
+# ── variability channels (std) — unchanged from v3 ──
 # acc_mag is read directly from the standardized clips (computed there as
 # sqrt(a_long^2 + a_lat^2), already gap/edge-masked) — not recomputed here.
 SIGNAL_COLS = ["speed_kmh", "acc_mag", "yaw_rate"]
 STD_COLS    = ["std_speed_kmh", "std_acc_mag", "std_yaw_rate"]
-NEEDED_COLS = ["t_rel_s"] + SIGNAL_COLS
+
+# ── feature-mean channels (Chapter 9) ──
+# Output mean columns, plus the additional standardized-clip signals they are
+# built from. speed_kmh and yaw_rate are already read for the std channels;
+# acc_mag and jerk_mag are precomputed upstream and read directly.
+MEAN_COLS     = ["mean_speed_kmh", "mean_acc_pos", "mean_acc_neg",
+                 "mean_abs_a_lat", "mean_abs_yaw_rate", "mean_abs_jerk"]
+MEAN_SRC_COLS = ["a_long", "a_lat", "jerk_mag"]
+
+# All columns needed from each clip (deduped, order-preserving).
+NEEDED_COLS = list(dict.fromkeys(["t_rel_s"] + SIGNAL_COLS + MEAN_SRC_COLS))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # HELPERS
@@ -140,13 +183,57 @@ def _window_stds(w_df: pd.DataFrame, duration_s: float) -> dict:
     return stds
 
 
+def _window_means(w_df: pd.DataFrame, duration_s: float) -> dict:
+    """
+    Per-signal within-window MEAN with the SAME MIN_VALID_FRAC rule used for the
+    stds. These six channels form the per-window feature vector consumed by the
+    regime clustering of Chapter 9. A mean built from a handful of surviving
+    frames is as unreliable as a std, so the identical validity gate applies.
+    Longitudinal acceleration is split into its positive (accel) and negative
+    (decel) parts so that the two are not cancelled by averaging over the window.
+    """
+    n_expected = max(1.0, duration_s * GRID_HZ)
+    min_valid  = max(MIN_VALID_ABS, int(np.ceil(MIN_VALID_FRAC * n_expected)))
+
+    out = {c: float("nan") for c in MEAN_COLS}
+
+    # translational pace
+    v = w_df["speed_kmh"]
+    if int(v.notna().sum()) >= min_valid:
+        out["mean_speed_kmh"] = float(v.mean())
+
+    # longitudinal acceleration, split into accel (+) and decel (-) intensity
+    al = w_df["a_long"].to_numpy(dtype=float)
+    al = al[~np.isnan(al)]
+    if al.size >= min_valid:
+        out["mean_acc_pos"] = float(np.maximum(al,  0.0).mean())
+        out["mean_acc_neg"] = float(np.maximum(-al, 0.0).mean())
+
+    # lateral acceleration intensity
+    alat = w_df["a_lat"]
+    if int(alat.notna().sum()) >= min_valid:
+        out["mean_abs_a_lat"] = float(alat.abs().mean())
+
+    # rotational activity (rad/s as stored; deg conversion deferred to viz)
+    yr = w_df["yaw_rate"]
+    if int(yr.notna().sum()) >= min_valid:
+        out["mean_abs_yaw_rate"] = float(yr.abs().mean())
+
+    # total jerk intensity (jerk_mag is precomputed and already non-negative)
+    jm = w_df["jerk_mag"]
+    if int(jm.notna().sum()) >= min_valid:
+        out["mean_abs_jerk"] = float(jm.mean())
+
+    return out
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # WINDOW COMPUTATION
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _compute_windows_for_clip(fp: Path) -> list[dict]:
     """
-    Extract all windows from a single clip and compute std per signal.
+    Extract all windows from a single clip and compute std AND mean per signal.
 
     Windowing rules (unchanged):
     - t_max >= WINDOW_S : sliding window with STEP_S step
@@ -165,7 +252,9 @@ def _compute_windows_for_clip(fp: Path) -> list[dict]:
 
     # ── short clip: 1 clip = 1 window ────────────────────────────────────────
     if t_max - t_min < WINDOW_S:
-        stds = _window_stds(df, duration_s=t_max - t_min)
+        dur   = t_max - t_min
+        stds  = _window_stds(df,  duration_s=dur)
+        means = _window_means(df, duration_s=dur)
         rows.append({
             "clip_id":        clip_id,
             "window_idx":     0,
@@ -173,6 +262,7 @@ def _compute_windows_for_clip(fp: Path) -> list[dict]:
             "window_end_s":   t_max,
             "n_frames":       len(df),
             **stds,
+            **means,
         })
         return rows
 
@@ -184,7 +274,8 @@ def _compute_windows_for_clip(fp: Path) -> list[dict]:
         mask  = (t >= t_start) & (t < t_end)
         w_df  = df[mask]
         if len(w_df) >= 2:
-            stds = _window_stds(w_df, duration_s=WINDOW_S)
+            stds  = _window_stds(w_df,  duration_s=WINDOW_S)
+            means = _window_means(w_df, duration_s=WINDOW_S)
             rows.append({
                 "clip_id":        clip_id,
                 "window_idx":     window_idx,
@@ -192,6 +283,7 @@ def _compute_windows_for_clip(fp: Path) -> list[dict]:
                 "window_end_s":   float(t_end),
                 "n_frames":       int(mask.sum()),
                 **stds,
+                **means,
             })
             window_idx += 1
         t_start += STEP_S
@@ -223,6 +315,10 @@ def _process_dataset(args: tuple) -> dict | None:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     result_df = pd.DataFrame(all_rows)
+    # Stable column order: identifiers, then variability channels, then features.
+    ordered = (["clip_id", "window_idx", "window_start_s", "window_end_s", "n_frames"]
+               + STD_COLS + MEAN_COLS)
+    result_df = result_df[[c for c in ordered if c in result_df.columns]]
     result_df.to_parquet(out_path, index=False)
     n_windows = len(result_df)
 
@@ -256,11 +352,12 @@ def main():
     t_start   = datetime.now()
 
     print(f"\n{'='*65}")
-    print(f"  compute_std.py  (v2 — 10 Hz common grid)")
+    print(f"  compute_std.py  (v4 — variability stds + feature means)")
     print(f"  Window: {WINDOW_S}s   Step: {STEP_S}s   Grid: {GRID_HZ} Hz")
-    print(f"  Min valid: {MIN_VALID_FRAC:.0%} of expected frames per signal")
-    print(f"  Bounds masking: {'ON' if APPLY_BOUNDS else 'OFF'}")
-    print(f"  Signals: {SIGNAL_COLS}")
+    print(f"  Min valid: {MIN_VALID_FRAC:.0%} of expected frames per statistic")
+    print(f"  Bounds masking: {'ON' if APPLY_BOUNDS else 'OFF'}  (jerk_mag ≤ {JERK_MAG_BOUND})")
+    print(f"  Variability stds: {STD_COLS}")
+    print(f"  Feature means:    {MEAN_COLS}")
     print(f"  Datasets found: {len(datasets)}")
     print(f"  Workers: {n_workers}  (CPU cores: {os.cpu_count()})")
     print(f"  Input  → {INERTIAL_ROOT}")

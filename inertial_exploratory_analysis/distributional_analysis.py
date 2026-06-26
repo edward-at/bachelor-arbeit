@@ -13,7 +13,7 @@ Per-dataset signal histograms (thesis Section 4.5.1 / 8.1).
      none of the compute.
   2. Streaming mode is leaner: bounds-filtering happens per batch and only
      filtered float32 arrays are kept, instead of concatenating full frames.
-  3. DATASET_COLORS completed with durlar (gold) and zod (red) — previously
+  3. DATASET_COLORS completed with durlar (blue1) and zod (red) — previously
      both silently fell back to the same blue.
 ────────────────────────────────────────────────────────────────────────────
 """
@@ -81,7 +81,7 @@ DATASET_COLORS = {
     "4seasons":   TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
     "hdd":       TUM_SECONDARY['gray'],
-    "kitscenes": TUM_SECONDARY['light_gray'],
+    "kitscenes": TUM_PRIMARY['black'],
     "boreas_rt": TUM_EXT['maroon'],
     "durlar":    TUM_SECONDARY['blue1'],
     "ford":      TUM_EXT['orange'],
@@ -175,6 +175,13 @@ BATCH_SIZE = 5_000          # clip files concatenated per streaming batch
 # ─────────────────────────────────────────────────────────────────────────────
 # DATA LOADING + SIGNAL EXTRACTION
 # ─────────────────────────────────────────────────────────────────────────────
+
+DISPLAY_NAMES = {
+    "boreas_rt": "Boreas RT", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
+    "kitti360": "KITTI-360", "nuscene": "nuScenes", "nvidia": "NVIDIA",
+    "oxford": "Oxford", "waymo": "Waymo", "zod": "ZOD",
+    "4seasons": "4Seasons", "hdd": "HDD", "a2d2": "A2D2", "kitscenes": "KITScenes"
+}
 
 SIGNAL_COLS = ["speed_kmh", "a_long", "a_lat", "jerk_long", "jerk_lat", "yaw_rate"]
 
@@ -387,7 +394,7 @@ def plot_signal(dataset_name: str,
 
         ax.set_xlim(xlim_lo, xlim_hi)
 
-    ax.set_title(f"{sig['label']} Distribution — {dataset_name.upper()} ")
+    ax.set_title(f"{sig['label']} Distribution ({DISPLAY_NAMES.get(dataset_name, dataset_name)})")
     ax.set_xlabel(sig["xlabel"])
     ax.set_ylabel("Fraction of frames")
     ax.grid(True)
