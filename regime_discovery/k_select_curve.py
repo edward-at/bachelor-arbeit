@@ -29,8 +29,8 @@ def main():
 
     fig, (axL, axR) = plt.subplots(1, 2, figsize=(11, 4.5))
 
-    axL.plot(df["k"], df["silhouette"], color=TUM_ACCENT["blue"], linewidth=2, label="silhouette")
-    axL.plot(df["k"], df["null"], color=TUM_SECONDARY["gray"], linewidth=2, label="null baseline")
+    axL.plot(df["k"], df["silhouette"], color=TUM_ACCENT["green"], linewidth=2, label="silhouette")
+    axL.plot(df["k"], df["null"], color=TUM_ACCENT["blue"], linewidth=2, label="null baseline")
     axL.axvline(k_sel, color=TUM_SECONDARY["dark_gray"], linewidth=1.5, label=f"selected k = {k_sel}")
     axL.set_xlabel("number of clusters k")
     axL.set_ylabel("mean silhouette")

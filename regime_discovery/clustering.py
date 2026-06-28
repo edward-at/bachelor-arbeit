@@ -183,8 +183,10 @@ def main():
     # ── fit scaler + PCA (viz) on the FIT population ──────────────────────────
     scaler = StandardScaler().fit(fit[FEATURES])
     Xfit   = scaler.transform(fit[FEATURES])
-    pca    = PCA(n_components=2, random_state=SEED).fit(Xfit)
+    pca    = PCA(n_components=3, random_state=SEED).fit(Xfit)
+    print(f"  PCA per-component %: {np.round(pca.explained_variance_ratio_ * 100, 1)}  cumulative %: {np.round(np.cumsum(pca.explained_variance_ratio_) * 100, 1)}")
     evr    = float(pca.explained_variance_ratio_[:2].sum())
+    evr3   = float(pca.explained_variance_ratio_[:3].sum())
 
     # ── k sweep with null-baseline silhouette gap ─────────────────────────────
     rows = []
@@ -197,7 +199,7 @@ def main():
     curves = pd.DataFrame(rows)
     k_sel  = int(curves.loc[curves["silhouette"].idxmax(), "k"])
 
-    print(f"\n  k sweep (PC1+PC2 explain {evr*100:.1f}% of variance):")
+    print(f"\n  k sweep (PC1+PC2 explain {evr*100:.1f}%, PC1-PC3 explain {evr3*100:.1f}% of variance):")
     print(f"    {'k':>3}{'inertia':>12}{'silhouette':>13}{'null':>9}{'gap':>8}")
     for _, r in curves.iterrows():
         print(f"    {int(r['k']):>3}{r['inertia']:>12,.0f}{r['silhouette']:>13.3f}"
@@ -225,7 +227,7 @@ def main():
     raw  = km.predict(Xall)
     full["regime"] = np.vectorize(label_map.get)(raw)
     pcs = pca.transform(Xall)
-    full["pc1"], full["pc2"] = pcs[:, 0], pcs[:, 1]
+    full["pc1"], full["pc2"], full["pc3"] = pcs[:, 0], pcs[:, 1], pcs[:, 2]
 
     # ── per-regime profile (physical units, ASSIGN population) ────────────────
     prof = (full.groupby("regime")[FEATURES].mean()
@@ -237,7 +239,7 @@ def main():
 
     # ── persist (parquet only) ────────────────────────────────────────────────
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
-    full[BACKREF + ["regime", "pc1", "pc2"]].to_parquet(
+    full[BACKREF + ["regime", "pc1", "pc2", "pc3"]].to_parquet(
         ARTIFACT_DIR / "cluster_assignments.parquet", index=False)
     prof.reset_index().to_parquet(ARTIFACT_DIR / "cluster_profile.parquet", index=False)
     curves.to_parquet(ARTIFACT_DIR / "kselect_curves.parquet", index=False)

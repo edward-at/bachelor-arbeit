@@ -8,6 +8,9 @@ feature is darkest in that column), while the cell annotation is the mean in
 physical units. This is the figure that turns the regime labels from assertions
 into something the reader can verify.
 
+Row labels come from regime_style.py (the single source of truth) so this figure
+names regime 0 identically to every other figure in the chapter — never "Regime 0".
+
 Thin reader of dataset/regime_data/cluster_profile.parquet — no recomputation,
 no model JSON. Same arrangement as the Section 4.5 figures over std_data.
 ────────────────────────────────────────────────────────────────────────────
@@ -18,6 +21,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from regime_style import regime_label            # ← single source of truth for labels
 
 PROJECT_ROOT    = Path("/Users/edward/Downloads")
 REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
@@ -48,7 +52,8 @@ def main():
     ax.set_xticks(range(len(feats)))
     ax.set_yticks(range(len(df)))
     ax.set_xticklabels([LABELS.get(f, f) for f in feats], rotation=30, ha="right")
-    ax.set_yticklabels([f"Regime {int(r)}\n({s:.0f}%)"
+    # behavioural names from regime_style — identical to every other figure
+    ax.set_yticklabels([f"{regime_label(int(r))}\n({s:.0f}%)"
                         for r, s in zip(df["regime"], df["share_pct"])])
     ax.set_title("Dynamic regime feature profiles  (cell: mean in physical units)")
 

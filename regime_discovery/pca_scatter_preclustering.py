@@ -2,17 +2,17 @@
 pca_scatter_preclustering.py  —  Section 4.6.3 figure
 ────────────────────────────────────────────────────────────────────────────
 The windows in the 2-D PCA plane BEFORE any labels are imposed — the structure
-the clustering must recover, shown independently of the algorithm that will
-partition it. A fixed-seed subsample is drawn for rendering only; the partition
-itself uses every window. The two displayed components explain the variance
-reported in Section 4.6 — state that figure in the caption.
+the clustering must recover. The view is cropped to the central 98 % of windows
+so the dense region is legible (sparse outliers beyond are omitted — state this
+in the caption). A fixed-seed subsample is drawn for rendering only.
 
-Thin reader of dataset/regime_data/cluster_assignments.parquet — no model JSON.
+Thin reader of dataset/regime_data/cluster_assignments.parquet — no model file.
 ────────────────────────────────────────────────────────────────────────────
 """
 
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from tum_colors import TUM_SECONDARY
@@ -20,14 +20,23 @@ from tum_colors import TUM_SECONDARY
 PROJECT_ROOT    = Path("/Users/edward/Downloads")
 REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
 OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "regime_discovery" / "figures" / "pca"
-N_PLOT          = 30000      # subsample for rendering only (clustering uses all windows)
-SEED            = 42
-DPI             = 300
+
+N_PLOT             = 30000       # subsample for rendering only (clustering uses all windows)
+SEED               = 42
+CROP_PCT           = (1, 99)     # zoom to this percentile range per axis
+EXPLAINED_VAR_PCT  = 59.8        # PC1+PC2 variance share — from clustering.py (seed 42, fixed)
+DPI                = 300
 
 
 def main():
     df = pd.read_parquet(REGIME_DATA_DIR / "cluster_assignments.parquet", columns=["pc1", "pc2"])
-    s  = df.sample(min(N_PLOT, len(df)), random_state=SEED)
+
+    # data-driven zoom: crop to the central CROP_PCT of windows, with a little padding
+    x_lo, x_hi = np.percentile(df["pc1"], CROP_PCT)
+    y_lo, y_hi = np.percentile(df["pc2"], CROP_PCT)
+    px, py = 0.05 * (x_hi - x_lo), 0.05 * (y_hi - y_lo)
+
+    s = df.sample(min(N_PLOT, len(df)), random_state=SEED)
 
     fig, ax = plt.subplots(figsize=(6.4, 6.0))
     # `s` (marker size) is the single deviation from the strict style: a
@@ -35,7 +44,10 @@ def main():
     ax.scatter(s["pc1"], s["pc2"], color=TUM_SECONDARY["blue2"], alpha=0.25, s=4, edgecolor="none")
     ax.set_xlabel("PC 1")
     ax.set_ylabel("PC 2")
-    ax.set_title("Windows in PCA space (before clustering)")
+    ax.set_title(f"Windows in PCA space (before clustering)\n"
+                 f"PC1+PC2 capture {EXPLAINED_VAR_PCT:.1f}% of the 5-D feature variance")
+    ax.set_xlim(x_lo - px, x_hi + px)
+    ax.set_ylim(y_lo - py, y_hi + py)
     ax.grid(True); ax.set_axisbelow(True)
 
     fig.tight_layout()
