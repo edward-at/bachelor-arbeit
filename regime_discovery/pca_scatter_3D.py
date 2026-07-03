@@ -42,7 +42,7 @@ SHOW                  = False      # True → open an interactive window to rota
 DPI                   = 300
 
 # Must match pca_scatter_labelled.py exactly so the figures stay consistent.
-REGIME_LABELS = ["Calm Driving", "Highway Cruising", "Turning", "Braking", "Accelerating"]
+REGIME_LABELS = ["Calm/Stationary", "Highway Cruising", "Turning", "Braking", "Accelerating"]
 REGIME_COLORS = [TUM_SECONDARY["blue2"], TUM_EXT["maroon"], TUM_EXT["orange"],
                  TUM_EXT["dark_green"], TUM_EXT["purple"]]
 

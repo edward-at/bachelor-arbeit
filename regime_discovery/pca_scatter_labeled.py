@@ -37,7 +37,7 @@ EXPLAINED_VAR_PCT  = 59.8        # PC1+PC2 variance share — from clustering.py
 DPI                = 300
 
 # Behavioural regime names, ordered 0..k-1 (0 = calmest). Read off the profile.
-REGIME_LABELS = ["Calm Driving", "Highway Cruising", "Turning", "Braking", "Accelerating"]
+REGIME_LABELS = ["Calm/Stationary", "Highway Cruising", "Turning", "Braking", "Accelerating"]
 # Ordered regime palette (calmest → most dynamic), TUM colours.
 REGIME_COLORS = [TUM_SECONDARY["blue2"], TUM_EXT["maroon"], TUM_EXT["orange"],
                  TUM_EXT["dark_green"], TUM_EXT["purple"]]
@@ -58,7 +58,7 @@ def main():
         g = s[s["regime"] == r]
         # `s` (marker size) — same single deviation as the pre-clustering scatter.
         ax.scatter(g["pc1"], g["pc2"], color=REGIME_COLORS[int(r) % len(REGIME_COLORS)],
-                   alpha=0.30, s=4, edgecolor="none")
+                   alpha=0.50, s=4, edgecolor="none")
     ax.set_xlabel("PC 1")
     ax.set_ylabel("PC 2")
     ax.set_title(f"Dynamic regimes in PCA space\n"

@@ -87,7 +87,7 @@ DATASET_COLORS = {
     "4seasons":   TUM_SECONDARY['blue2'],
     "a2d2":      TUM_SECONDARY['dark_gray'],
     "hdd":       TUM_SECONDARY['gray'],
-    "kitscenes": TUM_SECONDARY['light_gray'],
+    "kitscenes": TUM_PRIMARY['black'],
     "boreas_rt": TUM_EXT['maroon'],
     "durlar":    TUM_SECONDARY['blue1'],
     "ford":      TUM_EXT['orange'],

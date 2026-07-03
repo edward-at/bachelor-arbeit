@@ -41,7 +41,7 @@ def main():
     fig, ax = plt.subplots(figsize=(6.4, 6.0))
     # `s` (marker size) is the single deviation from the strict style: a
     # default-size scatter of tens of thousands of points is unreadable. Minimal.
-    ax.scatter(s["pc1"], s["pc2"], color=TUM_SECONDARY["blue2"], alpha=0.25, s=4, edgecolor="none")
+    ax.scatter(s["pc1"], s["pc2"], color=TUM_SECONDARY["blue2"], alpha=0.4, s=4, edgecolor="none")
     ax.set_xlabel("PC 1")
     ax.set_ylabel("PC 2")
     ax.set_title(f"Windows in PCA space (before clustering)\n"
