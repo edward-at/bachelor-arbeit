@@ -152,10 +152,9 @@ def render(tab, raw, inten):
         ax.text((a + b) / 2.0, -0.95, name, ha="center", va="center", fontsize=CELL_FS)
 
     cbar = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02)
-    cbar.set_label("column-normalised bias intensity (darker = stronger)")
+    cbar.set_label("column normalised bias intensity")
 
-    ax.set_title("Bias fingerprint across datasets — rows ordered by low-dynamic share; "
-                 "* = accel-confounded")
+    ax.set_title("Bias fingerprint across datasets (* = accel-confounded)")
     fig.tight_layout()
 
     out = OUT_DIR / "bias_fingerprint.png"

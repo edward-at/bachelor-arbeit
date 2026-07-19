@@ -148,7 +148,7 @@ def fig_share_ci(tab, refs):
     ax.set_yticks(y)
     ax.set_yticklabels([label(d) for d in t.index])
     ax.set_xlabel("Low-dynamic share (regimes {0, 1}) with 95 % clip-bootstrap CI")
-    ax.set_title(f"RQ1 headline metric with uncertainty (B = {B}, clip-level resampling)")
+    ax.set_title(f"Headline metric with uncertainty (B = {B}, clip-level resampling)")
     ax.grid(True, alpha=0.3)
     ax.set_axisbelow(True)
     ax.legend(loc="lower right")

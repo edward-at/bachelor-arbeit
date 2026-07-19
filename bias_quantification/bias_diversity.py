@@ -74,7 +74,7 @@ def fig_hill_profiles(tab):
                label=f"maximum ({N_REGIMES} regimes)")
     ax.set_xlabel("Diversity order q")
     ax.set_ylabel("Effective number of regimes  $D_q$")
-    ax.set_title("Hill diversity profiles — regime diversity per dataset")
+    ax.set_title("Hill diversity profiles: regime diversity per dataset")
     ax.grid(True, alpha=0.3)
     ax.set_axisbelow(True)
     ax.legend(loc="lower left", ncol=2)

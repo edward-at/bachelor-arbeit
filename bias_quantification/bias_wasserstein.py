@@ -76,10 +76,7 @@ def plot_wasserstein(per, out_dir):
     axes[0].set_yticks(y)
     axes[0].set_yticklabels(names)
 
-    fig.suptitle("Per-channel 1-Wasserstein distance to the pooled reference "
-                 "(quantifies the Chapter 8 ECDFs)\n"
-                 "* = accel-confounded: acc_mag distance reflects signal fidelity, "
-                 "not behaviour")
+    fig.suptitle("Per-channel 1-Wasserstein distance to the pooled reference (* = accel-confounded)")
     fig.tight_layout()
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "bias_wasserstein.png"

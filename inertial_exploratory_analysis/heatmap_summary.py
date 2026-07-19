@@ -13,11 +13,10 @@ A single summary figure for the whole exploratory chapter.
             colour only encodes the within-column ranking.
 
 Most columns are cheap and come straight from std_data, which is the single
-source of truth for windowed analysis. Two facets that std_data simply cannot
-express -- frame-level stationarity (8.1) and state-space occupancy (8.5) --
-need one streaming pass over the frame layer. Set COMPUTE_FRAME_METRICS = False
-to skip that pass entirely and drop those two columns for a fast,
-std_data-only run.
+source of truth for windowed analysis. One facet that std_data simply cannot
+express -- frame-level stationarity (8.1) -- needs one streaming pass over the
+frame layer. Set COMPUTE_FRAME_METRICS = False to skip that pass entirely and
+drop that column for a fast, std_data-only run.
 
 Honest caveats (carried into the §8.9 methodology):
   * The columns are correlated by construction (a calm dataset is calm on most
@@ -67,16 +66,12 @@ DISPLAY_NAMES = {
 T1_SPEED, T2_SPEED, T3_SPEED = 1.0, 5.0, 15.0
 
 # ─────────────────────── frame-pass config ─────────────────────────
-COMPUTE_FRAME_METRICS = True     # False -> skip the frame layer, drop Stat % and Occ
+COMPUTE_FRAME_METRICS = True     # False -> skip the frame layer, drop Stat %
 FRAME_SAMPLE_CLIPS = 3000        # cap clips read per dataset (None = all). Estimates
-                                 # for Stat % / occupancy are stable under sampling, and
-                                 # this keeps NVIDIA (~298k clips) and Waymo tractable.
+                                 # for Stat % are stable under sampling, and this
+                                 # keeps NVIDIA (~298k clips) and Waymo tractable.
 N_FRAME_WORKERS = 8
 STATIONARY_KMH = 0.5             # a frame is "stationary" below this speed (8.1)
-
-# occupancy 2-D histogram (speed in m/s) x (a_long in m/s^2) for the 8.5 spread
-OCC_SPEED_BINS = np.linspace(0.0, 40.0, 41)    # 0 - 144 km/h
-OCC_ALONG_BINS = np.linspace(-6.0, 6.0, 41)
 
 # ────────────── physical-validity bounds (NaN-mask only) ────────────
 SPEED_MAX_KMH = 200.0
@@ -89,14 +84,13 @@ CELL_FS = 8                      # documented heatmap exception: in-cell + group
 # ─────────────────────── column definitions ────────────────────────
 # key, on-figure label, section, facet group, invert?, needs frame layer?, print format
 COLUMNS = [
-    dict(key="stat_frac",     label="Stat %",  sec="4.5.1", group="Stationarity", invert=True,  frame=True,  fmt="%.1f"),
-    dict(key="ns_pct",        label="NS %",    sec="4.5.7", group="Stationarity", invert=True,  frame=False, fmt="%.0f"),
-    dict(key="med_sig_speed", label="\u03c3 Spd",  sec="4.5.2", group="Central \u03c3", invert=False, frame=False, fmt="%.1f"),
-    dict(key="med_sig_acc",   label="\u03c3 Acc",  sec="4.5.6", group="Central \u03c3", invert=False, frame=False, fmt="%.2f"),
-    dict(key="med_sig_yaw",   label="\u03c3 Yaw",  sec="4.5.6", group="Central \u03c3", invert=False, frame=False, fmt="%.1f"),
-    dict(key="high_pct",      label="High %",  sec="4.5.7", group="Tail",         invert=False, frame=False, fmt="%.0f"),
-    dict(key="iqr_sig_speed", label="IQR Spd", sec="4.5.3", group="Homog.",       invert=False, frame=False, fmt="%.1f"),
-    dict(key="occ_spread",    label="Occ",     sec="4.5.5", group="Coverage",     invert=False, frame=True,  fmt="%.2f"),
+    dict(key="stat_frac",     label="Stat %",   group="Stationarity", invert=True,  frame=True,  fmt="%.1f"),
+    dict(key="ns_pct",        label="NS %",     group="Stationarity", invert=True,  frame=False, fmt="%.0f"),
+    dict(key="med_sig_speed", label="\u03c3 Spd",   group="Central \u03c3", invert=False, frame=False, fmt="%.1f"),
+    dict(key="med_sig_acc",   label="\u03c3 Acc",   group="Central \u03c3", invert=False, frame=False, fmt="%.2f"),
+    dict(key="med_sig_yaw",   label="\u03c3 Yaw",   group="Central \u03c3", invert=False, frame=False, fmt="%.1f"),
+    dict(key="high_pct",      label="High %",   group="Tail",         invert=False, frame=False, fmt="%.0f"),
+    dict(key="iqr_sig_speed", label="IQR Spd",  group="Homog.",       invert=False, frame=False, fmt="%.1f"),
 ]
 
 
@@ -129,41 +123,25 @@ def std_metrics(parquet_path):
 
 # ═══════════════════════════ frame metrics ═════════════════════════
 def _accum_clip(clip_path):
-    """Return (n_low_speed, n_valid, occupancy_hist) for one clip."""
+    """Return (n_low_speed, n_valid) for one clip."""
     try:
-        df = pd.read_parquet(clip_path, columns=["speed_kmh", "a_long"])
+        df = pd.read_parquet(clip_path, columns=["speed_kmh"])
     except Exception:
         df = pd.read_parquet(clip_path)
 
     spd = df["speed_kmh"].to_numpy(dtype=float) if "speed_kmh" in df.columns else np.empty(0)
-    along = df["a_long"].to_numpy(dtype=float) if "a_long" in df.columns else np.full(spd.shape, np.nan)
 
     valid_spd = np.isfinite(spd) & (spd >= 0.0) & (spd <= SPEED_MAX_KMH)
     n_valid = int(valid_spd.sum())
     n_low = int((valid_spd & (spd < STATIONARY_KMH)).sum())
-
-    sp_ms = spd / 3.6
-    m = np.isfinite(sp_ms) & np.isfinite(along) & (spd <= SPEED_MAX_KMH)
-    H, _, _ = np.histogram2d(sp_ms[m], along[m], bins=[OCC_SPEED_BINS, OCC_ALONG_BINS])
-    return n_low, n_valid, H
-
-
-def _occupancy_entropy(H):
-    """Normalised Shannon entropy of a 2-D occupancy histogram, in [0, 1]."""
-    p = H.ravel()
-    total = p.sum()
-    if total <= 0:
-        return np.nan
-    p = p[p > 0] / total
-    ent = -np.sum(p * np.log(p))
-    return float(ent / np.log(H.size))  # divide by max entropy (uniform over all bins)
+    return n_low, n_valid
 
 
 def frame_metrics(dataset_dir):
-    """Stat % (8.1) and occupancy spread (8.5) from one streaming pass over clips."""
+    """Stat % (8.1) from one streaming pass over clips."""
     clips = sorted(dataset_dir.glob("clip_*.parquet"))
     if not clips:
-        return {"stat_frac": np.nan, "occ_spread": np.nan}
+        return {"stat_frac": np.nan}
 
     if FRAME_SAMPLE_CLIPS and len(clips) > FRAME_SAMPLE_CLIPS:
         rng = np.random.default_rng(0)
@@ -171,16 +149,14 @@ def frame_metrics(dataset_dir):
         clips = [clips[i] for i in pick]
 
     n_low = n_valid = 0
-    Hacc = np.zeros((OCC_SPEED_BINS.size - 1, OCC_ALONG_BINS.size - 1), dtype=float)
     with ThreadPoolExecutor(max_workers=N_FRAME_WORKERS) as ex:
-        for nl, nv, H in tqdm(ex.map(_accum_clip, clips), total=len(clips),
-                              desc=f"frames:{dataset_dir.name}", leave=False):
+        for nl, nv in tqdm(ex.map(_accum_clip, clips), total=len(clips),
+                           desc=f"frames:{dataset_dir.name}", leave=False):
             n_low += nl
             n_valid += nv
-            Hacc += H
 
     stat = 100.0 * n_low / n_valid if n_valid else np.nan
-    return {"stat_frac": stat, "occ_spread": _occupancy_entropy(Hacc)}
+    return {"stat_frac": stat}
 
 
 # ══════════════════════════════ build ══════════════════════════════
@@ -239,7 +215,7 @@ def render(datasets, cols, raw, inten, index):
 
     # axis ticks / labels
     xpos = np.arange(n_col + 1)
-    xlabels = [f'{c["label"]}\n({c["sec"]})' for c in cols] + ["Index\n(0\u2013100)"]
+    xlabels = [f'{c["label"]}' for c in cols] + ["Index\n(0\u2013100)"]
     ax.set_xticks(xpos)
     ax.set_xticklabels(xlabels)
     ax.set_yticks(np.arange(n_ds))

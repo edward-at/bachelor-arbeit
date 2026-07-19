@@ -121,8 +121,7 @@ def fig_entropy(tab, pooled_mean):
     axes[1].grid(axis="x", alpha=0.3)
     axes[1].set_axisbelow(True)
 
-    fig.suptitle("Boundary bias — regime-core vs overlap-zone occupancy per dataset "
-                 "(GMM geometry; * = accel-confounded)")
+    fig.suptitle("Boundary bias: regime-core vs overlap-zone occupancy per dataset (* = accel-confounded)")
     fig.tight_layout()
     out = OUT_DIR / "gmm_entropy.png"
     fig.savefig(out, dpi=DPI)
@@ -140,7 +139,7 @@ def main():
     pd.set_option("display.width", 220, "display.max_columns", 40)
     shown = tab.copy()
     shown.index = [label(d) for d in shown.index]
-    print("\nBoundary-bias metrics (real values; * = confounded acceleration):\n")
+    print("\nBoundary bias metrics (* = confounded acceleration):\n")
     print(shown.round(4).sort_values("mean_entropy", ascending=False).to_string())
 
     print(f"\nPooled mean entropy = {pooled_mean:.4f} "

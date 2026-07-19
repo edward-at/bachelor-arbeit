@@ -83,8 +83,7 @@ def plot_balance(per, profiles, out_dir):
     axes[0].set_yticks(y)
     axes[0].set_yticklabels(names)
 
-    fig.suptitle("Per-dataset balance and distance metrics (ordered by low-dynamic "
-                 "share; * = accel-confounded)")
+    fig.suptitle("Per-dataset balance and distance metrics (* = accel-confounded)")
     fig.tight_layout()
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "bias_balance_metrics.png"

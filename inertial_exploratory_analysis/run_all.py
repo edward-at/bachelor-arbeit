@@ -11,23 +11,23 @@ ROOT = Path(__file__).resolve().parent
 # Edit this order if some scripts depend on outputs from others
 ORDER = [
     "distributional_analysis.py",
-    "ecdf_analysis.py",
     "ridgeline.py",
-    "boxplot_comparison.py",
-    "heatmap_summary.py",
-    "regime_classification.py",
-    "phase_potrait.py",
-    "time_series_analysis.py",
     "density_band_analysis.py",
     "trajectory_fan.py",
+    "phase_potrait.py",
+    "boxplot_comparison.py",
+    "ecdf_analysis.py",
+    "regime_classification.py",
+    "time_series_analysis.py",
+    "heatmap_summary.py"
 ]
 
 # Scripts to skip
 SKIP = {
     "run_all.py",
-    "Test.py",   # usually test/debug file
-    "compute_std.py",
     "standardize_inertial_data.py",
+    "compute_std.py",
+    "Test.py",   # usually test/debug file
     "tum_colors.py"
 }
 

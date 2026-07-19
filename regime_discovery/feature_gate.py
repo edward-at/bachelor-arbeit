@@ -32,7 +32,7 @@ and VIF are scale-invariant, so no standardisation is applied here.
 
 Outputs (all parquet):
   dataset/regime_data/feature_gate_vector.parquet   — the locked vector (ordered)
-  dataset/regime_data/feature_gate_stats.parquet    — per-feature VIF + decision
+  dataset/regime_data/feature_gate_stats.parquet    — per-feature VIF (before/after) + decision
   figures/feature_gate/feature_correlation_gate.png — Pearson | Spearman (annotated)
 ────────────────────────────────────────────────────────────────────────────
 """
@@ -226,12 +226,7 @@ def main():
     X = full[FEATURES].to_numpy(dtype=float)
     P = np.corrcoef(X, rowvar=False)
     S = _spearman_matrix(X)
-    V = _vif(X)
-
-    print(f"\n  VIF (full candidate set):")
-    for f, v in zip(FEATURES, V):
-        flag = "  <-- > %.0f" % VIF_THRESHOLD if v > VIF_THRESHOLD else ""
-        print(f"    {LABELS[f]:<8} {v:6.2f}{flag}")
+    V = _vif(X)   # VIF "before" — full six-candidate set
 
     if {"mean_abs_a_lat", "mean_abs_yaw_rate"} <= set(FEATURES):
         print(f"\n  a_lat–yaw Pearson per dataset (the coupling should hold within each):")
@@ -240,6 +235,16 @@ def main():
 
     # ── prune ─────────────────────────────────────────────────────────────────
     keep, log = _prune(full[FEATURES])
+
+    # VIF "after" — recomputed on the locked set, reported beside the "before" values
+    V_after = dict(zip(keep, _vif(full[keep].to_numpy(dtype=float))))
+    print(f"\n  VIF  before -> after  (dropped features have no 'after' value):")
+    print(f"    {'feature':<9}{'before':>9}{'after':>10}")
+    for f, vb in zip(FEATURES, V):
+        va = f"{V_after[f]:.2f}" if f in keep else "dropped"
+        flag = "  <-- > %.0f" % VIF_THRESHOLD if vb > VIF_THRESHOLD else ""
+        print(f"    {LABELS[f]:<9}{vb:>9.2f}{va:>10}{flag}")
+
     print(f"\n  {'-'*60}")
     if log:
         print("  Pruned:")
@@ -262,7 +267,8 @@ def main():
     drop_reason = {d["dropped"]: d["reason"] for d in log}
     pd.DataFrame({
         "feature":     FEATURES,
-        "vif":         [round(v, 4) for v in V],
+        "vif_before":  [round(v, 4) for v in V],
+        "vif_after":   [round(V_after[f], 4) if f in keep else None for f in FEATURES],
         "kept":        [f in keep for f in FEATURES],
         "drop_reason": [drop_reason.get(f, "") for f in FEATURES],
     }).to_parquet(ARTIFACT_DIR / "feature_gate_stats.parquet", index=False)

@@ -277,7 +277,7 @@ def plot_xy_fan(per_ds, out_dir):
             _draw_xy_panel(ax, per_ds[ds], cmap, norm, xlim, ylim)
             sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
             fig.colorbar(sm, ax=ax, fraction=0.046, pad=0.02).set_label(label)
-            ax.set_title(f"Trajectory distribution — {ds}  (window = {WINDOW_S:g}s)")
+            ax.set_title(f"Trajectory distribution {ds}  (window = {WINDOW_S:g}s)")
             fig.savefig(out_dir / f"trajectory_fan_xy_{ds}_w{int(WINDOW_S)}.png",
                         dpi=DPI, bbox_inches="tight")
             plt.close(fig)

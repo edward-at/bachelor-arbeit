@@ -73,7 +73,7 @@ import numpy as np
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
-from scipy.signal import butter, filtfilt, savgol_filter
+from scipy.signal import butter, savgol_filter, sosfiltfilt
 from tqdm import tqdm
 
 warnings.filterwarnings("ignore")
@@ -85,7 +85,7 @@ warnings.filterwarnings("ignore")
 GRID_HZ         = 10        # common output sampling rate
 DT_GRID         = 0.1       # s — 1 / GRID_HZ
 F_CUT_HZ        = 3.0       # Butterworth low-pass cutoff (vehicle dynamics < 3 Hz)
-BUTTER_ORDER    = 4         # zero-phase via filtfilt → effective order 8
+BUTTER_ORDER    = 4         # zero-phase via sosfiltfilt → effective order 8
 HAMPEL_WINDOW_S = 0.5       # s — Hampel filter window in seconds
 HAMPEL_T0       = 3.0       # MAD multiplier threshold
 GAP_MAX_S       = 0.5       # s — gaps longer than this are masked, not interpolated
@@ -98,9 +98,111 @@ EDGE_MASK       = math.ceil(W_D2 / 2)        # frames NaN'd at clip edges (deriv
 GAP_DILATION    = math.ceil(W_D2 / 2)        # frames NaN'd around gaps (derivs)
 GPS_SPEED_MAX   = 50.0      # m/s — impossible-speed threshold for GPS cleaning
 
+# ── v4: PHYSICAL-VALIDITY GATES ──────────────────────────────────────────────
+# v3 enforced these bounds only in the plotting scripts — i.e. DOWNSTREAM of
+# every stage that consumes them. Impossible readings therefore propagated
+# through the low-pass and the SG derivatives into a_long / a_lat / acc_mag and
+# into std_data before anything checked them. The bounds below are the ones the
+# thesis already publishes in Section 8.1; v4 enforces them where they belong.
+#
+# HONEST LIMIT (applies to BOTH gates): a gate is a metal detector. It catches
+# an artifact of 138,345 km/h; it does NOT catch the same artifact at 150 km/h,
+# nor an 8 m/s^2 artifact that is indistinguishable from hard braking. These
+# gates are a disclosed safety net, NOT a substitute for root-cause diagnosis.
+SPEED_MAX_MS       = 200.0 / 3.6        # 55.56 m/s = 200 km/h  (Section 8.1)
+A_MAX_MS2          = 15.0               # m/s^2  (~1.53 g)      (Section 8.1)
+J_MAX_MS3          = 30.0               # m/s^3                 (Section 8.1)
+YAW_RATE_MAX_RADS  = math.radians(90.0) # 1.571 rad/s = 90 deg/s (Section 8.1)
+
+# Gate-mask closing. Gating alone is NOT enough: NaN'ing only the frames above
+# the bound leaves the *sub-threshold* garbage of the same corrupted episode in
+# place, and prep_channel then LINEARLY INTERPOLATES the gated slits from those
+# surviving garbage neighbours (gaps <= GAP_MAX_S are bridged). That is
+# interpolation anchored on garbage — the exact failure mode diagnosed inside
+# _clean_gps_position. Closing merges bad frames separated by less than
+# GATE_CLOSE_S into ONE run, so a corrupted episode becomes a single long NaN
+# run (> GAP_MAX_S -> masked, never bridged), while a genuinely isolated
+# one-frame glitch still gets interpolated as before.
+GATE_CLOSE_S       = 2.0                # s — merge bad runs closer than this
+
+# Clip-drop guard. _clean_gps_position and the gap policy both REPAIR by linear
+# interpolation. On a clip that is mostly garbage, "repair" fabricates a smooth,
+# straight, near-zero-acceleration trajectory that enters the statistics as real
+# CALM driving — biasing RQ1 in the opposite direction, invisibly. Below this
+# threshold we drop the clip instead of inventing it.
+#   denominator: grid frames with finite speed AFTER gating / total grid frames
+MIN_VALID_FRAC_CLIP = 0.60
+
+# v4.1 — contamination-based drop. The valid-fraction guard above asks "how much
+# survived?"; this asks "was the sensor ever proven broken?" A GPS that reported
+# 12,000 km/h is not a sensor to trust at 150 km/h either — and its sub-bound
+# garbage (108-200 km/h in central Oxford) is invisible to the gate by
+# construction, so no closing window can remove it (the sweep asymptoted at 3
+# residual frames even with CLOSE_S = 120 s). Empirically the rule is insensitive:
+# Oxford's two broken clips sit at 18.8% / 35.1% gated while the worst of the
+# other 68 sits at 0.04% — a 470x separation. Their suspect frames also run
+# mean |a_long| = 4.0 m/s^2 vs 0.29 on legitimate frames (13.8x more violent):
+# GPS garbage, not fast driving.
+GATE_FRAC_DROP = 0.15   # drop a clip if >15% of its finite speed frames were gated
+
+# Channels that are measurement-limited for a given dataset. NaN'd after
+# construction, recorded in col_sources as SRC_EXCLUDED, and disclosed in the
+# thesis — never a silent drop.
+MEASUREMENT_LIMITED = {
+    # 4Seasons carries NO measured speed (loader passes position + IMU only), so
+    # speed is 100% position-derived. Its raw pose oscillates along-track at
+    # ~2 Hz with ~+/-1.3 m amplitude. Predicted velocity error A*2*pi*f
+    # = 1.3 * 2pi * 2 ~= 16 m/s ~= 59 km/h; observed swings are +/-35 km/h.
+    # 2 Hz is BELOW F_CUT_HZ (3.0) — the noise is IN-BAND, i.e. inside the
+    # vehicle-dynamics passband, and therefore indistinguishable in frequency
+    # from the signal. No filter can remove it. Raw IMU is independent: retained.
+    #
+    # ── DECISION 2026-07-15 (Edward): exclusion DISABLED — 4Seasons retained ──
+    # in full, WITH the contamination above, disclosed in Section 7.3. The
+    # diagnosis remains valid: Gate 2 masks only the supra-threshold artifacts
+    # (|a| > 15 m/s^2); sub-threshold garbage indistinguishable from genuine
+    # maneuvering remains in every speed-derived channel, so all 4Seasons
+    # speed/acceleration statistics read as noise-inflated upper bounds.
+    # Re-enable the exclusion by uncommenting the entry below.
+    # "4seasons": [
+    #     "speed", "speed_kmh", "a_long", "abs_a_long", "jerk_long",
+    #     "abs_jerk_long", "a_lat", "abs_a_lat", "jerk_lat", "acc_mag",
+    #     "abs_acc_mag", "jerk_mag", "abs_jerk_mag", "deceleration",
+    #     "curvature", "abs_curvature", "curvature_valid",
+    # ],
+    # NOTE (unconfirmed — left OFF pending Edward's sign-off): the thesis prose
+    # states DurLAR's longitudinal channel is unrecoverable (sigma ratio ~117x vs
+    # IMU, near-zero correlation), but v3 contains NO code that excludes it, so
+    # DurLAR's a_long/jerk_long are currently PRESENT in the data. Enable only if
+    # the prose is meant to bind the data:
+    # "durlar": ["a_long", "abs_a_long", "jerk_long", "abs_jerk_long"],
+}
+
+# ── v4.2: NAMED EXCLUSION OF INDIVIDUALLY-DIAGNOSED BROKEN SOURCE FILES ──────
+# Why a blocklist and not a smarter rule: raw oxford_clip_0039 gates at 8.4% of
+# its frames while DurLAR's LEGITIMATELY RETAINED clips gate at 10.7-11.7% — the
+# bad Oxford file sits BELOW the good DurLAR files on every per-clip gate
+# statistic, so no threshold can separate them. These three files are excluded
+# by name, with the diagnostic evidence recorded here (the receipts):
+#   * oxford_clip_0013: max raw speed    636 km/h;   883/1,439 frames > 200 (61%)
+#   * oxford_clip_0039: max raw speed 11,559 km/h; 1,237 frames > 200 + 137 in-band
+#   * oxford_clip_0051: max raw speed 138,439 km/h; 3,908 frames > 200 + 948 in-band
+#   * context: Oxford is a ~10 km central-urban loop; every OTHER clip's max is
+#     90.9 km/h, and the suspect frames run mean |a_long| = 4.0 m/s^2 vs 0.29 on
+#     legitimate frames (13.8x) — GPS/INS failure, not fast driving.
+# Keyed on the RAW SOURCE FILENAME (stable), never on output clip indices
+# (which shift whenever a clip is dropped).
+KNOWN_BAD_SOURCES = {
+    "oxford": {
+        "oxford_clip_0013.parquet",
+        "oxford_clip_0039.parquet",
+        "oxford_clip_0051.parquet",
+    },
+}
+
 MAX_WORKERS = min(os.cpu_count() or 4, 8)
 
-PIPELINE_VERSION = "v3_10hz_common_grid"
+PIPELINE_VERSION = "v4_4_10hz_common_grid_validity_gated"  # v4_4: 4Seasons exclusion disabled (dated decision in MEASUREMENT_LIMITED)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PATHS
@@ -150,10 +252,11 @@ OUTPUT_COLUMNS = [
     "curvature", "abs_curvature", "curvature_valid",
 ]
 
-SRC_RAW   = "RAW"
-SRC_DERIV = "DERIVED"
-SRC_NA    = "NOT_AVAILABLE"
-SRC_FLAG  = "FLAG"
+SRC_RAW      = "RAW"
+SRC_DERIV    = "DERIVED"
+SRC_NA       = "NOT_AVAILABLE"
+SRC_FLAG     = "FLAG"
+SRC_EXCLUDED = "EXCLUDED_MEASUREMENT_LIMITED"   # v4 — see MEASUREMENT_LIMITED
 
 # ─────────────────────────────────────────────────────────────────────────────
 # UTILITIES
@@ -206,11 +309,47 @@ def hampel(x, native_dt, window_s=HAMPEL_WINDOW_S, t0=HAMPEL_T0):
     return y
 
 
-def lowpass_segments(x, fs_native, fc=F_CUT_HZ, order=BUTTER_ORDER):
+def _close_bad_runs(bad, max_gap_frames):
+    """
+    v4 — morphological closing of a boolean gate mask.
+
+    Merge bad-flag runs separated by <= max_gap_frames GOOD frames into one run.
+
+    Why this exists: gating only the frames ABOVE the bound leaves the
+    sub-threshold garbage of the same corrupted episode in place, and
+    prep_channel then linearly interpolates the gated slits FROM those surviving
+    garbage neighbours (any gap <= GAP_MAX_S is bridged). Closing turns a
+    corrupted episode into a single long NaN run, which exceeds GAP_MAX_S and is
+    therefore MASKED rather than bridged — while a genuinely isolated one-frame
+    glitch, with no other bad frame within max_gap_frames, is left alone and
+    still gets interpolated exactly as in v3.
+    """
+    bad = np.asarray(bad, dtype=bool)
+    if max_gap_frames < 1 or not bad.any():
+        return bad
+    idx = np.flatnonzero(bad)
+    if idx.size < 2:
+        return bad
+    out = bad.copy()
+    d = np.diff(idx)
+    # a gap of d-1 good frames sits between idx[i] and idx[i+1]
+    for i in np.flatnonzero((d > 1) & (d - 1 <= max_gap_frames)):
+        out[idx[i]:idx[i + 1]] = True
+    return out
+
+
+def lowpass_segments(x, fs_native, fc=F_CUT_HZ, order=BUTTER_ORDER, label=""):
     """
     Zero-phase Butterworth low-pass, applied per contiguous non-NaN segment.
     Segments shorter than 3 × filter length are left unfiltered. NaN frames
     stay NaN.
+
+    v4 — second-order sections (sos) instead of transfer-function (ba) form.
+    At 4Seasons' 2000 Hz native rate the normalised cutoff is 3/1000 = 0.003 and
+    the ba-form poles sit at |z| = 0.9964; sos is far better conditioned there.
+    v3's `except Exception: pass` also meant a numerically failing filter left a
+    segment UNFILTERED — i.e. an anti-alias step that silently did not happen,
+    with zero log output. v4 warns instead of swallowing it.
     """
     x = np.asarray(x, dtype=float)
     n = len(x)
@@ -221,8 +360,8 @@ def lowpass_segments(x, fs_native, fc=F_CUT_HZ, order=BUTTER_ORDER):
     if fc >= nyq:
         return x.copy()   # cutoff at/above Nyquist — nothing to remove
 
-    b, a = butter(order, fc / nyq, btype="low")
-    min_len = 3 * max(len(a), len(b))
+    sos = butter(order, fc / nyq, btype="low", output="sos")
+    min_len = 3 * (sos.shape[0] * 2 + 1)
 
     result = x.copy()
     nan_mask = np.isnan(x)
@@ -234,9 +373,15 @@ def lowpass_segments(x, fs_native, fc=F_CUT_HZ, order=BUTTER_ORDER):
         seg = x[s:e]
         if len(seg) >= min_len:
             try:
-                result[s:e] = filtfilt(b, a, seg, method="gust")
-            except Exception:
-                pass   # leave segment unfiltered on numerical failure
+                result[s:e] = sosfiltfilt(sos, seg)
+            except Exception as exc:   # v4 — never fail silently
+                warnings.warn(
+                    f"[lowpass] {label or 'signal'}: sosfiltfilt failed on a "
+                    f"{len(seg)}-sample segment at fs={fs_native:.1f} Hz "
+                    f"({exc}). SEGMENT LEFT UNFILTERED — anti-aliasing did not "
+                    f"run for these samples.",
+                    RuntimeWarning,
+                )
 
     return result
 
@@ -520,9 +665,35 @@ def build_standard_frame(
         speed_nat = np.sqrt(vx_nat**2 + vy_nat**2)
         col_sources["speed"] = SRC_DERIV if not np.all(np.isnan(speed_nat)) else SRC_NA
 
-    speed_nat = np.where(speed_nat < 0, np.nan, speed_nat)
+    # ── STEP 3b (v4): PHYSICAL-VALIDITY GATE ON SPEED ────────────────────────
+    # v3 had only `speed_nat < 0` here — a lower bound and NO upper bound. That
+    # single omission is the root cause of Oxford (138,345 km/h), DurLAR (5,374)
+    # and NVIDIA (336): the impossible values flowed on into the low-pass, the SG
+    # derivatives, a_lat = speed * yaw_rate, acc_mag, and therefore std_data.
+    #
+    # PLACEMENT IS DELIBERATE — this must run BEFORE prep_channel, because
+    # lowpass_segments uses a ZERO-PHASE (non-causal) filter that smears a spike
+    # both forwards and backwards in time. Gate after the low-pass and the poison
+    # has already leaked into frames that were clean.
+    #
+    # (It is not a purity guarantee for POSITION-derived speed: there, _lp_fill
+    # has already interpolated and filtered the positions before a velocity even
+    # exists, so some smearing precedes the gate. Closing mitigates exactly that.)
+    #
+    # An impossible reading is a dropout that forgot to be NaN. Handing it to the
+    # gap policy (STEP 5) reuses machinery that already exists.
+    n_speed_finite_pre = int(np.isfinite(speed_nat).sum())
+    bad_speed = (speed_nat < 0.0) | (speed_nat > SPEED_MAX_MS)
+    bad_speed = _close_bad_runs(bad_speed, max(1, int(round(GATE_CLOSE_S / median_dt_s))))
+    n_speed_gated = int((bad_speed & np.isfinite(speed_nat)).sum())
+    speed_nat = np.where(bad_speed, np.nan, speed_nat)
 
     # ── STEP 4: HAMPEL point-outlier removal on speed ────────────────────────
+    # NOTE: Hampel flags a point only if it deviates from the ROLLING MEDIAN by
+    # > HAMPEL_T0 * MAD. Inside a SUSTAINED garbage run the rolling median is
+    # itself garbage and the MAD is small, so nothing is flagged. Hampel kills
+    # impulses, not sustained excursions — which is why STEP 3b above, not this
+    # step, is what actually removes the Oxford / DurLAR corruption.
     if not np.all(np.isnan(speed_nat)) and n_native > 5:
         speed_nat = hampel(speed_nat, median_dt_s)
 
@@ -583,6 +754,19 @@ def build_standard_frame(
         col_sources["yaw_rate"] = (SRC_DERIV if not np.all(np.isnan(yaw_rate_g))
                                    else SRC_NA)
 
+    # ── STEP 8a (v4): GATE YAW RATE BEFORE IT MULTIPLIES INTO a_lat ──────────
+    # a_lat is speed * yaw_rate — a DIRECT multiplication, no derivative and no
+    # filter in between. A bad yaw rate therefore poisons a_lat, acc_mag and
+    # std_acc_mag just as effectively as a bad speed does. Several datasets take
+    # yaw from the same INS attitude solution that produced their velocities
+    # (Oxford), or store it in the wrong unit (the ZOD deg/rad precedent), so
+    # this channel gets the same published bound as the others rather than an
+    # assumption that it is clean.
+    n_yaw_gated = int((np.isfinite(yaw_rate_g)
+                       & (np.abs(yaw_rate_g) > YAW_RATE_MAX_RADS)).sum())
+    yaw_rate_g = np.where(np.abs(yaw_rate_g) <= YAW_RATE_MAX_RADS,
+                          yaw_rate_g, np.nan)
+
     a_lat_g    = speed_g * yaw_rate_g
     jerk_lat_g = sg_deriv(a_lat_g, order=1, window=W_D1)
 
@@ -604,7 +788,26 @@ def build_standard_frame(
     a_lat_g     = mask_derivative(a_lat_g,     a_lat_g)
     jerk_lat_g  = mask_derivative(jerk_lat_g,  a_lat_g)
 
-    # ── DERIVED SIGNALS (after masking — NaN propagates honestly) ────────────
+    # ── STEP 9b (v4): VALIDITY GATE ON THE DERIVED CHANNELS ──────────────────
+    # Applied AFTER masking and BEFORE acc_mag / jerk_mag, so the magnitudes are
+    # built from gated components rather than inheriting garbage through a sqrt.
+    #
+    # ⚠ THIS IS A SAFETY NET, NOT A FIX. It catches KITTI's 21 m/s^2 and
+    # KITScenes' 36 m/s^2 — but it CANNOT catch the same artifact at 8 m/s^2,
+    # which is indistinguishable from hard braking. If a dataset's derivative
+    # stage manufactures artifacts, the ones this gate removes are the tip; the
+    # sub-threshold ones remain, invisibly, inside acc_mag and std_acc_mag.
+    # KITTI and KITScenes are NOT yet root-caused. This gate does not close that.
+    _pre = [a_long_g, a_lat_g, jerk_long_g, jerk_lat_g]
+    _lim = [A_MAX_MS2, A_MAX_MS2, J_MAX_MS3, J_MAX_MS3]
+    n_deriv_gated = int(sum((np.isfinite(v) & (np.abs(v) > lim)).sum()
+                            for v, lim in zip(_pre, _lim)))
+    a_long_g    = np.where(np.abs(a_long_g)    <= A_MAX_MS2, a_long_g,    np.nan)
+    a_lat_g     = np.where(np.abs(a_lat_g)     <= A_MAX_MS2, a_lat_g,     np.nan)
+    jerk_long_g = np.where(np.abs(jerk_long_g) <= J_MAX_MS3, jerk_long_g, np.nan)
+    jerk_lat_g  = np.where(np.abs(jerk_lat_g)  <= J_MAX_MS3, jerk_lat_g,  np.nan)
+
+    # ── DERIVED SIGNALS (after masking + gating — NaN propagates honestly) ───
     jerk_mag_g      = np.sqrt(jerk_long_g**2 + jerk_lat_g**2)
     abs_jerk_long_g = np.abs(jerk_long_g)
     abs_jerk_mag_g  = jerk_mag_g.copy()
@@ -733,6 +936,20 @@ def build_standard_frame(
         "curvature_valid":    curv_valid_g.astype(bool),
     })
 
+    # ── v4: CLIP-DROP GUARD ──────────────────────────────────────────────────
+    # Denominator (pinned): finite gridded speed frames / total grid frames.
+    # Below MIN_VALID_FRAC_CLIP the clip is DROPPED, not repaired — because both
+    # _clean_gps_position and the gap policy repair by linear interpolation, and
+    # interpolating a mostly-garbage clip fabricates a smooth, straight,
+    # near-zero-acceleration trajectory that would enter the statistics as real
+    # CALM driving. That biases RQ1 in the opposite direction, with no visible
+    # trace in any figure — strictly worse than the bug it "fixes".
+    n_grid = int(len(t_grid))
+    valid_frac_speed = (float(np.isfinite(speed_g).sum()) / n_grid) if n_grid else 0.0
+    # v4.1 — contamination fraction at native rate (post-closing count / pre-gate finite)
+    gated_frac_speed = (float(n_speed_gated) / n_speed_finite_pre
+                        if n_speed_finite_pre else 0.0)
+
     processing_meta = {
         "native_hz":                  int(native_hz),
         "native_median_dt_s":         float(median_dt_s),
@@ -751,7 +968,36 @@ def build_standard_frame(
         "w_d2":                       int(W_D2),
         "edge_mask_frames":           int(EDGE_MASK),
         "pipeline_version":           PIPELINE_VERSION,
+        # ── v4 gate telemetry (feeds the V5 gated-mass report) ───────────────
+        "speed_max_kmh_gate":         float(SPEED_MAX_MS * 3.6),
+        "a_max_ms2_gate":             float(A_MAX_MS2),
+        "j_max_ms3_gate":             float(J_MAX_MS3),
+        "yaw_rate_max_degs_gate":     float(math.degrees(YAW_RATE_MAX_RADS)),
+        "gate_close_s":               float(GATE_CLOSE_S),
+        "n_speed_finite_pre_gate":    int(n_speed_finite_pre),
+        "n_speed_gated":              int(n_speed_gated),
+        "n_yaw_rate_gated":           int(n_yaw_gated),
+        "n_deriv_gated":              int(n_deriv_gated),
+        "valid_frac_speed":           float(valid_frac_speed),
+        "min_valid_frac_clip":        float(MIN_VALID_FRAC_CLIP),
+        "gated_frac_speed":           float(gated_frac_speed),
+        "gate_frac_drop":             float(GATE_FRAC_DROP),
+        "dropped_reason":             None,
     }
+
+    drop_reasons = []
+    if valid_frac_speed < MIN_VALID_FRAC_CLIP:
+        drop_reasons.append(
+            f"valid_frac_speed={valid_frac_speed:.3f} < {MIN_VALID_FRAC_CLIP:.2f} "
+            f"after the physical-validity gate — dropped rather than interpolated")
+    if gated_frac_speed > GATE_FRAC_DROP:
+        drop_reasons.append(
+            f"gated_frac_speed={gated_frac_speed:.3f} > {GATE_FRAC_DROP:.2f} — "
+            f"GPS proven broken on this clip; sub-bound garbage is invisible to "
+            f"the gate, so the clip is dropped, not trusted")
+    if drop_reasons:
+        processing_meta["dropped_reason"] = "; ".join(drop_reasons)
+        return None, col_sources, processing_meta
 
     return df[OUTPUT_COLUMNS], col_sources, processing_meta
 
@@ -759,6 +1005,30 @@ def build_standard_frame(
 # ─────────────────────────────────────────────────────────────────────────────
 # SAVE
 # ─────────────────────────────────────────────────────────────────────────────
+
+def apply_measurement_limits(df, col_sources, dataset_name):
+    """
+    v4 — NaN the channels listed in MEASUREMENT_LIMITED for this dataset and
+    record the exclusion in col_sources (which is persisted to the parquet
+    schema metadata). This is a DISCLOSED exclusion, not a silent drop: the
+    columns remain present with the correct dtype so every downstream script
+    keeps its schema, but they carry no values and no derived statistic.
+    """
+    cols = MEASUREMENT_LIMITED.get(dataset_name, [])
+    if not cols or df is None or df.empty:
+        return df, col_sources, 0
+    n = 0
+    for c in cols:
+        if c not in df.columns:
+            continue
+        if pd.api.types.is_bool_dtype(df[c]):
+            df[c] = False          # e.g. curvature_valid — cannot hold NaN
+        else:
+            df[c] = np.nan
+        col_sources[c] = SRC_EXCLUDED
+        n += 1
+    return df, col_sources, n
+
 
 def save_clip(df, col_sources, processing_meta, out_path: Path):
     table = pa.Table.from_pandas(df, preserve_index=False)
@@ -819,7 +1089,13 @@ def load_a2d2(f):
     ts_ns = (raw["timestamp"].astype(np.int64) * 1000)
     return build_standard_frame(
         timestamp_ns = ts_ns.values,
-        speed_raw    = raw["vehicle_speed"].values / 3.6,
+        # v4 (D-4) — vehicle_speed is ALREADY m/s. Proof from A2D2's own
+        # data: raw IMU acceleration_x never passes through this factor, yet
+        # corr(ax, a_long) = 0.977 and std(ax)/std(a_long) = 3.73 ~= 3.6.
+        # v3 max speed was 20.4 km/h (absurd) -> 73.3 km/h (plausible), and
+        # max|a_long| 1.11 -> 4.0 m/s^2, matching the IMU's independent 4.43.
+        speed_raw    = raw["vehicle_speed"].values,   # was: / 3.6
+
         ax_raw       = raw["acceleration_x"].values,
         ay_raw       = raw["acceleration_y"].values,
         az_raw       = raw["acceleration_z"].values if "acceleration_z" in raw.columns else None,
@@ -1016,8 +1292,17 @@ def load_kitscenes(f):
 
 
 def load_oxford(f):
-    # FIX 6 — reverted to spec: no clean_gps, no hardcoded frame-based rolling
-    # median. The standard Hampel + 3 Hz low-pass path handles Oxford.
+    # v4 (D-2) — FIX 6 claimed "the standard Hampel + 3 Hz low-pass path
+    # handles Oxford". It does not: Hampel kills impulses, and Oxford clip_0051
+    # carries a ~8-minute SUSTAINED garbage run (4,847 frames > 108 km/h), for
+    # which the rolling median is itself garbage and the MAD is small.
+    #
+    # BUT clean_gps is NOT what saves Oxford's speed. This loader passes RAW INS
+    # velocities (velocity_east/north), so speed = sqrt(vx^2+vy^2) never touches
+    # position, while _clean_gps_position repairs x/y ONLY. Restoring it here is
+    # a TRAJECTORY fix (x/y/easting/northing). Oxford's SPEED is cleaned solely
+    # by the STEP 3b gate + mask closing. Do not let the audit's pass depend on
+    # this line. (Same reason DurLAR and NVIDIA still leaked despite clean_gps.)
     raw = pd.read_parquet(f)
     ts_ns = to_timestamp_ns(raw["timestamp"])
     return build_standard_frame(
@@ -1033,6 +1318,7 @@ def load_oxford(f):
         roll_raw     = raw["roll"].values  if "roll"  in raw.columns else None,
         pitch_raw    = raw["pitch"].values if "pitch" in raw.columns else None,
         yaw_raw      = raw["yaw"].values   if "yaw"   in raw.columns else None,
+        clean_gps    = True,   # v4 — trajectory columns only; see note above
     )
 
 
@@ -1166,10 +1452,18 @@ def _process_one_file(args):
                         items.append(inner)
                 elif isinstance(item, tuple) and len(item) == 3:
                     items.append(item)
-            return items
-        if isinstance(result, tuple) and len(result) == 3:
-            return [result]
-        return []
+        elif isinstance(result, tuple) and len(result) == 3:
+            items = [result]
+        else:
+            items = []
+        # v4.3 — stamp the raw source filename into every clip's metadata.
+        # Output clip indices RENUMBER whenever anything is dropped, so they can
+        # never identify a source; this line is what makes raw<->output mapping a
+        # lookup instead of the forensic archaeology it took to untangle Oxford.
+        for _, _, pm in items:
+            if isinstance(pm, dict):
+                pm["source_file"] = f.name
+        return items
     except Exception:
         return [f"ERROR::{f.name}::{traceback.format_exc()}"]
 
@@ -1190,6 +1484,28 @@ def process_dataset(dataset_name: str, global_bar: tqdm):
         return 0, 0
 
     loader  = LOADERS[loader_key]
+
+    # ── v4.2: apply the named source blocklist (see KNOWN_BAD_SOURCES) ───────
+    blocked = KNOWN_BAD_SOURCES.get(loader_key, set())
+    if blocked:
+        skipped = [f.name for f in parquet_files if f.name in blocked]
+        parquet_files = [f for f in parquet_files if f.name not in blocked]
+        for name in skipped:
+            global_bar.write(f"  [{dataset_name}] BLOCKLISTED source skipped: {name}")
+
+    # ── v4.2: purge stale outputs before writing ─────────────────────────────
+    # v4 introduced clip DROPPING, but the output directory was never cleared, so
+    # any run that dropped clips left the PREVIOUS run's tail files behind
+    # (fewer new clips than old -> old clip_00NN survive at the high indices).
+    # Every audit then read a MIX of fresh and stale outputs. Purge first; the
+    # directory must contain only what THIS run writes.
+    stale = sorted(out_dir.glob("clip_*.parquet"))
+    for f in stale:
+        f.unlink()
+    if stale:
+        global_bar.write(f"  [{dataset_name}] purged {len(stale)} existing output "
+                         f"clip files before writing")
+
     n_files = len(parquet_files)
     errors  = []
     results = [None] * n_files
@@ -1225,6 +1541,14 @@ def process_dataset(dataset_name: str, global_bar: tqdm):
 
     clip_index = 1
     saved = 0
+    # ── v4 gate telemetry, aggregated per dataset (feeds V5) ─────────────────
+    dropped_clips   = []
+    n_speed_gated   = 0
+    n_yaw_gated     = 0
+    n_deriv_gated   = 0
+    n_speed_pre     = 0
+    n_limited_cols  = 0
+
     for clip_list in results:
         if not clip_list:
             continue
@@ -1232,12 +1556,42 @@ def process_dataset(dataset_name: str, global_bar: tqdm):
             if not isinstance(item, tuple) or len(item) != 3:
                 continue
             df, col_sources, processing_meta = item
+
+            n_speed_gated += int(processing_meta.get("n_speed_gated", 0) or 0)
+            n_yaw_gated   += int(processing_meta.get("n_yaw_rate_gated", 0) or 0)
+            n_deriv_gated += int(processing_meta.get("n_deriv_gated", 0) or 0)
+            n_speed_pre   += int(processing_meta.get("n_speed_finite_pre_gate", 0) or 0)
+
+            # v4 — a clip below MIN_VALID_FRAC_CLIP is dropped, never fabricated.
             if df is None or df.empty:
+                reason = processing_meta.get("dropped_reason")
+                if reason:
+                    src = processing_meta.get("source_file", "?")
+                    dropped_clips.append(f"{src} — {reason}")
                 continue
+
+            # v4 — disclosed per-dataset channel exclusions (MEASUREMENT_LIMITED)
+            df, col_sources, n_lim = apply_measurement_limits(
+                df, col_sources, dataset_name)
+            n_limited_cols = max(n_limited_cols, n_lim)
+
             out_name = f"clip_{clip_index:04d}.parquet"
             save_clip(df, col_sources, processing_meta, out_dir / out_name)
             clip_index += 1
             saved += 1
+
+    # ── v4 — report the gate, never let it act silently ──────────────────────
+    if n_speed_gated or n_yaw_gated or n_deriv_gated or dropped_clips or n_limited_cols:
+        pct = (100.0 * n_speed_gated / n_speed_pre) if n_speed_pre else 0.0
+        global_bar.write(
+            f"  [{dataset_name}] v4 gate: "
+            f"speed {n_speed_gated:,} ({pct:.3f}%) | "
+            f"yaw {n_yaw_gated:,} | deriv {n_deriv_gated:,} | "
+            f"clips dropped {len(dropped_clips)} | "
+            f"channels excluded {n_limited_cols}"
+        )
+        for reason in dropped_clips[:5]:
+            global_bar.write(f"      dropped clip: {reason}")
 
     global_bar.update(n_files)
     return saved, len(errors)
