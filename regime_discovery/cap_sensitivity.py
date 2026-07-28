@@ -17,6 +17,7 @@ shared step from clustering.py so the two cannot diverge. All outputs parquet.
 Reads:   dataset/regime_data/kselect_curves.parquet   (selected k)
          dataset/std_data/<dataset>.parquet
 Writes:  dataset/regime_data/cap_sensitivity_caps.parquet
+         dataset/regime_data/cap_sensitivity_rank.parquet
          dataset/regime_data/cap_sensitivity_drift.parquet
          figures/cap_sensitivity/cap_sensitivity_ari.png
 ────────────────────────────────────────────────────────────────────────────
@@ -58,6 +59,8 @@ REF_CAP    = 5000                    # reference cap (the production setting)
 ARI_OK     = 0.85
 RANK_OK    = 0.90
 RARE_SHARE = 1.0                     # regimes below this % reported separately
+ARI_VMIN   = 0.85                    # heatmap colour floor — the concern level;
+                                     # values are annotated, truncation stated in caption
 OUT_DIR    = PROJECT_ROOT / "bachelor-arbeit" / "regime_discovery" / "figures" / "cap_sensitivity"
 DPI        = 300
 
@@ -97,14 +100,19 @@ def _fit_one_cap(full: pd.DataFrame, cap: int, k: int) -> dict:
 
 def _plot_ari(ari: np.ndarray, caps: list[int], out_fp: Path):
     fig, ax = plt.subplots(figsize=(6.2, 5.4))
-    im = ax.imshow(ari, cmap="Blues", vmin=0.0, vmax=1.0)
+    # colour floor at ARI_VMIN: on a 0-1 scale every value above 0.9 renders as
+    # the same dark blue. Cells are annotated, so the truncation costs nothing
+    # and is stated in the caption.
+    im = ax.imshow(ari, cmap="Blues", vmin=ARI_VMIN, vmax=1.0)
     labels = [f"{c//1000}k" if c >= 1000 else str(c) for c in caps]
     ax.set_xticks(range(len(caps))); ax.set_yticks(range(len(caps)))
     ax.set_xticklabels(labels); ax.set_yticklabels(labels)
-    ax.set_title("Cross-cap assignment agreement (ARI)")
+    ax.set_title("Cap robustness: cross-cap assignment agreement (ARI)")
+    thresh = ARI_VMIN + 0.55 * (1.0 - ARI_VMIN)
     for i in range(len(caps)):
         for j in range(len(caps)):
-            ax.text(j, i, f"{ari[i, j]:.3f}", ha="center", va="center")
+            ax.text(j, i, f"{ari[i, j]:.3f}", ha="center", va="center",
+                    color=("white" if ari[i, j] > thresh else "black"))
     fig.colorbar(im, ax=ax, fraction=0.046)
     fig.tight_layout()
     out_fp.parent.mkdir(parents=True, exist_ok=True)
@@ -159,13 +167,17 @@ def main():
                                       .reindex(range(k), fill_value=0).to_numpy())
                     for ds, g in dfreg.groupby("dataset")}
     print(f"\n  Per-dataset bias-ranking Spearman between caps:")
-    rank_rhos = []
+    rank_rhos, rank_rows = [], []
     for a in range(len(CAPS)):
         for b in range(a + 1, len(CAPS)):
             va = [ent[CAPS[a]][d] for d in datasets]
             vb = [ent[CAPS[b]][d] for d in datasets]
             rho = float(spearmanr(va, vb).correlation)
             rank_rhos.append(rho)
+            # persisted so the thesis table can be regenerated from the artefact
+            rank_rows.append({"cap_a": CAPS[a], "cap_b": CAPS[b],
+                              "ari": round(float(ari[a, b]), 4),
+                              "spearman_rho": round(rho, 4)})
             print(f"    {CAPS[a]:>6} vs {CAPS[b]:>6}:  ρ = {rho:+.3f}")
 
     # ── per-regime centroid drift (matched to REF_CAP) ────────────────────────
@@ -213,12 +225,15 @@ def main():
         cap_rows.append(row)
     pd.DataFrame(cap_rows).to_parquet(ARTIFACT_DIR / "cap_sensitivity_caps.parquet", index=False)
 
+    pd.DataFrame(rank_rows).to_parquet(ARTIFACT_DIR / "cap_sensitivity_rank.parquet", index=False)
+
     pd.DataFrame([{"regime": r, "ref_share_pct": ref["shares"][r],
                    "max_drift_sigma": round(drift[r], 4)} for r in range(k)]
                  ).to_parquet(ARTIFACT_DIR / "cap_sensitivity_drift.parquet", index=False)
 
     print(f"\n  Figure → {OUT_DIR / 'cap_sensitivity_ari.png'}")
     print(f"  Saved  → {ARTIFACT_DIR / 'cap_sensitivity_caps.parquet'}")
+    print(f"           {ARTIFACT_DIR / 'cap_sensitivity_rank.parquet'}")
     print(f"           {ARTIFACT_DIR / 'cap_sensitivity_drift.parquet'}")
     print(f"{'='*78}\n")
 
