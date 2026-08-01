@@ -1,8 +1,13 @@
 """
 validity_indices.py  —  Section 4.6.7 figure
-Reads validity_indices.parquet → gap / Davies–Bouldin / Calinski–Harabasz vs k,
+Reads validity_indices.parquet → Davies–Bouldin / Calinski–Harabasz / gap vs k,
 with the silhouette-selected k marked, so the reader can see whether the three
 criteria corroborate it. Thin reader; no recomputation.
+
+Panel order follows the methodology: the two corroborating compactness indices
+first (Davies–Bouldin, Calinski–Harabasz), the gap statistic last — it is
+reported with its known uniform-null caveat rather than as a co-equal selector,
+so it reads as the disclosed dissenter rather than as a third vote.
 """
 
 from pathlib import Path
@@ -16,9 +21,10 @@ REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
 OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "regime_discovery" / "figures" / "validity"
 DPI             = 300
 
-PANELS = [("gap", "Gap statistic"),
-          ("davies_bouldin", "Davies–Bouldin index"),
-          ("calinski_harabasz", "Calinski–Harabasz index")]
+# methodology order: corroborating indices first, gap (disclosed dissenter) last
+PANELS = [("davies_bouldin", "Davies–Bouldin index (lower = better)"),
+          ("calinski_harabasz", "Calinski–Harabasz index (higher = better)"),
+          ("gap", "Gap statistic")]
 
 
 def main():

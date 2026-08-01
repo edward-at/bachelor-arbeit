@@ -47,7 +47,7 @@ from sklearn.mixture import GaussianMixture
 from sklearn.metrics import adjusted_rand_score
 
 # shared steps — single source of truth
-from clustering import (_discover, _load, _build_fit, _order_regimes,
+from clustering import (_discover, _load, _build_fit, _order_regimes, _pin_pca_signs,
                         FEATURES, N_INIT, SEED, K_RANGE, CAP, BACKREF, ARTIFACT_DIR)
 
 warnings.filterwarnings("ignore")
@@ -102,6 +102,7 @@ def main():
     Xfit   = scaler.transform(fit[FEATURES])
     Xall   = scaler.transform(full[FEATURES])
     pca    = PCA(n_components=3, random_state=SEED).fit(Xfit)   # viz only (same as clustering)
+    pca    = _pin_pca_signs(pca)                                # same orientation pin as clustering
     W2     = pca.components_[:2]                                # (2,5) loading for the plane
 
     # k-means reference centroids (ordered), to align GMM components and compare

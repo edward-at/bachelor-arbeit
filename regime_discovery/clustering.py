@@ -17,7 +17,9 @@ bias measurement of Chapter 5. The cap NEVER discards data from the measurement.
 
 k is selected by maximum silhouette, each silhouette compared against a null
 baseline (each feature independently shuffled). Clustering runs on the FULL
-standardised vector; PCA is for the scatter only.
+standardised vector; PCA is for the scatter only. The PCA component signs are
+pinned to named feature anchors (_pin_pca_signs) so the projection's
+orientation is reproducible across reruns.
 
 Run ONCE; downstream figures and the bias measurement of Chapter 5 read the
 saved parquet layer, never re-fit. Reproducibility rests on the fixed seed:
@@ -29,6 +31,7 @@ Reads:   dataset/regime_data/feature_gate_vector.parquet   (locked vector)
 Writes:  dataset/regime_data/cluster_assignments.parquet
          dataset/regime_data/cluster_profile.parquet
          dataset/regime_data/kselect_curves.parquet
+         dataset/regime_data/pca_variance.parquet
 ────────────────────────────────────────────────────────────────────────────
 """
 
@@ -78,7 +81,7 @@ INTENSITY_FEATURES = [f for f in FEATURES if f != "mean_speed_kmh"]
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# HELPERS  (imported by cap_sensitivity.py)
+# HELPERS  (imported by cap_sensitivity.py, gmm.py, and the stability scripts)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _now() -> str:
@@ -140,6 +143,20 @@ def _order_regimes(centroids_scaled: np.ndarray) -> dict:
     return {int(old): new for new, old in enumerate(order)}
 
 
+def _pin_pca_signs(pca):
+    """PCA eigenvectors are defined only up to sign, so a refit on changed data
+    can mirror an axis (a rerun did exactly this to PC2). Anchor each component
+    to a named feature whose loading is forced positive, making the projection's
+    orientation reproducible across reruns: PC1 grows with speed variability,
+    PC2 with mean speed, PC3 with acceleration. A sign flip changes only the
+    stored pc columns — labels, distances and profiles are untouched."""
+    _ANCHOR = ["std_speed_kmh", "mean_speed_kmh", "mean_acc_pos"]
+    for c, feat in enumerate(_ANCHOR[:pca.n_components_]):
+        if pca.components_[c, FEATURES.index(feat)] < 0:
+            pca.components_[c] *= -1.0
+    return pca
+
+
 def _sil(X: np.ndarray, labels: np.ndarray, seed: int) -> float:
     return float(silhouette_score(X, labels, sample_size=min(SIL_SAMPLE, len(X)),
                                   random_state=seed))
@@ -184,6 +201,7 @@ def main():
     scaler = StandardScaler().fit(fit[FEATURES])
     Xfit   = scaler.transform(fit[FEATURES])
     pca    = PCA(n_components=3, random_state=SEED).fit(Xfit)
+    pca    = _pin_pca_signs(pca)      # pin orientation (viz only; labels untouched)
     print(f"  PCA per-component %: {np.round(pca.explained_variance_ratio_ * 100, 1)}  cumulative %: {np.round(np.cumsum(pca.explained_variance_ratio_) * 100, 1)}")
     evr    = float(pca.explained_variance_ratio_[:2].sum())
     evr3   = float(pca.explained_variance_ratio_[:3].sum())
@@ -243,8 +261,11 @@ def main():
         ARTIFACT_DIR / "cluster_assignments.parquet", index=False)
     prof.reset_index().to_parquet(ARTIFACT_DIR / "cluster_profile.parquet", index=False)
     curves.to_parquet(ARTIFACT_DIR / "kselect_curves.parquet", index=False)
+    pd.DataFrame({"component": ["pc1", "pc2", "pc3"],
+                  "explained_var_ratio": np.round(pca.explained_variance_ratio_, 6)}
+                 ).to_parquet(ARTIFACT_DIR / "pca_variance.parquet", index=False)
 
-    print(f"\n  Saved → {ARTIFACT_DIR}  (cluster_assignments · cluster_profile · kselect_curves)")
+    print(f"\n  Saved → {ARTIFACT_DIR}  (cluster_assignments · cluster_profile · kselect_curves · pca_variance)")
     print(f"  Reproduce: rerun under seed {SEED}.")
     print(f"{'='*78}\n")
 

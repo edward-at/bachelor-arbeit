@@ -55,7 +55,7 @@ def main():
     # behavioural names from regime_style — identical to every other figure
     ax.set_yticklabels([f"{regime_label(int(r))}\n({s:.0f}%)"
                         for r, s in zip(df["regime"], df["share_pct"])])
-    ax.set_title("Dynamic regime feature profiles  (cell: mean in physical units)")
+    ax.set_title("Dynamic regime feature profiles")
 
     # documented heatmap exception: a single small fontsize for the in-cell values
     for i in range(len(df)):

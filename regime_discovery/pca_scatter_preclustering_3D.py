@@ -36,7 +36,6 @@ OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "regime_discovery" / "figur
 N_PLOT                = 30000      # subsample for rendering only (clustering uses all windows)
 SEED                  = 42         # same subsample as the labelled 3-D view
 CROP_PCT              = (1, 99)    # zoom to this percentile range per axis
-EXPLAINED_VAR_3D_PCT  = 78.7       # PC1-PC3 share — from clustering.py
 VIEW_ELEV             = 18         # same camera as the labelled 3-D view
 VIEW_AZIM             = -60        # same camera as the labelled 3-D view
 SHOW                  = False      # True → open an interactive window to rotate
@@ -46,6 +45,9 @@ DPI                   = 300
 def main():
     df = pd.read_parquet(REGIME_DATA_DIR / "cluster_assignments.parquet",
                          columns=["pc1", "pc2", "pc3"])
+    # variance shares from the pipeline artefact — never hard-coded, cannot go stale
+    evr = pd.read_parquet(REGIME_DATA_DIR / "pca_variance.parquet")["explained_var_ratio"]
+    var3_pct = 100.0 * float(evr.iloc[:3].sum())
 
     # data-driven zoom on all three axes
     lims = {c: np.percentile(df[c], CROP_PCT) for c in ("pc1", "pc2", "pc3")}
@@ -61,7 +63,7 @@ def main():
     ax.set_ylabel("PC 2")
     ax.set_zlabel("PC 3")
     ax.set_title(f"Windows in 3-D PCA space (before clustering)\n"
-                 f"PC1-PC3 capture {EXPLAINED_VAR_3D_PCT:.1f}% of the 5-D feature variance")
+                 f"PC1-PC3 capture {var3_pct:.1f}% of the 5-D feature variance")
     ax.set_xlim(*lims["pc1"]); ax.set_ylim(*lims["pc2"]); ax.set_zlim(*lims["pc3"])
     ax.view_init(elev=VIEW_ELEV, azim=VIEW_AZIM)
 

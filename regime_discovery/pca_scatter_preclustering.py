@@ -21,15 +21,17 @@ PROJECT_ROOT    = Path("/Users/edward/Downloads")
 REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
 OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "regime_discovery" / "figures" / "pca"
 
-N_PLOT             = 30000       # subsample for rendering only (clustering uses all windows)
-SEED               = 42
-CROP_PCT           = (1, 99)     # zoom to this percentile range per axis
-EXPLAINED_VAR_PCT  = 59.8        # PC1+PC2 variance share — from clustering.py (seed 42, fixed)
-DPI                = 300
+N_PLOT   = 30000       # subsample for rendering only (clustering uses all windows)
+SEED     = 42
+CROP_PCT = (1, 99)     # zoom to this percentile range per axis
+DPI      = 300
 
 
 def main():
     df = pd.read_parquet(REGIME_DATA_DIR / "cluster_assignments.parquet", columns=["pc1", "pc2"])
+    # variance shares from the pipeline artefact — never hard-coded, cannot go stale
+    evr = pd.read_parquet(REGIME_DATA_DIR / "pca_variance.parquet")["explained_var_ratio"]
+    var2_pct = 100.0 * float(evr.iloc[:2].sum())
 
     # data-driven zoom: crop to the central CROP_PCT of windows, with a little padding
     x_lo, x_hi = np.percentile(df["pc1"], CROP_PCT)
@@ -45,7 +47,7 @@ def main():
     ax.set_xlabel("PC 1")
     ax.set_ylabel("PC 2")
     ax.set_title(f"Windows in PCA space (before clustering)\n"
-                 f"PC1+PC2 capture {EXPLAINED_VAR_PCT:.1f}% of the 5-D feature variance")
+                 f"PC1+PC2 capture {var2_pct:.1f}% of the 5-D feature variance")
     ax.set_xlim(x_lo - px, x_hi + px)
     ax.set_ylim(y_lo - py, y_hi + py)
     ax.grid(True); ax.set_axisbelow(True)
