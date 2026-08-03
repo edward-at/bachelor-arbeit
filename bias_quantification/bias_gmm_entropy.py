@@ -121,7 +121,7 @@ def fig_entropy(tab, pooled_mean):
     axes[1].grid(axis="x", alpha=0.3)
     axes[1].set_axisbelow(True)
 
-    fig.suptitle("Boundary bias: regime-core vs overlap-zone occupancy per dataset (* = accel-confounded)")
+    fig.suptitle("Boundary bias: regime-core vs overlap-zone occupancy per dataset")
     fig.tight_layout()
     out = OUT_DIR / "gmm_entropy.png"
     fig.savefig(out, dpi=DPI)

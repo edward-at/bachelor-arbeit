@@ -118,8 +118,7 @@ def fig_lorenz(datasets, data, tab):
     ax.set_xlabel("Cumulative fraction of 20 s windows (calmest first)")
     ax.set_ylabel("Cumulative fraction of speed-variability mass")
     ax.set_title("Dynamic concentration: Lorenz curves of window "
-                 "\u03c3-speed\n(Legend: dynamic-content Gini per dataset, "
-                 "* = accel-confounded)")
+                 "\u03c3-speed\n(Legend: dynamic-content Gini per dataset)")
     ax.grid(True, alpha=0.3)
     ax.set_axisbelow(True)
     ax.legend(loc="upper left", ncol=2)

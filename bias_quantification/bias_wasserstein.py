@@ -76,7 +76,7 @@ def plot_wasserstein(per, out_dir):
     axes[0].set_yticks(y)
     axes[0].set_yticklabels(names)
 
-    fig.suptitle("Per-channel 1-Wasserstein distance to the pooled reference (* = accel-confounded)")
+    fig.suptitle("Per-channel 1-Wasserstein distance to the pooled reference")
     fig.tight_layout()
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "bias_wasserstein.png"

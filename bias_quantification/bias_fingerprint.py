@@ -154,7 +154,7 @@ def render(tab, raw, inten):
     cbar = fig.colorbar(im, ax=ax, fraction=0.025, pad=0.02)
     cbar.set_label("column normalised bias intensity")
 
-    ax.set_title("Bias fingerprint across datasets (* = accel-confounded)")
+    ax.set_title("Bias fingerprint across datasets")
     fig.tight_layout()
 
     out = OUT_DIR / "bias_fingerprint.png"

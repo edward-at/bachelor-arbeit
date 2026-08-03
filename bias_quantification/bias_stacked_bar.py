@@ -79,7 +79,7 @@ def plot_stacked_bar(per, profiles, out_dir):
     ax.set_xlim(0, 100)
     # reserve an empty band BELOW the bottom bar so the legend does not cover it
     ax.set_ylim(-2.6, y.max() + 0.8)
-    ax.set_xlabel("Share of 20 s windows (%)   (* = accel-confounded signal, see §6.6)")
+    ax.set_xlabel("Share of 20 s windows (%) ")
     ax.set_title("Per-dataset dynamic-regime composition, ordered by low-dynamic share")
     ax.grid(axis="x", alpha=0.3)
     ax.set_axisbelow(True)

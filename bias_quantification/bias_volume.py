@@ -84,7 +84,7 @@ def fig_lorenz(tab, scalars):
     ax.set_ylabel("Cumulative fraction of 20 s windows")
     # two-line title: the one-line version clipped at the figure edge
     ax.set_title("Corpus volume concentration\n"
-                 f"volume-share Gini = {scalars['volume_gini']:.2f} \u00b7 "
+                 f"volume-share Gini = {scalars['volume_gini']:.2f}, "
                  f"effective datasets $D_2$ \u2248 {scalars['eff_datasets_d2']:.1f} "
                  f"of {scalars['n_datasets']}")
     ax.grid(True, alpha=0.3)

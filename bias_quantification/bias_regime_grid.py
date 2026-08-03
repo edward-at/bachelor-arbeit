@@ -74,8 +74,8 @@ def plot_grid(per, out_dir):
     axes[0][0].set_ylabel("share of windows (%)")
     axes[1][0].set_ylabel("share of windows (%)")
 
-    key = " · ".join(f"{i} {regime_label(i)}" for i in range(N_REGIMES))
-    fig.suptitle(f"Per-dataset regime distributions (* = accel-confounded)\nRegimes: {key}")
+    key = ", ".join(f"{i} = {regime_label(i)}" for i in range(N_REGIMES))
+    fig.suptitle(f"Per-dataset regime distributions \nRegimes: {key}")
     fig.tight_layout()
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / "bias_regime_grid.png"

@@ -103,8 +103,7 @@ def main():
     tab["n_windows"] = counts.sum(axis=1).astype(int)
     shown = tab.copy()
     shown.index = [label(d) for d in shown.index]
-    print("\nRegime supply (% of each regime's pooled windows; "
-          "* = confounded acceleration):\n")
+    print("\nRegime supply (% of each regime's pooled windows "\n")
     print(shown.round(2).to_string())
 
     print(f"\nTop {TOP_K} suppliers per regime:")
