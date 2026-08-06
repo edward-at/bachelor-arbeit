@@ -23,9 +23,11 @@ Honest caveats (write these into the methodology):
   * Composition confound: part of a dataset's mean entropy is inherited from
     WHICH regions it occupies (some components are intrinsically fuzzier).
     The per-component pooled entropy breakdown is printed so this is visible.
-  * Entropy units are as stored by Chapter 9 (natural log assumed; max for
-    five components = ln 5 ~ 1.609). The script verifies the observed max
-    against that bound before printing a normalised column.
+  * ENTROPY UNITS: Chapter 9 (gmm.py) stores the membership entropy ALREADY
+    NORMALISED by ln(k) — the stored column is on [0, 1], not in nats. The
+    guard below checks against that ceiling of 1.0, and no further division
+    is applied here. (A previous version assumed nats and divided a second
+    time, which silently scaled the derived column by 1/ln 5.)
   * Accel-confounded datasets carry the asterisk: the GMM features include
     acceleration-derived dimensions, so their boundary profile inherits the
     fidelity artifact.
@@ -54,7 +56,9 @@ GMM_ASSIGN = ARTIFACT_DIR / "gmm_assignments.parquet"
 TAU_PRIMARY = 0.8            # DC11: ambiguity threshold (companion metric)
 TAU_SENSITIVITY = (0.5, 0.8, 0.9)
 N_COMPONENTS = 5
-MAX_ENTROPY_NATS = np.log(N_COMPONENTS)   # 1.609..., assuming natural log
+# Chapter 9 divides by ln(k) before persisting, so the stored entropy is
+# already on [0, 1]; the ceiling to check against is 1.0, not ln 5.
+MAX_ENTROPY = 1.0
 
 
 # ══════════════════════════════ build ══════════════════════════════
@@ -68,23 +72,25 @@ def build_table():
     n_kmeans = len(pd.read_parquet(REGIME_ASSIGN, columns=["regime"]))
     if len(df) != n_kmeans:
         print(f"  [WARN] gmm_assignments has {len(df):,} windows but "
-              f"cluster_assignments has {n_kmeans:,} — populations differ.")
+              f"cluster_assignments has {n_kmeans:,} — populations differ. "
+              f"Re-run gmm.py against the current clustering before quoting "
+              f"any number below.")
 
-    # entropy-units guard (DC11): verify the natural-log assumption
+    # entropy-units guard (DC11): the stored column must already be normalised
     obs_max = float(df["entropy"].max())
-    units_ok = obs_max <= MAX_ENTROPY_NATS * 1.001
+    units_ok = obs_max <= MAX_ENTROPY * 1.001
     if not units_ok:
-        print(f"  [WARN] observed max entropy {obs_max:.3f} exceeds ln(5) = "
-              f"{MAX_ENTROPY_NATS:.3f} — normalised column SKIPPED; verify the "
-              f"Chapter-9 entropy convention before quoting normalised values.")
+        print(f"  [WARN] observed max entropy {obs_max:.3f} exceeds the "
+              f"normalised ceiling {MAX_ENTROPY:.3f} — the Chapter-9 column is "
+              f"evidently NOT normalised (nats?); verify gmm.py's entropy "
+              f"convention before quoting any value below.")
 
     g = df.groupby("dataset")
     tab = pd.DataFrame(index=sorted(df["dataset"].unique()))
     tab["n_windows"] = g.size()
+    # mean_entropy IS the normalised quantity — no further division.
     tab["mean_entropy"] = g["entropy"].mean()
     tab["median_entropy"] = g["entropy"].median()
-    if units_ok:
-        tab["mean_entropy_norm"] = tab["mean_entropy"] / MAX_ENTROPY_NATS
     for tau in TAU_SENSITIVITY:
         tab[f"amb_share_{int(tau * 100)}"] = g["max_posterior"].apply(
             lambda v, t=tau: float(np.mean(v < t)))
@@ -143,7 +149,7 @@ def main():
     print(shown.round(4).sort_values("mean_entropy", ascending=False).to_string())
 
     print(f"\nPooled mean entropy = {pooled_mean:.4f} "
-          f"(observed max {obs_max:.4f}; ln(5) = {MAX_ENTROPY_NATS:.4f}"
+          f"(observed max {obs_max:.4f}; normalised ceiling = {MAX_ENTROPY:.4f}"
           f"{', units check OK' if units_ok else ', UNITS CHECK FAILED'})")
     print("\nPer-component pooled mean entropy (composition-confound context):")
     print(comp_break.round(4).to_string())

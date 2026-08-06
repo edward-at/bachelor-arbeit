@@ -40,6 +40,8 @@ from bias_tier2_common import (
 )
 
 OUT_DIR = FIG_ROOT
+AXIS_PAD = 0.015     # headroom so the corner marker (largest dataset) is not
+                     # clipped by the axes frame at (1, 1)
 
 
 # ══════════════════════════════ build ══════════════════════════════
@@ -68,18 +70,19 @@ def fig_lorenz(tab, scalars):
     cum_y = np.concatenate([[0.0], np.cumsum(shares)])
 
     fig, ax = plt.subplots(figsize=(8, 8))
-    ax.plot([0, 1], [0, 1], color="black", linewidth=1, alpha=0.5,
+    ax.plot([0, 1], [0, 1], color="black", linewidth=1, alpha=0.5, zorder=1,
             label="perfect equality")
-    ax.plot(cum_x, cum_y, color=TUM_PRIMARY["tum_blue"], linewidth=2,
+    ax.plot(cum_x, cum_y, color=TUM_PRIMARY["tum_blue"], linewidth=2, zorder=2,
             label="corpus Lorenz curve")
 
-    # one point per dataset at its cumulative position, largest drawn last
+    # one point per dataset at its cumulative position, largest drawn last.
+    # zorder=3: scatter defaults BELOW plot, which hid the markers under the curve.
     for i, ds in enumerate(tab.index):
         ax.scatter(cum_x[i + 1], cum_y[i + 1], color=color(ds),
-                   edgecolor="black", linewidth=0.5, label=label(ds))
+                   edgecolor="black", linewidth=0.5, zorder=3, label=label(ds))
 
-    ax.set_xlim(0.0, 1.0)
-    ax.set_ylim(0.0, 1.0)
+    ax.set_xlim(-AXIS_PAD, 1.0 + AXIS_PAD)
+    ax.set_ylim(-AXIS_PAD, 1.0 + AXIS_PAD)
     ax.set_xlabel("Cumulative fraction of datasets (smallest first)")
     ax.set_ylabel("Cumulative fraction of 20 s windows")
     # two-line title: the one-line version clipped at the figure edge

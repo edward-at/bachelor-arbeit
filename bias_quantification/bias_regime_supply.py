@@ -68,9 +68,7 @@ def render(datasets, supply):
                        rotation=30, ha="right")
     ax.set_yticks(range(n_ds))
     ax.set_yticklabels([label(d) for d in datasets])
-    ax.set_title("Regime supply — who provides each regime's windows\n"
-                 "(columns sum to 100 %; rows ordered by corpus volume; "
-                 "* = accel-confounded)")
+    ax.set_title("Regime supply, who provides each regime's windows")
 
     thresh = 0.55 * supply.max()
     for r in range(n_ds):
@@ -103,7 +101,7 @@ def main():
     tab["n_windows"] = counts.sum(axis=1).astype(int)
     shown = tab.copy()
     shown.index = [label(d) for d in shown.index]
-    print("\nRegime supply (% of each regime's pooled windows "\n")
+    print("\nRegime supply (% of each regime's pooled windows) ")
     print(shown.round(2).to_string())
 
     print(f"\nTop {TOP_K} suppliers per regime:")
