@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-run_sampling.py — Chapter 11: Balanced Subset Construction.
+run_sampling.py — Chapter 11: sampling method construction.
 
-Generates ten curated window-ID subsets (M01–M10) from the frozen window layer
+Generates eleven curated window-ID subsets (M01–M11) from the frozen window layer
 (cluster_assignments + std_data [+ window_summaries cache]) under one shared
 protocol (Section 11.0): frame overlap guard (auto-verified), CONFOUNDED_ACCEL
 guard, matched-N sizing, fixed seeds, largest-remainder integer allocation.
 
 Outputs (all under SUBSET_DIR):
-    M01_srs.parquet ... M10_cluster_quota_fill.parquet   (window-ID lists)
+    M01_srs.parquet ... M11_neyman_allocation.parquet    (window-ID lists)
     supply_table.csv        regime x dataset supply, post-dedup
-    allocation_table.csv    per-regime quotas for allocation methods (+ Neyman row)
+    allocation_table.csv    per-regime quotas for the allocation designs
+                            (M02-M05, M11)
     manifest.json           full run metadata, config echo, per-method summaries
 
 Usage:
@@ -20,7 +21,7 @@ Usage:
     python run_sampling.py --n 5000           # override matched-N
 
 Methods M07/M08 need the window_summaries.parquet cache
-(built once by build_window_summaries.py); they are skipped with a warning
+(built once by window_summary.py); they are skipped with a warning
 if the cache is missing. See METHODOLOGY.md for definitions and citations.
 """
 
@@ -70,7 +71,17 @@ DEDUP_MODE = "auto"         # "auto" | "on" | "off"
 DEDUP_STRIDE = 2
 DEDUP_PHASE = 0             # keep windows with (idx - clip_min_idx) % 2 == 0
 WINDOW_S = 20.0
-CONFOUNDED_ACCEL = {"a2d2", "4seasons", "durlar"}   # single source of truth
+# Fidelity guard set (Section 11.2): imported from the Chapter 10 compute
+# stage so the two chapters cannot diverge. Local fallback engages only if
+# the import path is unavailable; the resolved source is logged and echoed
+# in the manifest.
+try:
+    sys.path.insert(0, str(PROJECT_ROOT / "bachelor-arbeit" / "bias_quantification"))
+    from bias_quant import CONFOUNDED_ACCEL
+    CONFOUNDED_SRC = "bias_quant (imported)"
+except Exception:
+    CONFOUNDED_ACCEL = {"a2d2", "4seasons", "durlar"}
+    CONFOUNDED_SRC = "local fallback — keep in sync with bias_quant.py" 
 MATCHED_N_MULT = 5          # matched-N = MULT x rarest-regime supply (post-dedup)
 OVERRIDE_N = None           # int to force a common N; None = matched-N rule
 
@@ -112,7 +123,7 @@ STD_FEATURE_COLS = ["std_speed_kmh", "std_acc_mag", "std_yaw_rate"]
 STEP_S = 10.0               # window step, used to derive window_idx if absent
 
 METHOD_ORDER = ["M01", "M02", "M03", "M04", "M05",
-                "M06", "M07", "M08", "M09", "M10"]
+                "M06", "M07", "M08", "M09", "M10", "M11"]
 METHOD_FILES = {
     "M01": "M01_srs.parquet",
     "M02": "M02_stratified_proportional.parquet",
@@ -124,6 +135,7 @@ METHOD_FILES = {
     "M08": "M08_predicate_mining.parquet",
     "M09": "M09_kennard_stone.parquet",
     "M10": "M10_cluster_quota_fill.parquet",
+    "M11": "M11_neyman_allocation.parquet",
 }
 ID_COLS = ["dataset", "clip_id", "window_idx",
            "window_start_s", "window_end_s", "regime"]
@@ -787,15 +799,46 @@ def write_subset(sel: pd.DataFrame, method_id: str, method_name: str) -> Path:
     return path
 
 
-def neyman_table_row(pool, N, supply):
-    """Neyman allocation vector (table row ONLY — no subset is generated)."""
+def m11_neyman(pool, N, rng, supply):
+    """M11 — Neyman variance-optimal allocation (Neyman 1934), GUARDED.
+
+    Quota_r proportional to S_r x SD_r of the declared variable (the composite
+    dynamic score of Section 11.4), integerised by the shared largest-remainder
+    engine and filled by SRS within regime — the same machinery as M02-M04,
+    differing in the weight vector alone.
+
+    Contrast case, not a balancing design: Neyman optimises the precision of
+    an estimated mean, spending budget where a regime's windows are most
+    scattered; representation is indifferent to dispersion. Read in Chapter 12
+    in that role, as M01 is read as the uncurated null.
+
+    Guard (Section 11.2, widened rule): this is the first design whose
+    ALLOCATION rather than selection consumes an acceleration-derived
+    quantity — the confounded datasets would inflate the within-regime
+    dispersion and thereby the quotas. Supply, dispersion, AND the draw all
+    use the guarded pool, so every quota is achievable by construction and
+    no structural shortfall arises.
+    """
     if "score" not in pool.columns or not pool["score"].notna().any():
-        return None
+        raise RuntimeError("M11: dynamic score unavailable")
+    guarded = pool[~pool["dataset"].isin(CONFOUNDED_ACCEL)]
     regimes = supply.index.tolist()
-    sd = pool.groupby("regime")["score"].std().reindex(regimes).fillna(0.0)
-    w = supply["TOTAL"].to_numpy(dtype=float) * sd.to_numpy()
-    q = allocate(w, N, supply["TOTAL"].to_numpy())
-    return dict(zip([str(r) for r in regimes], q.tolist()))
+    g_supply = (guarded.groupby("regime").size()
+                .reindex(regimes).fillna(0).astype(int))
+    g_sd = (guarded.groupby("regime")["score"].std()
+            .reindex(regimes).fillna(0.0))
+    w = g_supply.to_numpy(dtype=float) * g_sd.to_numpy(dtype=float)
+    if not np.isfinite(w).any() or float(np.nansum(w)) <= 0:
+        raise RuntimeError("M11: degenerate Neyman weights "
+                           "(guarded score dispersion is zero everywhere)")
+    q = allocate(w, min(int(N), int(g_supply.sum())), g_supply.to_numpy())
+    quotas = dict(zip(regimes, q.tolist()))
+    sel = srs_within(guarded, "regime", quotas, rng)
+    return sel, {"quota": {str(r): int(v) for r, v in quotas.items()},
+                 "declared_variable": "dynamic_score",
+                 "guarded_sd_per_regime": {str(r): float(v)
+                                           for r, v in g_sd.items()},
+                 "guard": "pool + allocation (Section 11.2, widened rule)"}
 
 
 def main():
@@ -822,6 +865,7 @@ def main():
     log(f"supply table written; regime totals:\n"
         f"{supply['TOTAL'].to_string()}")
     N = matched_n(supply)
+    log(f"fidelity guard set: {sorted(CONFOUNDED_ACCEL)} ({CONFOUNDED_SRC})")
 
     requested = [m.strip().upper() for m in args.methods.split(",") if m.strip()]
     manifest = {
@@ -831,6 +875,7 @@ def main():
             "DEDUP_MODE": DEDUP_MODE, "DEDUP_STRIDE": DEDUP_STRIDE,
             "DEDUP_PHASE": DEDUP_PHASE,
             "CONFOUNDED_ACCEL": sorted(CONFOUNDED_ACCEL),
+            "CONFOUNDED_SOURCE": CONFOUNDED_SRC,
             "MATCHED_N_MULT": MATCHED_N_MULT, "OVERRIDE_N": OVERRIDE_N,
             "BANKIER_Q": BANKIER_Q, "EVENT_SHARE": EVENT_SHARE,
             "DECEL_TRIGGER_G": DECEL_TRIGGER_G,
@@ -866,6 +911,8 @@ def main():
                 lambda rng: m09_kennard_stone(pool, N, rng, supply)),
         "M10": ("cluster-based quota fill (Yen & Lee variant)",
                 lambda rng: m10_cluster_quota_fill(pool, N, rng, supply)),
+        "M11": ("Neyman variance-optimal allocation (guarded pool)",
+                lambda rng: m11_neyman(pool, N, rng, supply)),
     }
 
     for i, mid in enumerate(METHOD_ORDER, start=1):
@@ -898,10 +945,9 @@ def main():
         if mid == "M05" and isinstance(extra, dict):
             alloc_rows[mid] = {r: int(sum(d.values()))
                                for r, d in extra.items()}
+        if mid == "M11" and isinstance(extra, dict) and "quota" in extra:
+            alloc_rows[mid] = dict(extra["quota"])
 
-    ney = neyman_table_row(pool, N, supply)
-    if ney:
-        alloc_rows["Neyman (table row only — no subset)"] = ney
     if alloc_rows:
         pd.DataFrame(alloc_rows).T.to_csv(ACTIVE_OUT_DIR / "allocation_table.csv")
         log("allocation_table.csv written")

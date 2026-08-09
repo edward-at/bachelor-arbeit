@@ -24,7 +24,7 @@ from subset_eval_common import (DPI, EVAL_DIR, ROW_LABELS, TUM_SECONDARY,
 
 WINDOW_S = 20.0
 GRID_HZ = 10.0
-GROUPS = ["R0_frame"] + [f"M{i:02d}" for i in range(1, 11)]
+GROUPS = ["R0_frame"] + [f"M{i:02d}" for i in range(1, 12)]
 REP_COLORS = [TUM_ACCENT["blue"], TUM_ACCENT["orange"], TUM_ACCENT["green"]]
 FIG_W, FIG_H = 9.0, 4.5
 

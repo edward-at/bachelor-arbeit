@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Per-method frame-level signal histograms (distributional_analysis grammar).
 
-66 single figures (Frame + M01..M10, six signals each) reproducing Section
+72 single figures (Frame + M01..M11, six signals each) reproducing Section
 8.1's grammar exactly — density bars, y-cap with overflow markers when one
 bar dwarfs the rest, zero line for signed signals, dashed mean line, the
 mu/sigma/p05/p95/valid-vs-total stats box — plus six comparative grids (one
@@ -73,7 +73,7 @@ def load():
         a[g["bin_idx"].values] = g["count"].values
         fine[(m, sig)] = a
     stats = {(r.method, r.signal): r for r in s.itertuples(index=False)}
-    methods = [m for m in ["R0_frame"] + [f"M{i:02d}" for i in range(1, 11)]
+    methods = [m for m in ["R0_frame"] + [f"M{i:02d}" for i in range(1, 12)]
                if (m, "speed") in fine]
     return fine, stats, methods
 

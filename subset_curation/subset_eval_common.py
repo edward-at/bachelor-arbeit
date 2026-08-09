@@ -47,8 +47,11 @@ FIG_ROOT = PROJECT_ROOT / "bachelor-arbeit" / "subset_curation" / "figures"
 OUT_DIR = FIG_ROOT / "subset_eval"
 DPI = 300
 
-TIER = "budget"                      # headline population, N = 71,215
-BUDGET_N = 71_215
+# Budget-tier size = one rarest-regime supply (Section 11.3). Recomputed on
+# the current 402,421-window frame, where the rarest regime is regime 4.
+# CHANGE HERE ONLY: the tier directory name is derived from it downstream.
+TIER = "budget"                      # headline population
+BUDGET_N = 71_390
 
 MAIN_BLUE = TUM_SECONDARY["blue2"]  # the thesis single-series colour
 
@@ -56,12 +59,12 @@ MAIN_BLUE = TUM_SECONDARY["blue2"]  # the thesis single-series colour
 # method slate: fixed M-order everywhere (never performance-ordered pre-rule)
 # ---------------------------------------------------------------------------
 METHODS = ["M01", "M02", "M03", "M04", "M05",
-           "M06", "M07", "M08", "M09", "M10"]
+           "M06", "M07", "M08", "M09", "M10", "M11"]
 METHOD_SHORT = {
     "M01": "SRS", "M02": "Proportional", "M03": "Equal",
     "M04": "Power q=0.5", "M05": "Two-way", "M06": "PPS score",
     "M07": "Trigger", "M08": "Predicates", "M09": "Kennard-Stone",
-    "M10": "Cluster fill",
+    "M10": "Cluster fill", "M11": "Neyman",
 }
 ROW_LABELS = {"R0_frame": "Frame", "R1_guarded": "Guarded frame",
               **{m: f"{m} {METHOD_SHORT[m]}" for m in METHODS}}
@@ -78,12 +81,14 @@ METHOD_COLORS = {
     "M08": TUM_ACCENT["orange"],
     "M09": TUM_SECONDARY["light_gray"],          # coverage / geometric
     "M10": TUM_SECONDARY["light_gray"],
+    "M11": TUM_EXT["purple"],          # variance-optimal (Section 11.10)
 }
 FAMILY_LEGEND = [("Replica", TUM_SECONDARY["gray"]),
                  ("Allocation", TUM_ACCENT["blue"]),
                  ("Probability", TUM_ACCENT["green"]),
                  ("Rule-based", TUM_ACCENT["orange"]),
-                 ("Coverage", TUM_SECONDARY["light_gray"])]
+                 ("Coverage", TUM_SECONDARY["light_gray"]),
+                 ("Variance-optimal", TUM_EXT["purple"])]
 
 CONFOUNDED = {"a2d2", "4seasons", "durlar"}
 

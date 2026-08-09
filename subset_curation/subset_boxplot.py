@@ -27,7 +27,7 @@ from subset_eval_common import (DPI, METHOD_COLORS, ROW_LABELS, TIER,
                                 BUDGET_N, dist_arrays, ensure_outdir,
                                 load_dist, load_master, present_methods)
 
-FIGSIZE = (16, 7)
+FIGSIZE = (17, 7)
 VIOLIN_WIDTH, BOX_WIDTH, WHISKER_WIDTH = 0.35, 0.12, 0.08
 MEAN_DOT_SIZE, VIOLIN_ALPHA = 7, 0.40
 BOX_LINEWIDTH, MEDIAN_LW, WHISKER_LW = 1.6, 2.2, 1.4

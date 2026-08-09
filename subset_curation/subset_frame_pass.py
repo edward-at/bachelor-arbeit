@@ -4,7 +4,7 @@
 One streaming pass over inertial_data/<dataset>/clip_*.parquet that tags every
 frame with its non-overlapping 20 s window (win_start = floor(t_rel/20)*20,
 key = "ds|clip|round(start*10)" — identical to the harness 'start' key) and,
-per membership group (Frame + M01..M10 budget subsets, an 11-bit mask),
+per membership group (Frame + M01..M11 budget subsets, a 12-bit mask),
 accumulates in a single read:
 
   1. fine per-signal histograms + moment sums  -> per-method frame histograms
@@ -51,7 +51,8 @@ INERTIAL_ROOT = PROJECT_ROOT / "dataset" / "inertial_data"
 STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
 REGIME_DIR = PROJECT_ROOT / "dataset" / "regime_data"
 SUBSET_DIR = PROJECT_ROOT / "dataset" / "subset_data"
-BUDGET_DIR = SUBSET_DIR / "tier_n71215"
+BUDGET_N = 71_390                       # Section 11.3; single point of change
+BUDGET_DIR = SUBSET_DIR / f"tier_n{BUDGET_N}"
 EVAL_DIR = SUBSET_DIR / "eval"
 
 WINDOW_S = 20.0
@@ -63,8 +64,8 @@ N_WORKERS = 12
 TASK_CLIPS = 200        # clip files per worker task
 
 METHODS = ["M01", "M02", "M03", "M04", "M05",
-           "M06", "M07", "M08", "M09", "M10"]
-GROUPS = ["R0_frame"] + METHODS          # bit 0 = frame, bits 1..10 = methods
+           "M06", "M07", "M08", "M09", "M10", "M11"]
+GROUPS = ["R0_frame"] + METHODS          # bit 0 = frame, bits 1..11 = methods
 N_GROUPS = len(GROUPS)
 
 # (signal_key, parquet_col, lo, hi, rad->deg) — verbatim distributional grammar
@@ -89,8 +90,8 @@ YAW_EDGES = np.linspace(-YAW_ABS_DEG, YAW_ABS_DEG, N_BINS_Y + 1)
 FRAME_COLS = ["t_rel_s", "speed_kmh", "a_long", "a_lat",
               "jerk_long", "jerk_lat", "yaw_rate", "acc_mag"]
 
-EXPECTED_FRAME_WINDOWS = 402_975
-EXPECTED_METHOD_WINDOWS = 71_215
+EXPECTED_FRAME_WINDOWS = 402_421
+EXPECTED_METHOD_WINDOWS = BUDGET_N
 
 
 def log(m):

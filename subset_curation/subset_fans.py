@@ -27,7 +27,7 @@ ALPHA, LINEWIDTH = 0.16, 0.8
 EXTENT_PCT, SPEED_PCT = 99.0, 99.0
 COLORMAP = "viridis"
 SINGLE_IN_XY, SINGLE_IN_SPEED = (8.0, 5.0), (8.0, 4.5)
-GROUPS = ["R0_frame"] + [f"M{i:02d}" for i in range(1, 11)]
+GROUPS = ["R0_frame"] + [f"M{i:02d}" for i in range(1, 12)]
 
 
 def _norm(vals):
