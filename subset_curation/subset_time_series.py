@@ -10,6 +10,9 @@ not a per-band selection), which is the honest adaptation to the selection
 grain. A light grey band shows the method's fan-sample envelope (10th-90th
 speed percentile per time step) behind the exemplars.
 Reads ONLY the fan caches. Outputs: figures/subset_eval/timeseries/…
+(De-duplicated 2026-07-09: the file had been pasted twice, so every
+run rendered the figures once with a stale copy and once with this
+one; only this copy remains.)
 """
 
 import matplotlib
@@ -27,6 +30,7 @@ GRID_HZ = 10.0
 GROUPS = ["R0_frame"] + [f"M{i:02d}" for i in range(1, 12)]
 REP_COLORS = [TUM_ACCENT["blue"], TUM_ACCENT["orange"], TUM_ACCENT["green"]]
 FIG_W, FIG_H = 9.0, 4.5
+Y_HEADROOM = 1.22        # top margin so the in-axes legend clears the traces
 
 
 def main():
@@ -60,26 +64,47 @@ def main():
                 traces_by_group[g].append(vg)
                 y_hi = max(y_hi, np.nanmax(vg))
 
+    skipped, fallback = [], []
     for g in GROUPS:
         traces = traces_by_group[g]
+        if not traces and env_by_group[g]:
+            # No exemplar FLAG survived in the cache for this group, but the
+            # group has sampled windows. The exemplars are by definition the
+            # first EX_N of that same seeded sample, so falling back to the
+            # first available sample windows is the identical construction —
+            # and it guarantees every group gets a figure instead of leaving
+            # a stale PNG from an earlier run on disk.
+            traces = env_by_group[g][:3]
+            fallback.append(g)
         if not traces:
+            skipped.append(g)
             continue
         fig, ax = plt.subplots(figsize=(FIG_W, FIG_H))
         env = np.array(env_by_group[g])
         if len(env) >= 10:
-            lo = np.nanpercentile(env, 10, axis=0)
-            hi = np.nanpercentile(env, 90, axis=0)
+            # A grid column is all-NaN where no sampled window reaches that
+            # time offset (np.interp pads with NaN outside a window's span).
+            # nanpercentile warns and returns NaN there, so compute only on
+            # columns with data and leave the rest NaN — fill_between then
+            # draws a gap rather than a fabricated band.
+            lo = np.full(env.shape[1], np.nan)
+            hi = np.full(env.shape[1], np.nan)
+            ok = np.isfinite(env).any(axis=0)
+            if ok.any():
+                lo[ok] = np.nanpercentile(env[:, ok], 10, axis=0)
+                hi[ok] = np.nanpercentile(env[:, ok], 90, axis=0)
             ax.fill_between(grid, lo, hi, color=TUM_SECONDARY["gray"],
                             alpha=0.25, label="sample 10\u201390th %ile")
         for i, tr in enumerate(traces[:3]):
             ax.plot(grid, tr, color=REP_COLORS[i], linewidth=1.4,
                     label=f"exemplar {i + 1}")
         ax.set_xlim(0, WINDOW_S)
-        ax.set_ylim(0, max(y_hi * 1.05, 1.0))
+        # headroom for the in-axes legend at upper right
+        ax.set_ylim(0, max(y_hi * Y_HEADROOM, 1.0))
         ax.set_xlabel("Time within window (s)")
         ax.set_ylabel("Speed (km/h)")
         ax.set_title(f"Exemplar speed traces ({ROW_LABELS[g]})")
-        ax.legend(fontsize=8)
+        ax.legend(loc="upper right", fontsize=8)
         ax.grid(True, alpha=0.3)
         ax.set_axisbelow(True)
         fig.tight_layout()
@@ -88,7 +113,15 @@ def main():
                     bbox_inches="tight")
         plt.close(fig)
     print(f"  [SAVED] exemplar traces for "
-          f"{sum(1 for g in GROUPS if traces_by_group[g])} groups")
+          f"{len(GROUPS) - len(skipped)} of {len(GROUPS)} groups")
+    if fallback:
+        print(f"  [NOTE] exemplar flags missing, used the first sampled "
+              f"windows instead for: {', '.join(fallback)} — re-run "
+              f"subset_frame_pass.py to refresh the fan caches")
+    if skipped:
+        print(f"  [WARN] no frames at all cached for: {', '.join(skipped)} "
+              f"— raise EX_N or the fan sample in subset_frame_pass.py, or "
+              f"investigate the fan-sequence coverage warning it prints")
 
 
 if __name__ == "__main__":

@@ -67,9 +67,8 @@ def main() -> None:
     axes[0].set_yticks(y)
     axes[0].set_yticklabels(labels)
 
-    fig.suptitle(f"Chapter-10 bias axes per sampling method — budget tier "
-                 f"(N = {BUDGET_N:,}); black line = frame, "
-                 f"grey line = uniform 20 % (left panel)")
+    fig.suptitle(f"Bias axes per sampling method, (Black line = frame), (Grey line = "
+                 f"uniform {UNIFORM:.0%} target)")
     fig.tight_layout()
     out = out_dir / "subset_bias_axes.png"
     fig.savefig(out, dpi=DPI)

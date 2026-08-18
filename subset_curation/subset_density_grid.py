@@ -68,8 +68,7 @@ def main() -> None:
     for ax in axes[-1, :]:
         ax.set_xlabel(CHANNEL_LABEL)
 
-    fig.suptitle(f"Per-method {CHANNEL_LABEL} density vs the frame "
-                 f"(grey ghost) — budget tier (N = {BUDGET_N:,}); "
+    fig.suptitle(f"Per-method {CHANNEL_LABEL} density vs the frame (grey),  "
                  f"x capped at frame p{X_CLIP_Q}")
     fig.tight_layout()
     out = out_dir / "subset_density_grid.png"

@@ -37,7 +37,13 @@ def main() -> None:
     rows = methods[::-1] + ["R0_frame"]          # frame drawn as the TOP row
 
     arrays = dict(zip(rows, dist_arrays(dist, "score", rows)))
+    # np.percentile PROPAGATES NaN, so the cap must be taken on finite
+    # values only; the per-row loop below already filters the same way.
     frame_vals = arrays["R0_frame"]
+    frame_vals = frame_vals[np.isfinite(frame_vals)]
+    if frame_vals.size == 0:
+        raise SystemExit("[ridgeline] frame score channel is entirely "
+                         "non-finite — check the dist cache")
     x_cap = float(np.percentile(frame_vals, X_PERCENTILE_CAP))
     xs = np.linspace(0.0, max(x_cap, 1e-6), N_GRID)
     n = len(rows)
@@ -68,8 +74,7 @@ def main() -> None:
     ax.set_xlim(0.0, x_cap)
     ax.set_xlabel(f"Composite dynamic score per 20 s window "
                   f"(x capped at frame p{X_PERCENTILE_CAP:.0f})")
-    ax.set_title(f"Dynamic-score distribution per sampling method — "
-                 f"budget tier (N = {BUDGET_N:,})")
+    ax.set_title(f"Dynamic-score distribution per sampling method")
     ax.grid(True, axis="x", alpha=0.3)
     ax.set_axisbelow(True)
     fig.tight_layout()

@@ -237,8 +237,8 @@ def draw_grid(sig_key, fine, methods, xlo, xhi, spec, out_dir):
         ax.set_ylabel("Fraction of frames")
     cap_note = (" (y-axis clipped to reveal the body)"
                 if grid_cap is not None else "")
-    fig.suptitle(f"{spec['label']} distribution per sampling method — "
-                 f"grey line = frame; shared frame-derived x-window{cap_note}")
+    fig.suptitle(f"{spec['label']} distribution per sampling method "
+                 f"(grey line = frame), (shared frame-derived x-window{cap_note})")
     fig.tight_layout()
     out = out_dir / f"subset_hist_grid_{sig_key}.png"
     fig.savefig(out, dpi=DPI)

@@ -93,7 +93,7 @@ def main() -> None:
                    vmin=0.0, vmax=1.0, aspect="auto")
 
     ax.set_xticks(np.arange(n_c))
-    ax.set_xticklabels([c[1] for c in cols], rotation=90, fontsize=CELL_FS + 1)
+    ax.set_xticklabels([c[1] for c in cols], rotation=0, fontsize=CELL_FS + 1)
     ax.set_yticks(np.arange(n_r))
     ax.set_yticklabels([ROW_LABELS[r] for r in rows])
     ax.set_ylim(n_r - 0.5, -1.5)          # headroom band for group labels
@@ -129,9 +129,9 @@ def main() -> None:
     cbar = fig.colorbar(im, ax=ax, fraction=0.02, pad=0.015)
     cbar.set_label("column min\u2013max (unoriented)")
 
-    ax.set_title(f"Method fingerprint — budget tier (N = {BUDGET_N:,}); "
-                 f"\u25b4 construction-determined  \u2022 influenced  "
-                 f"blank held-out; no composite index")
+    ax.set_title(f"Method fingerprint "
+                 f"(\u25b4=construction-determined),  (\u2022=influenced),  "
+                 f"(blank=held-out), (no composite index)")
     fig.tight_layout()
     out = out_dir / "subset_fingerprint.png"
     fig.savefig(out, dpi=DPI)

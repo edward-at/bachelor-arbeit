@@ -22,8 +22,13 @@ computes per-window kinematic summaries that std_data does not store:
     max_acc_mag, n_frames_used
 
 Output: SUBSET_DIR / window_summaries.parquet  (keyed dataset, clip_id,
-window_idx). Per-dataset partials live in SUBSET_DIR/_summaries_partial so an
-interrupted run resumes by skipping finished (non-empty) datasets.
+window_idx). Per-dataset partials live in SUBSET_DIR/_summaries_partial; a
+partial is reused only if its (clip_id, window_idx) key set exactly matches
+the CURRENT std_data for that dataset, so a regenerated std_data invalidates
+stale partials automatically instead of being skipped forever. The final
+write hard-verifies full coverage against std_data and exits nonzero on any
+mismatch, failing here rather than one stage later in the evaluation
+harness's join guard.
 """
 
 from __future__ import annotations
@@ -180,12 +185,26 @@ def process_clip(path: Path, windows: np.ndarray) -> list:
 
 def process_dataset(ds: str) -> None:
     partial = PARTIAL_DIR / f"{ds}.parquet"
-    if partial_is_done(partial):
-        log(f"{ds}: non-empty partial exists, skipping (delete it to rebuild)")
-        return
     std = pd.read_parquet(STD_DATA_DIR / f"{ds}.parquet",
                           columns=["clip_id", "window_idx",
                                    "window_start_s", "window_end_s"])
+    std_keys = set(zip(std["clip_id"].astype(str),
+                       std["window_idx"].astype(int)))
+    if partial.exists():
+        try:
+            part = pd.read_parquet(partial,
+                                   columns=["clip_id", "window_idx"])
+            part_keys = set(zip(part["clip_id"].astype(str),
+                                part["window_idx"].astype(int)))
+        except Exception:
+            part_keys = set()
+        if part_keys and part_keys == std_keys:
+            log(f"{ds}: partial matches current std_data "
+                f"({len(part_keys):,} windows), skipping")
+            return
+        log(f"{ds}: STALE partial ({len(part_keys):,} cached vs "
+            f"{len(std_keys):,} current std windows; std_data "
+            f"regenerated?) - rebuilding")
     ds_dir = INERTIAL_DIR / ds
     if not ds_dir.exists():
         log(f"{ds}: WARNING inertial dir missing ({ds_dir}) — skipped")
@@ -253,14 +272,25 @@ def main():
     full.to_parquet(OUT_PATH, index=False)
     log(f"window_summaries.parquet written: {len(full):,} rows -> {OUT_PATH}")
 
-    # coverage report vs std_data
-    log("coverage report (summarized windows / std windows):")
+    # Coverage verification vs std_data. Rows are one-per-std-window by
+    # construction (empty windows persist as NaN rows), so the contract is
+    # exact equality; the old >=95% advisory let a stale tail sit under it.
+    log("coverage verification (summarized windows / std windows):")
     got = full.groupby("dataset").size()
+    bad = []
     for ds in datasets:
         n_std = pq.ParquetFile(STD_DATA_DIR / f"{ds}.parquet").metadata.num_rows
         n_got = int(got.get(ds, 0))
-        flag = "" if n_std and n_got / n_std >= 0.95 else "   <-- INCOMPLETE"
+        flag = "" if n_got == n_std else "   <-- MISMATCH"
         log(f"  {ds:12s} {n_got:>9,} / {n_std:>9,}{flag}")
+        if n_got != n_std:
+            bad.append(ds)
+    if bad:
+        raise SystemExit(
+            f"[summaries] coverage mismatch for {', '.join(bad)}: the cache "
+            f"does not cover current std_data. Delete the listed partial(s) "
+            f"under {PARTIAL_DIR} if the rebuild above did not already "
+            f"replace them, and re-run.")
 
 
 if __name__ == "__main__":

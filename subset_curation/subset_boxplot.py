@@ -27,7 +27,9 @@ from subset_eval_common import (DPI, METHOD_COLORS, ROW_LABELS, TIER,
                                 BUDGET_N, dist_arrays, ensure_outdir,
                                 load_dist, load_master, present_methods)
 
-FIGSIZE = (17, 7)
+FIG_H = 7.0
+FIG_W_MIN = 16.0
+FIG_W_PER_GROUP = 1.35   # axes width scales with the slate (M11 now, C-rows at 13.2)
 VIOLIN_WIDTH, BOX_WIDTH, WHISKER_WIDTH = 0.35, 0.12, 0.08
 MEAN_DOT_SIZE, VIOLIN_ALPHA = 7, 0.40
 BOX_LINEWIDTH, MEDIAN_LW, WHISKER_LW = 1.6, 2.2, 1.4
@@ -40,8 +42,7 @@ SIGNALS = [
          title="Standard Deviation of Speed per Sampling Method",
          ylabel="\u03c3(speed) [km/h]", clip=(0.0, 200.0)),
     dict(key="acc_mag",  ch="std_acc_mag",
-         title="Standard Deviation of Acceleration Magnitude per Sampling "
-               "Method  (* = confounded-accel sources present)",
+         title="Standard Deviation of Acceleration Magnitude per Sampling Method (*)",
          ylabel="\u03c3(acc_mag) [m/s\u00b2] *", clip=(0.0, 21.3)),
     dict(key="yaw_rate", ch="std_yaw_deg",
          title="Standard Deviation of Yaw Rate per Sampling Method",
@@ -110,7 +111,16 @@ def _fmt(v):
 
 def plot_signal(sig, dist, rows, n_real):
     arrays = dist_arrays(dist, sig["ch"], rows)
-    fig, ax = plt.subplots(figsize=FIGSIZE)
+    # the dist cache is a raw row-paired sample (v12.1.2 contract), so NaNs
+    # pass through; filter here and report, because non-finite sigma values in
+    # the restored corpus are themselves a data-state signal worth seeing
+    n_bad = int(sum((~np.isfinite(a)).sum() for a in arrays))
+    if n_bad:
+        print(f"  [NOTE] {sig['key']}: {n_bad:,} non-finite sampled values "
+              f"excluded from display statistics")
+    arrays = [a[np.isfinite(a)] for a in arrays]
+    fig_w = max(FIG_W_MIN, FIG_W_PER_GROUP * len(rows) + 2.5)
+    fig, ax = plt.subplots(figsize=(fig_w, FIG_H))
     ax.set_title(sig["title"], fontsize=13, pad=10)
     ax.set_ylabel(sig["ylabel"], fontsize=11)
     ax.grid(axis="y", linestyle="--", alpha=0.7, zorder=0)
@@ -152,8 +162,12 @@ def plot_signal(sig, dist, rows, n_real):
         plt.Line2D([0], [0], color="grey", linewidth=WHISKER_LW,
                    label="Whiskers (1.5 \u00d7 IQR)"),
     ]
-    ax.legend(handles=legend, loc="upper left", frameon=True,
-              facecolor="white", fontsize=9)
+    # legend outside the axes: with Frame leading in fixed slate order, its
+    # clipped-max annotation and upper tail sit exactly where an in-axes
+    # upper-left legend would (the median-sorted Chapter 8 originals never
+    # collided because their leftmost group was the calmest, unclipped one)
+    ax.legend(handles=legend, loc="upper left", bbox_to_anchor=(1.005, 1.0),
+              frameon=True, facecolor="white", fontsize=9)
     fig.tight_layout()
     out = ensure_outdir() / f"subset_boxplot_{sig['key']}.png"
     fig.savefig(out, dpi=DPI, bbox_inches="tight")

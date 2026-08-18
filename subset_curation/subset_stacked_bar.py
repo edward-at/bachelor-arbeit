@@ -55,8 +55,7 @@ def main() -> None:
     ax.set_xlim(0, 100)
     ax.set_ylim(-2.6, y.max() + 0.8)     # empty band so the legend covers no bar
     ax.set_xlabel("Share of 20 s windows (%)")
-    ax.set_title(f"Per-method dynamic-regime composition — "
-                 f"budget tier (N = {BUDGET_N:,})")
+    ax.set_title(f"Per-method dynamic-regime composition")
     ax.grid(axis="x", alpha=0.3)
     ax.set_axisbelow(True)
     ax.legend(loc="lower center", ncol=N_REGIMES)

@@ -4,7 +4,7 @@
 One streaming pass over inertial_data/<dataset>/clip_*.parquet that tags every
 frame with its non-overlapping 20 s window (win_start = floor(t_rel/20)*20,
 key = "ds|clip|round(start*10)" — identical to the harness 'start' key) and,
-per membership group (Frame + M01..M11 budget subsets, a 12-bit mask),
+per membership group (Frame + M01..M10 budget subsets, an 11-bit mask),
 accumulates in a single read:
 
   1. fine per-signal histograms + moment sums  -> per-method frame histograms
@@ -51,8 +51,7 @@ INERTIAL_ROOT = PROJECT_ROOT / "dataset" / "inertial_data"
 STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
 REGIME_DIR = PROJECT_ROOT / "dataset" / "regime_data"
 SUBSET_DIR = PROJECT_ROOT / "dataset" / "subset_data"
-BUDGET_N = 71_390                       # Section 11.3; single point of change
-BUDGET_DIR = SUBSET_DIR / f"tier_n{BUDGET_N}"
+BUDGET_DIR = SUBSET_DIR / "tier_n71215"
 EVAL_DIR = SUBSET_DIR / "eval"
 
 WINDOW_S = 20.0
@@ -63,10 +62,19 @@ FINE_BINS = 1000        # fine accumulation grid per signal (rebinned at render)
 N_WORKERS = 12
 TASK_CLIPS = 200        # clip files per worker task
 
-METHODS = ["M01", "M02", "M03", "M04", "M05",
-           "M06", "M07", "M08", "M09", "M10", "M11"]
-GROUPS = ["R0_frame"] + METHODS          # bit 0 = frame, bits 1..11 = methods
-N_GROUPS = len(GROUPS)
+# The slate is DISCOVERED from the budget directory at run time (M01..M11
+# today, C-rows at 13.2) — never hardcoded, so the mask grows with the files.
+METHODS: list = []            # filled by discover_methods() in main()
+GROUPS: list = []             # ["R0_frame"] + METHODS
+N_GROUPS = 0
+
+
+def discover_methods() -> list:
+    mids = sorted({fp.name.split("_")[0]
+                   for fp in BUDGET_DIR.glob("M*_*.parquet")})
+    if not mids:
+        raise SystemExit(f"[frame_pass] no M*_*.parquet in {BUDGET_DIR}")
+    return mids
 
 # (signal_key, parquet_col, lo, hi, rad->deg) — verbatim distributional grammar
 EXTRACT_SPEC = [
@@ -90,8 +98,8 @@ YAW_EDGES = np.linspace(-YAW_ABS_DEG, YAW_ABS_DEG, N_BINS_Y + 1)
 FRAME_COLS = ["t_rel_s", "speed_kmh", "a_long", "a_lat",
               "jerk_long", "jerk_lat", "yaw_rate", "acc_mag"]
 
-EXPECTED_FRAME_WINDOWS = 402_421
-EXPECTED_METHOD_WINDOWS = BUDGET_N
+EXPECTED_FRAME_WINDOWS = 402_975
+EXPECTED_METHOD_WINDOWS = 71_215
 
 
 def log(m):
@@ -160,7 +168,7 @@ def build_masks():
     ds_c = _resolve(a, ["dataset"])
     cl_c = _resolve(a, ["clip_id", "clip"])
     keys = _keys_as_start(a, ds_c, cl_c, bridge)
-    mask = pd.Series(np.uint16(1), index=keys)                 # bit 0: frame
+    mask = pd.Series(np.uint32(1), index=keys)                 # bit 0: frame
     log(f"  frame windows: {len(mask):,} (expected {EXPECTED_FRAME_WINDOWS:,})")
 
     per_method_keys = {}
@@ -176,7 +184,7 @@ def build_masks():
         if missing.any():
             raise SystemExit(f"[frame_pass] {mid}: {int(missing.sum())} windows "
                              f"not in the frame")
-        mask.loc[k] = mask.loc[k].values | np.uint16(1 << bit)
+        mask.loc[k] = mask.loc[k].values | np.uint32(1 << bit)
         log(f"  {mid}: {len(k):,} windows tagged")
 
     # sigma(speed) per window for the time-series band selection (start-keyed)
@@ -253,7 +261,7 @@ def make_worker(ds, mask_dict, fan_kid):
             keys = (ds + "|" + clip + "|"
                     + pd.Series(st10, dtype="int64").astype(str)).to_numpy()
             gm = np.fromiter((mask_dict.get(k, 0) for k in keys),
-                             dtype=np.uint16, count=len(keys))
+                             dtype=np.uint32, count=len(keys))
             inw = gm > 0
             if not inw.any():
                 continue
@@ -318,7 +326,14 @@ def make_worker(ds, mask_dict, fan_kid):
 
 
 def main():
+    global METHODS, GROUPS, N_GROUPS
     t0 = time.time()
+    METHODS = discover_methods()
+    GROUPS = ["R0_frame"] + METHODS
+    N_GROUPS = len(GROUPS)
+    assert N_GROUPS <= 32, "widen the mask dtype past uint32 first"
+    log(f"[0/4] Slate discovered: {len(METHODS)} methods "
+        f"({METHODS[0]}..{METHODS[-1]}) -> {N_GROUPS} groups")
     EVAL_DIR.mkdir(parents=True, exist_ok=True)
     mask, per_method_keys, sigma = build_masks()
     fan_idx = sample_fans(mask, per_method_keys, sigma)

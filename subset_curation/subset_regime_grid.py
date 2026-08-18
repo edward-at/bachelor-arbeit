@@ -54,8 +54,7 @@ def main() -> None:
     axes[1][0].set_ylabel("share of windows (%)")
 
     key = " \u00b7 ".join(f"{i} {regime_label(i)}" for i in range(N_REGIMES))
-    fig.suptitle(f"Per-method regime profiles — budget tier "
-                 f"(N = {BUDGET_N:,}); grey line = uniform 20 %\n"
+    fig.suptitle(f"Per-method regime profiles (grey line = uniform 20 %)\n"
                  f"Regimes: {key}")
     fig.tight_layout()
     out = out_dir / "subset_regime_grid.png"

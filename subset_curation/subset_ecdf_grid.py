@@ -37,6 +37,7 @@ def main() -> None:
     rows = ["R0_frame"] + methods
 
     arrays = dict(zip(rows, dist_arrays(dist, CHANNEL, rows)))
+    arrays = {k: v[np.isfinite(v)] for k, v in arrays.items()}
     fx, fy = ecdf(arrays["R0_frame"])
     x_hi = float(np.percentile(arrays["R0_frame"], X_CLIP_Q))
 
@@ -45,7 +46,7 @@ def main() -> None:
     flat = axes.ravel()
     for k, r in enumerate(rows):
         ax = flat[k]
-        ax.plot(fx, fy, color="black", linewidth=1.0)
+        ax.plot(fx, fy, color="black", linewidth=1.0, alpha=0.55)
         if r != "R0_frame":
             mx, my = ecdf(arrays[r])
             ax.plot(mx, my, color=MAIN_BLUE, linewidth=1.4)
@@ -61,8 +62,7 @@ def main() -> None:
     for ax in axes[-1, :]:
         ax.set_xlabel(CHANNEL_LABEL)
 
-    fig.suptitle(f"Per-method {CHANNEL_LABEL} ECDF vs the frame (black ghost) "
-                 f"— budget tier (N = {BUDGET_N:,}); "
+    fig.suptitle(f"Per-method {CHANNEL_LABEL} ECDF vs the frame (black) "
                  f"x capped at frame p{X_CLIP_Q}")
     fig.tight_layout()
     out = out_dir / "subset_ecdf_grid.png"

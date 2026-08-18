@@ -55,8 +55,7 @@ def main() -> None:
     ax.set_xticklabels([ROW_LABELS[r] for r in rows], rotation=45, ha="right")
     ax.set_ylim(0, 1.12)
     ax.set_ylabel("Source share")
-    ax.set_title(f"Source composition per sampling method — budget tier "
-                 f"(N = {BUDGET_N:,}); annotations: volume Gini / D\u2082")
+    ax.set_title(f"Source composition per sampling method (Annotations: Volume Gini, D\u2082)")
     ax.legend(loc="center left", bbox_to_anchor=(1.005, 0.5))
     ax.set_axisbelow(True)
     ax.grid(axis="y", alpha=0.3)

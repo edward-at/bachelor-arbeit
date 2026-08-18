@@ -89,6 +89,10 @@ def xy_fan(per, out_dir):
                              EXTENT_PCT), 1.0)
     xlim, ylim = (-0.05 * xmax, xmax * 1.05), (-ymax * 1.05, ymax * 1.05)
     for g, recs in per.items():
+        if not recs:
+            print(f"  [WARN] {g}: no fan traces in cache — figure skipped "
+                  f"(re-run subset_frame_pass.py to refresh the cache)")
+            continue
         fig, ax = plt.subplots(figsize=SINGLE_IN_XY)
         for r in sorted(recs, key=lambda r: r["heading_change"], reverse=True):
             ax.plot(r["x"], r["y"], color=cmap(norm(r["heading_change"])),
@@ -101,7 +105,7 @@ def xy_fan(per, out_dir):
         sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
         fig.colorbar(sm, ax=ax, fraction=0.046, pad=0.02).set_label(
             "Absolute total heading change (rad)")
-        ax.set_title(f"Trajectory distribution — {ROW_LABELS[g]} "
+        ax.set_title(f"Trajectory distribution, {ROW_LABELS[g]} "
                      f"(window = {WINDOW_S:g}s)")
         rid = "frame" if g == "R0_frame" else g
         fig.savefig(out_dir / f"trajectory_fan_{rid}.png", dpi=DPI,
@@ -117,6 +121,10 @@ def speed_fan(per, out_dir):
              for r in allr if r["speed_kmh"].size]
     vmax = max(float(np.percentile(dvals, SPEED_PCT)), 1.0)
     for g, recs in per.items():
+        if not recs:
+            print(f"  [WARN] {g}: no fan traces in cache — figure skipped "
+                  f"(re-run subset_frame_pass.py to refresh the cache)")
+            continue
         fig, ax = plt.subplots(figsize=SINGLE_IN_SPEED)
         for r in sorted(recs, key=lambda r: r["peak_acc"]):
             ax.plot(r["t"], r["speed_kmh"] - r["speed_kmh"][0],

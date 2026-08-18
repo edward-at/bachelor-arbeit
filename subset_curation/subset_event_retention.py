@@ -48,17 +48,16 @@ def main() -> None:
         ax.bar(x, vals, color=MAIN_BLUE, edgecolor="black",
                linewidth=0.4)
         ax.set_xticks(x)
-        ax.set_xticklabels(methods, rotation=90)
+        ax.set_xticklabels(methods, rotation=0)
         ax.set_title(title)
         ax.set_ylim(0, ceiling * 1.08)
         ax.set_axisbelow(True)
         ax.grid(True, alpha=0.3)
     for ax in axes[:, 0]:
         ax.set_ylabel("Retention ratio vs frame")
-    fig.suptitle(f"Predicate retention per sampling method — budget tier "
-                 f"(N = {BUDGET_N:,}); line = SRS null, band = K-draw "
-                 f"envelope, upper line = full-capture ceiling "
-                 f"{ceiling:.2f}")
+    fig.suptitle(f"Predicate retention per sampling method "
+                 f"(line = SRS null), (band = K-draw envelope), "
+                 f"(upper line = full-capture ceiling {ceiling:.2f})")
     fig.tight_layout()
     out = out_dir / "subset_event_retention.png"
     fig.savefig(out, dpi=DPI)

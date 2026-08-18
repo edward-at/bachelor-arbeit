@@ -64,8 +64,7 @@ def plot_group(tag, subtitle, panels, mt, methods, out_dir):
     axes[0].set_yticklabels(labels)
 
     fig.suptitle(f"Per-channel 1-Wasserstein distance to the frame, "
-                 f"{subtitle} — budget tier (N = {BUDGET_N:,}); "
-                 f"* = accel-confounded sources present")
+                 f"{subtitle} (*)")
     fig.tight_layout()
     out = out_dir / f"subset_wasserstein_{tag}.png"
     fig.savefig(out, dpi=DPI)

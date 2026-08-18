@@ -5,7 +5,7 @@ subset_eval_harness.py — Chapter 12.1 evaluation harness.
 Purpose
 -------
 Re-points the Chapter 10 instruments at METHODS instead of datasets. Reads the
-frozen Chapter 11 artifacts (window-ID subsets M01..M11 at two tiers), joins the
+frozen Chapter 11 artifacts (window-ID subsets M01..M10 at two tiers), joins the
 fixed data layers, computes every 12.1 metric once, and writes a versioned cache
 that all Tier-1/Tier-2 figures read. No selection is re-run, nothing is re-fitted,
 no figure computes anything itself (compute-once, Section 9.6 discipline).
@@ -17,8 +17,8 @@ Inputs (all read-only, all frozen before this script exists)
   dataset/subset_data/window_summaries.parquet      six per-window summaries (S11.4)
   dataset/std_data/<dataset>.parquet                std_speed_kmh / std_acc_mag /
                                                     std_yaw_rate (rad/s) per window
-  dataset/subset_data/M01..M11_*.parquet            capability tier subsets
-  dataset/subset_data/tier_n<BUDGET_N>/M01..M11_*.parquet budget tier (headline)
+  dataset/subset_data/M01..M10_*.parquet            capability tier subsets
+  dataset/subset_data/tier_n71215/M01..M10_*.parquet budget tier subsets (headline)
   manifest.json in each tier dir                    decision constants + counts
 
 Outputs (dataset/subset_data/eval/)
@@ -99,15 +99,9 @@ EVAL_DIR     = SUBSET_DIR / "eval"
 ASSIGNMENTS_PARQUET = REGIME_DIR / "cluster_assignments.parquet"
 SUMMARIES_PARQUET   = SUBSET_DIR / "window_summaries.parquet"
 
-# Budget-tier size = one rarest-regime supply (Section 11.3), recomputed on the
-# current 402,421-window frame where the rarest regime is regime 4. The tier
-# directory is DERIVED from it, so this constant is the single point of change.
-BUDGET_N = 71_390
-CAPABILITY_N = 5 * BUDGET_N
-
 TIER_DIRS = {                       # tier name -> directory holding M??_*.parquet
-    "capability": SUBSET_DIR,       # N = 5 x rarest supply (one table in the chapter)
-    "budget":     SUBSET_DIR / f"tier_n{BUDGET_N}",   # headline population
+    "capability": SUBSET_DIR,       # N = 356,075 (one table in the chapter)
+    "budget":     SUBSET_DIR / "tier_n71215",   # N = 71,215 (headline population)
 }
 TIER_ORDER = ["budget", "capability"]
 
@@ -115,7 +109,7 @@ METHOD_NAMES = {                    # short display names, fixed M-order everywh
     "M01": "SRS", "M02": "Proportional", "M03": "Equal",
     "M04": "Power q=0.5", "M05": "Two-way", "M06": "PPS score",
     "M07": "Trigger", "M08": "Predicates", "M09": "Kennard-Stone",
-    "M10": "Cluster fill", "M11": "Neyman",
+    "M10": "Cluster fill",
 }
 REF_ROWS = ["R0_frame", "R1_guarded"]           # context rows in every table
 
@@ -170,25 +164,22 @@ DIST_TIERS = {"budget"}
 DIST_SAMPLE = 25_000
 DIST_SEED = 777
 DIST_CHANNELS = ["score", "std_speed_kmh", "std_acc_mag", "std_yaw_deg",
-                 "pc1", "pc2"]   # one index draw per method: channels row-paired
+                 "pc1", "pc2", "regime"]   # one index draw per method:
+                 # channels row-paired (regime feeds the coloured PCA grid)
 
 # within-regime mean-shift metrics (introduced-bias check, all methods)
 SHIFT_CHANNELS = {"speed": "std_speed_kmh", "acc": "std_acc_mag",
                   "yaw": "std_yaw_deg"}
 
 # Canary expectations (from the frozen Chapter 11 record).
-# Canary expectations. frame/guarded/supply/tier values are recomputed on the
-# current 402,421-window assignment. The two selection-dependent counts below
-# are NOT recomputable without a Chapter 11 re-run: refresh them from the new
-# manifest.json before trusting a green canary line.
 EXPECTED = {
-    "frame_n": 402_421,
-    "guarded_n": 401_230,            # frame minus a2d2 + 4seasons + durlar
-    "trigger_guarded": None,         # REFRESH from manifest after re-run
-    "predicate_union": None,         # REFRESH from manifest after re-run
-    "regime_supplies": {89_420, 89_499, 78_883, 73_229, 71_390},  # soft, multiset
-    "budget_n": BUDGET_N,
-    "capability_n": CAPABILITY_N,
+    "frame_n": 402_975,
+    "guarded_n": 401_624,
+    "trigger_guarded": 1_124,        # hard: also calibrates decel units
+    "predicate_union": 146_223,      # soft
+    "regime_supplies": {88_875, 91_754, 78_725, 71_215, 72_406},  # soft, multiset
+    "budget_n": 71_215,
+    "capability_n": 356_075,
 }
 
 METRIC_VERSION = "12.1.2"
@@ -804,23 +795,18 @@ I6 = ["pc_coverage_share", "cell_coverage_share"]
 
 GROUP_CLS = {
     # group: {method: class}; M01 handled globally as N
-    # M11 (Neyman, Section 11.10): quotas fix the regime shares (I1 = T);
-    # the quota vector consumes the composite score, so the score's ingredient
-    # channels and the score-level metrics are influenced (I2, I3 = P); and the
-    # guarded pool structurally alters source composition, retention and cell
-    # coverage (I4, I5, I6 = P). Within regime the draw is plain SRS.
     "I1": {"M02": "T", "M03": "T", "M04": "T", "M05": "T", "M06": "P",
-           "M07": "O", "M08": "O", "M09": "T", "M10": "T", "M11": "T"},
+           "M07": "O", "M08": "O", "M09": "T", "M10": "T"},
     "I2": {"M02": "O", "M03": "O", "M04": "O", "M05": "O", "M06": "P",
-           "M07": "O", "M08": "P", "M09": "P", "M10": "P", "M11": "P"},
+           "M07": "O", "M08": "P", "M09": "P", "M10": "P"},
     "I3": {"M02": "O", "M03": "O", "M04": "O", "M05": "O", "M06": "T",
-           "M07": "P", "M08": "P", "M09": "P", "M10": "P", "M11": "P"},
+           "M07": "P", "M08": "P", "M09": "P", "M10": "P"},
     "I4": {"M02": "O", "M03": "O", "M04": "O", "M05": "T", "M06": "P",
-           "M07": "P", "M08": "P", "M09": "P", "M10": "O", "M11": "P"},
+           "M07": "P", "M08": "P", "M09": "P", "M10": "O"},
     "I5": {"M02": "O", "M03": "O", "M04": "O", "M05": "O", "M06": "P",
-           "M07": "T", "M08": "T", "M09": "P", "M10": "O", "M11": "P"},
+           "M07": "T", "M08": "T", "M09": "P", "M10": "O"},
     "I6": {"M02": "O", "M03": "O", "M04": "O", "M05": "O", "M06": "P",
-           "M07": "O", "M08": "O", "M09": "T", "M10": "P", "M11": "P"},
+           "M07": "O", "M08": "O", "M09": "T", "M10": "P"},
 }
 CLS_OVERRIDES = {  # (metric, method) -> class
     ("w1_std_acc", "M07"): "P",      # trigger consumes the accel channel

@@ -53,9 +53,8 @@ def main() -> None:
     axes[0].set_yticks(range(len(methods)))
     axes[0].set_yticklabels([ROW_LABELS[m] for m in methods])
 
-    fig.suptitle(f"Within-regime mean shift vs the frame — budget tier "
-                 f"(N = {BUDGET_N:,}); diverging scale per panel, "
-                 f"zero = no introduced bias")
+    fig.suptitle(f"Within-regime mean shift vs the frame, (diverging scale per panel), "
+                 f"(zero = no introduced bias)")
     fig.tight_layout()
     out = out_dir / "subset_mean_shift.png"
     fig.savefig(out, dpi=DPI)
