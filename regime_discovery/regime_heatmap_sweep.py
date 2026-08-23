@@ -69,7 +69,7 @@ def main():
         prof = full.groupby(reg)[FEATURES].mean()
         share = np.array([100.0 * np.mean(reg == r) for r in range(k)])
 
-        M = prof[FEATURES].to_numpy(float)
+        M = prof[FEATURES].to_numpy(float, copy=True)
         if YAW_TO_DEG and "mean_abs_yaw_rate" in FEATURES:
             M[:, FEATURES.index("mean_abs_yaw_rate")] *= 180.0 / np.pi
 
