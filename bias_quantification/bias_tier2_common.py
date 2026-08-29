@@ -30,7 +30,7 @@ Schema alignment (verified against bias_quant.py, 2026-07-03):
   * W1 columns in bias_per_dataset.parquet are `w_std_speed_kmh`,
     `w_std_acc_mag`, `w_std_yaw_rate` (yaw already in deg/s). The std_data
     fallback below reproduces bias_quant.wasserstein_per_channel exactly
-    (all overlapping windows, pooled includes self, NaN-drop only).
+    (all std_data windows — non-overlapping since 2026-08-29 — pooled includes self, NaN-drop only).
   * Equivalences to Tier-1 columns (disclosed in §10.4 of the note):
     Hill D1 = N_REGIMES ** entropy_norm  and  Hill D2 = 1 / hhi.
     cross_check_tier1() verifies all of this at runtime when the Tier-1
@@ -128,7 +128,7 @@ def color(ds):
 
 # ═══════════════════════ canonical loaders ═════════════════════════
 def load_assignments(columns=("dataset", "clip_id", "regime")):
-    """Read the canonical window-regime artifact (402,975 x 20 s windows)."""
+    """Read the canonical window-regime artifact (402,421 x 20 s windows; derived, see canonical.py)."""
     if not REGIME_ASSIGN.exists():
         raise SystemExit(f"Canonical artifact not found: {REGIME_ASSIGN}")
     return pd.read_parquet(REGIME_ASSIGN, columns=list(columns))
@@ -239,7 +239,7 @@ def load_std_channels(datasets):
 
 def w1_vs_pooled(datasets):
     """1-Wasserstein per DC5 channel vs the pooled window set — reproduces
-    bias_quant.wasserstein_per_channel (all overlapping windows, pooled
+    bias_quant.wasserstein_per_channel (all std_data windows, non-overlapping, pooled
     includes the dataset itself, yaw in deg/s). Fallback path only."""
     data = load_std_channels(datasets)
     pooled = {ch: np.concatenate([data[d][ch] for d in datasets]) for ch in W1_CHANNELS}

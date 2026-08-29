@@ -58,6 +58,11 @@ def patch_common(winner: str) -> None:
 def finalist_overlays(winner: str) -> None:
     mod = importlib.import_module("subset_ecdf_finalist")
     mod.FINALISTS = [m for m in cc.FINALISTS if m != winner] + [winner]
+    for attr in ("METHOD_COLORS", "COLORS", "LINE_COLORS", "PALETTE"):
+        try:
+            getattr(mod, attr)[winner] = cc.CURATION_COLOR
+        except (AttributeError, TypeError, KeyError):
+            pass
     print(f"[render] finalists: {mod.FINALISTS}")
     mod.main()
 
@@ -68,8 +73,7 @@ def winner_profile(winner: str) -> None:
     fig, ax = plt.subplots(figsize=(7, 4.2))
     x = np.arange(len(shares))
     ax.bar(x - 0.2, 100 * m.loc["R0_frame", shares].astype(float), 0.4,
-           label="Frame", color=sec.TUM_EXT["teal"]
-           if hasattr(sec, "TUM_EXT") else "gray",
+           label="Frame", color=cc.GHOST,
            edgecolor="black", linewidth=0.5)
     ax.bar(x + 0.2, 100 * m.loc[winner, shares].astype(float), 0.4,
            label=winner, color=cc.CURATION_COLOR,
@@ -78,8 +82,9 @@ def winner_profile(winner: str) -> None:
                label="uniform target")
     ax.set_xticks(x)
     ax.set_xticklabels([f"{i}" for i in range(len(shares))])
-    ax.set_xlabel("regime"); ax.set_ylabel("share of windows (%)")
-    ax.set_title(f"{winner}: regime composition (budget tier)")
+    ax.set_xlabel("regime")
+    ax.set_ylabel("share of windows (%)")
+    ax.set_title(f"{winner}: regime composition")
     ax.set_axisbelow(True); ax.grid(True, axis="y", alpha=0.4); ax.legend()
     fig.tight_layout()
     out = sec.OUT_DIR / "curation_winner_regime_profile.png"
@@ -96,7 +101,7 @@ def winner_sources(winner: str) -> None:
     fig, ax = plt.subplots(figsize=(9, 4.6))
     x = np.arange(len(order))
     ax.bar(x - 0.2, 100 * piv.loc["R0_frame", order].astype(float), 0.4,
-           label="Frame", color="lightgray", edgecolor="black",
+           label="Frame", color=cc.GHOST, edgecolor="black",
            linewidth=0.5)
     ax.bar(x + 0.2, 100 * piv.loc[winner, order].astype(float), 0.4,
            label=winner, color=cc.CURATION_COLOR, edgecolor="black",
@@ -106,9 +111,8 @@ def winner_sources(winner: str) -> None:
               + ("*" if ds in cc.CONFOUNDED else "") for ds in order]
     ax.set_xticks(x); ax.set_xticklabels(labels, rotation=45, ha="right")
     ax.set_ylabel("share of windows (%)")
-    ax.set_title(f"{winner}: source composition vs frame (budget tier; "
-                 f"per-regime cap {cc.SOURCE_CAP_FRAC:.0%} applies within "
-                 f"regimes)")
+    ax.set_title(f"{winner}: source composition vs frame (per-regime "
+                 f"cap {cc.SOURCE_CAP_FRAC:.0%} applies within regimes)")
     ax.set_axisbelow(True); ax.grid(True, axis="y", alpha=0.4); ax.legend()
     fig.tight_layout()
     out = sec.OUT_DIR / "curation_winner_source_composition.png"

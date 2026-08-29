@@ -84,7 +84,6 @@ FIGURES_PARTITION = [
     "pca_scatter_preclustering_3D.py",
     "pca_scatter_labeled.py",         # cluster_assignments (pc1, pc2, regime)
     "pca_scatter_labeled_3D.py",      # needs pc3
-    "pca_scatter_3D.py",              # earlier name of the labelled 3-D view
     "regime_heatmap.py",              # cluster_profile
     "regime_heatmap_sweep.py",
 ]

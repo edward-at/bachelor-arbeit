@@ -25,7 +25,7 @@ NAMING RULE (updated): TWO qualified Ginis now exist in Chapter 10 —
 (bias_volume.py). The unqualified word "Gini" is never used.
 
 Honest caveats:
-  * Population = all std_data windows (50 % overlap), the Chapter-8 ECDF
+  * Population = all std_data windows (non-overlapping since 2026-08-29), the Chapter-8 ECDF
     population — consistent with the W1 metric, disclosed as such.
   * A high Gini is not "bad": real driving IS long-tailed. The metric
     quantifies HOW long-tailed each corpus is, which is exactly what uniform

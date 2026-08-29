@@ -2,7 +2,7 @@
 feature_gate.py  —  Section 4.6.2, the feature redundancy screen
 ────────────────────────────────────────────────────────────────────────────
 Locks the clustering feature vector before any k-means is run. Reads the
-per-window feature table (std_data), restricts to the non-overlapping windows of
+per-window feature table (std_data, non-overlapping since 2026-08-29), keeps the windows of
 all fourteen qualified datasets, screens the candidate features for redundancy
 (Pearson + Spearman + VIF), prunes the redundant ones, and persists the locked
 vector together with the screen statistics — all as parquet, no JSON.
@@ -26,8 +26,10 @@ interpretability, retaining the directly-sensed feature (TIEBREAK_KEEP) over a
 partner derived by differentiation. This resolves the a_lat / yaw-rate coupling
 (a_lat = v·ω) toward yaw rate.
 
-Grain: clustering uses NON-OVERLAPPING 20 s windows, recovered from the 50 %
-overlap std_data layer by a start-time filter (no recomputation). Correlations
+Grain: clustering uses NON-OVERLAPPING 20 s windows. Since 2026-08-29 the
+std_data layer is itself non-overlapping (STEP_S == WINDOW_S), so the
+start-time filter below passes every window and is retained only as a cheap
+grid-alignment invariant. Correlations
 and VIF are scale-invariant, so no standardisation is applied here.
 
 Outputs (all parquet):
@@ -92,7 +94,10 @@ def _discover() -> list[str]:
 
 
 def _load_population(name: str) -> pd.DataFrame | None:
-    """Read one dataset, keep the non-overlapping (grid-aligned 20 s) subset."""
+    """Read one dataset; keep grid-aligned windows.
+
+    Under the non-overlapping layer (2026-08-29) the filter is an identity
+    and acts as an alignment invariant, not a selection."""
     fp = STD_DATA_DIR / f"{name}.parquet"
     if not fp.exists():
         print(f"  [WARN] {name}: {fp.name} not found")

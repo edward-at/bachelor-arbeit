@@ -66,10 +66,10 @@ def fmt(t: float) -> str:
 def main() -> None:
     anchors = {
         "frame": stamp(FRAME),
-        "std": max(newest(STD_DIR, "*.parquet"), stamp(SUMMARIES)),
+        "std": newest(STD_DIR, "*.parquet"),   # Ch.8 reads std_data only; the summaries anchor false-staled 181 exploratory figures
     }
     print(f"anchor 'frame' (cluster_assignments): {fmt(anchors['frame'])}")
-    print(f"anchor 'std'   (newest std_data/summaries): {fmt(anchors['std'])}")
+    print(f"anchor 'std'   (newest std_data): {fmt(anchors['std'])}")
     print("Ch.9/10/12/13 measured against 'frame'; Ch.8 against 'std'; "
           "survey figures exempt.\n")
 

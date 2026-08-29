@@ -51,7 +51,8 @@ INERTIAL_ROOT = PROJECT_ROOT / "dataset" / "inertial_data"
 STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
 REGIME_DIR = PROJECT_ROOT / "dataset" / "regime_data"
 SUBSET_DIR = PROJECT_ROOT / "dataset" / "subset_data"
-BUDGET_DIR = SUBSET_DIR / "tier_n71215"
+from canonical import C
+BUDGET_DIR = C.budget_dir          # tier_n<budget_n>, derived
 EVAL_DIR = SUBSET_DIR / "eval"
 
 WINDOW_S = 20.0
@@ -98,8 +99,8 @@ YAW_EDGES = np.linspace(-YAW_ABS_DEG, YAW_ABS_DEG, N_BINS_Y + 1)
 FRAME_COLS = ["t_rel_s", "speed_kmh", "a_long", "a_lat",
               "jerk_long", "jerk_lat", "yaw_rate", "acc_mag"]
 
-EXPECTED_FRAME_WINDOWS = 402_975
-EXPECTED_METHOD_WINDOWS = 71_215
+EXPECTED_FRAME_WINDOWS = C.frame_n
+EXPECTED_METHOD_WINDOWS = C.budget_n
 
 
 def log(m):

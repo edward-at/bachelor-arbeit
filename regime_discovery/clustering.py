@@ -98,6 +98,8 @@ def _load(name: str) -> pd.DataFrame | None:
     if not fp.exists():
         print(f"  [WARN] {name}: not found"); return None
     df = pd.read_parquet(fp, columns=["clip_id", "window_start_s", "window_end_s"] + FEATURES)
+    # grid-align filter: identity under the non-overlapping layer (2026-08-29);
+    # kept as an alignment invariant, not a selection
     t0 = df.groupby("clip_id")["window_start_s"].transform("min")
     k  = (df["window_start_s"] - t0) / WINDOW_S
     df = df[(k - k.round()).abs() < 1e-6].dropna(subset=FEATURES).copy()

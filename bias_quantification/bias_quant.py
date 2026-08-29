@@ -64,7 +64,8 @@ RAD_TO_DEG = 180.0 / np.pi
 WASSERSTEIN_CHANNELS = ["std_speed_kmh", "std_acc_mag", "std_yaw_rate"]
 
 # Population for the Wasserstein channels. "all" = every std_data window
-# (overlapping), reproducing Chapter 8's ECDFs exactly. See build log note.
+# (the full std_data layer, non-overlapping since 2026-08-29), reproducing
+# Chapter 8's ECDFs exactly. See build log note.
 WASSERSTEIN_POPULATION = "all_windows"
 
 # ── MEASUREMENT-FIDELITY FLAG (single source of truth for Chapter 10) ────────

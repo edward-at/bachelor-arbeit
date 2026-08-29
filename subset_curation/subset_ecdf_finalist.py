@@ -7,7 +7,7 @@ overlays are only readable at 3-5 lines, which is why the all-methods
 distribution view is the ridgeline and THIS figure waits for a finalist
 pick.
 
-FINALISTS below is PROVISIONAL — a suggestion from the Tier-1 master table
+FINALISTS below is FIXED by register entry D27 (frame + M01 + M05 + M07)
 (M05 = only source-breaker, M08 = balance without quotas + full event
 capture, M09 = coverage champion). Confirm or replace it after reviewing
 the T1 figures; the choice is analytic, not mine to lock.
@@ -24,7 +24,7 @@ from subset_eval_common import (DPI, ROW_LABELS, TIER, BUDGET_N, TUM_ACCENT,
                                 load_dist, load_master, present_methods)
 
 # PROVISIONAL finalist pick — edit after reviewing the Tier-1 results.
-FINALISTS = ["M01", "M05", "M08", "M09"]
+FINALISTS = ["M01", "M05", "M07"]   # D27: frame + M01 + M05 + M07; the winner joins via the Ch.13 renderer
 PALETTE = [TUM_ACCENT["blue"], TUM_ACCENT["orange"], TUM_ACCENT["green"],
            TUM_EXT["purple"], TUM_EXT["red"]]
 
@@ -71,9 +71,11 @@ def main() -> None:
         ax.legend()
         ax.set_axisbelow(True)
         ax.grid(True, alpha=0.3)
-    fig.suptitle(f"ECDF overlays, frame vs finalists — budget tier "
-                 f"(N = {BUDGET_N:,}); finalist list provisional until "
-                 f"confirmed")
+    # 2026-08-23: title cleaned to the thesis text rules (no em dash, no
+    # semicolon, no tier name) and the finalist list is fixed by register
+    # entry D27, no longer provisional. Content unchanged.
+    fig.suptitle("ECDF overlays, frame and finalists "
+                 "(finalist register D27)")
     fig.tight_layout()
     out = out_dir / "subset_ecdf_finalists.png"
     fig.savefig(out, dpi=DPI)

@@ -3,7 +3,7 @@
 
 The figure behind the pooling justification: a regime-balanced subset of a
 single dataset can keep at most 5 x (its rarest regime's share) of that
-dataset. Pooled, the frame keeps 88.4 per cent; most individual datasets
+dataset. Pooled, the frame keeps 88.7 per cent; most individual datasets
 collapse to a few per cent because they lack entire regimes. One bar per
 dataset, the pooled frame as the reference line. Winner-independent, so it
 may be produced before the gates run (D25 untouched: it reads no method).

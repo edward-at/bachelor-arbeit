@@ -27,7 +27,24 @@ from subset_eval_common import (DPI, EVAL_DIR, ROW_LABELS, TUM_SECONDARY,
 
 WINDOW_S = 20.0
 GRID_HZ = 10.0
-GROUPS = ["R0_frame"] + [f"M{i:02d}" for i in range(1, 12)]
+def _groups_from_meta():
+    """Group order MUST match the frame-pass bitmask. The pass records it in
+    frame_pass_meta.json and may hold 13 groups once the winner is widened in
+    (curation_render_winner --frame-pass); the hard-coded 12 is only the
+    fallback for caches written before the meta carried the list."""
+    import json
+    meta = EVAL_DIR / "frame_pass_meta.json"
+    if meta.exists():
+        try:
+            g = json.load(open(meta)).get("groups")
+            if g:
+                return list(g)
+        except Exception:
+            pass
+    return ["R0_frame"] + [f"M{i:02d}" for i in range(1, 12)]
+
+
+GROUPS = _groups_from_meta()
 REP_COLORS = [TUM_ACCENT["blue"], TUM_ACCENT["orange"], TUM_ACCENT["green"]]
 FIG_W, FIG_H = 9.0, 4.5
 Y_HEADROOM = 1.22        # top margin so the in-axes legend clears the traces
@@ -103,7 +120,7 @@ def main():
         ax.set_ylim(0, max(y_hi * Y_HEADROOM, 1.0))
         ax.set_xlabel("Time within window (s)")
         ax.set_ylabel("Speed (km/h)")
-        ax.set_title(f"Exemplar speed traces ({ROW_LABELS[g]})")
+        ax.set_title(f"Exemplar speed traces ({ROW_LABELS.get(g, g)})")
         ax.legend(loc="upper right", fontsize=8)
         ax.grid(True, alpha=0.3)
         ax.set_axisbelow(True)

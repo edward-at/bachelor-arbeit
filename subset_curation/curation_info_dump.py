@@ -83,6 +83,9 @@ def s2():
 
 @section("3  tier thresholds vs fresh distributions (numeric eyeball)")
 def s3():
+    import sys as _sys
+    _sys.path.insert(0, str(PROJECT_ROOT / "bachelor-arbeit"
+                            / "inertial_exploratory_analysis"))
     import regime_classification as rc
     data = rc.load_std_data()
     for col, slug, title in rc.SIGNALS:

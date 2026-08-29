@@ -83,7 +83,7 @@ SIGNALS = [
 
 THRESHOLDS = {
     "std_speed_kmh": (1.0,  5.0,  15.0),
-    "std_acc_mag":   (0.2,  0.5,   1.5),   # PLACEHOLDER (never calibrated) — set from the acc_mag ECDF
+    "std_acc_mag":   (0.2,  0.5,   1.5),   # FROZEN 2026-08-29 (D-5): a stated round convention, not a calibrated quantity; lineage disclosed in thesis 4.5, limitation in 6.6.
     "std_yaw_rate":  (1.0,  5.0,  15.0),
 }
 

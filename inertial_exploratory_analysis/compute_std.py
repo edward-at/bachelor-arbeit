@@ -39,8 +39,8 @@ Output schema:
 ─── CHANGES vs v3 ──────────────────────────────────────────────────────────
   5. FEATURE MEANS: the same per-window pass now ALSO emits six mean_*
      channels that form the per-window feature vector consumed by the regime
-     clustering of Chapter 9. Windowing is UNCHANGED (20 s / 10 s / 50 %
-     overlap); only extra columns are written, so every existing Chapter 8
+     clustering of Chapter 9. Windowing: 20 s windows advanced 20 s
+     (non-overlapping since 2026-08-29, D-2); every existing Chapter 8
      consumer of std_data is unaffected.
   6. The variability channels collapse acceleration to a single magnitude
      (std_acc_mag); the feature channels instead RE-SEPARATE longitudinal
@@ -72,7 +72,7 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────────────────────────
 
 WINDOW_S       = 20.0   # window size in seconds
-STEP_S         = 10.0   # step size in seconds (50% overlap)
+STEP_S         = 20.0   # step size in seconds (== WINDOW_S: non-overlapping, D-2 2026-08-29)
 GRID_HZ        = 10     # sampling rate of v3 standardized clips (uniform)
 MIN_VALID_FRAC = 0.5    # per signal: min fraction of expected frames that
                         # must be non-NaN, else the statistic = NaN for that signal

@@ -12,7 +12,7 @@ no figure computes anything itself (compute-once, Section 9.6 discipline).
 
 Inputs (all read-only, all frozen before this script exists)
 -----------------------------------------------------------
-  dataset/regime_data/cluster_assignments.parquet   frame: 402,975 windows,
+  dataset/regime_data/cluster_assignments.parquet   frame: 402,421 windows,
                                                     regime labels 0..4, frozen PCs
   dataset/subset_data/window_summaries.parquet      six per-window summaries (S11.4)
   dataset/std_data/<dataset>.parquet                std_speed_kmh / std_acc_mag /
@@ -32,7 +32,7 @@ Outputs (dataset/subset_data/eval/)
 
 Decisions applied (Chapter 11/12 D-ledger, dated 2026-07-08)
 ------------------------------------------------------------
-  D14  population = the 402,975 non-overlapping frame; references R0 (frame),
+  D14  population = the 402,421 non-overlapping frame; references R0 (frame),
        R1 (guarded frame, one guard-cost row), R2 (uniform regime target);
        Ch12 Wasserstein values are NOT comparable to the S10.6 per-dataset
        values (those used the overlapping variability layer) — disclosed.
@@ -49,7 +49,7 @@ Decisions applied (Chapter 11/12 D-ledger, dated 2026-07-08)
 
 Canaries (hard unless --force)
 ------------------------------
-  frame N == 402,975 ; guarded N == 401,624 ; 0.6 g trigger on guarded == 1,124
+  frame N == 402,421 ; guarded N == 401,230 ; 0.6 g trigger on guarded == 1,088
   (the trigger count doubles as the unit calibrator for peak_decel);
   soft: regime supplies multiset, predicate union == 146,223, per-regime top
   supplier (~0.89 for Highway Cruising), pooled top source (~0.74).
@@ -75,6 +75,7 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from canonical import C
 
 import numpy as np
 import pandas as pd
@@ -99,21 +100,20 @@ EVAL_DIR     = SUBSET_DIR / "eval"
 ASSIGNMENTS_PARQUET = REGIME_DIR / "cluster_assignments.parquet"
 SUMMARIES_PARQUET   = SUBSET_DIR / "window_summaries.parquet"
 
-TIER_DIRS = {                       # tier name -> directory holding M??_*.parquet
-    "capability": SUBSET_DIR,       # N = 356,075 (one table in the chapter)
-    "budget":     SUBSET_DIR / "tier_n71215",   # N = 71,215 (headline population)
+from canonical import C
+
+TIER_DIRS = {
+    "capability": SUBSET_DIR,          # N = C.capability_n
+    "budget":     C.budget_dir,        # N = C.budget_n, headline population
 }
 TIER_ORDER = ["budget", "capability"]
 
-METHOD_NAMES = {                    # short display names, fixed M-order everywhere
-    "M01": "SRS", "M02": "Proportional", "M03": "Equal",
-    "M04": "Power q=0.5", "M05": "Two-way", "M06": "PPS score",
-    "M07": "Trigger", "M08": "Predicates", "M09": "Kennard-Stone",
-    "M10": "Cluster fill",
-}
+from subset_eval_common import METHOD_SHORT as METHOD_NAMES
+# single definition (subset_eval_common) — the local copy stopped at M10 and
+# silently dropped M11 Neyman whenever this file ran standalone
 REF_ROWS = ["R0_frame", "R1_guarded"]           # context rows in every table
 
-CONFOUNDED_ACCEL = {"a2d2", "4seasons", "durlar"}   # asterisk sources (S10.2)
+from subset_eval_common import CONFOUNDED as CONFOUNDED_ACCEL   # asterisk sources (S10.2); mirror of bias_quant
 
 # Regime conventions. LOW_DYN_REGIME feeds low_dyn_share and the landscape
 # scatter x-axis (D17). Confirm against regime_style.py before captioning:
@@ -171,15 +171,17 @@ DIST_CHANNELS = ["score", "std_speed_kmh", "std_acc_mag", "std_yaw_deg",
 SHIFT_CHANNELS = {"speed": "std_speed_kmh", "acc": "std_acc_mag",
                   "yaw": "std_yaw_deg"}
 
-# Canary expectations (from the frozen Chapter 11 record).
+# Canary expectations, derived from the artifacts (canonical.py), never typed.
+# Drift against an accepted corpus is checked by `python canonical.py --check`
+# against the dated snapshot, which is the question worth asking.
 EXPECTED = {
-    "frame_n": 402_975,
-    "guarded_n": 401_624,
-    "trigger_guarded": 1_124,        # hard: also calibrates decel units
-    "predicate_union": 146_223,      # soft
-    "regime_supplies": {88_875, 91_754, 78_725, 71_215, 72_406},  # soft, multiset
-    "budget_n": 71_215,
-    "capability_n": 356_075,
+    "frame_n":         C.frame_n,
+    "guarded_n":       C.guarded_n,
+    "trigger_guarded": C.event_reserve_n,     # also calibrates decel units
+    "predicate_union": None,                  # soft, no derived counterpart
+    "regime_supplies": set(C.regime_supplies),
+    "budget_n":        C.budget_n,
+    "capability_n":    C.capability_n,
 }
 
 METRIC_VERSION = "12.1.2"
@@ -535,7 +537,7 @@ def calibrate_units(master: pd.DataFrame, meta: dict) -> None:
     else:
         decisions["speed"] = f"p99 {p99_ms:.1f} -> km/h"
 
-    # peak_decel: unit hypothesis chosen by the frozen 1,124 anchor (S11.3).
+    # peak_decel: unit hypothesis chosen by the frozen 1,088 anchor (S11.3).
     guard = ~master["dataset"].isin(CONFOUNDED_ACCEL)
     d_abs = master["peak_decel"].abs()
     c_g = int(((d_abs >= HARD_DECEL_G) & guard).sum())
@@ -628,8 +630,12 @@ def add_score_and_predicates(master: pd.DataFrame, meta: dict,
     union = int((master["p_hard_decel"] | master["p_high_yaw"]
                  | master["p_high_speed"] | master["p_stop_go"]
                  | master["p_near_stat"] | master["p_top_score"]).sum())
-    check("predicate_union", union, EXPECTED["predicate_union"],
-          hard=False, tol=0.01)
+    if EXPECTED["predicate_union"] is not None:
+        check("predicate_union", union, EXPECTED["predicate_union"],
+              hard=False, tol=0.01)
+    else:
+        log(f"  predicate union: {union:,} "
+            f"(no derived expectation; informational)")
 
     # supplier canaries (frame level): pooled top source, per-regime top source
     top_src = master["dataset"].value_counts(normalize=True)

@@ -51,7 +51,8 @@ DPI = 300
 # the current 402,421-window frame, where the rarest regime is regime 4.
 # CHANGE HERE ONLY: the tier directory name is derived from it downstream.
 TIER = "budget"                      # headline population
-BUDGET_N = 71_390
+from canonical import C
+BUDGET_N = C.budget_n                # derived from the artifacts (was 71_390)
 
 MAIN_BLUE = TUM_SECONDARY["blue2"]  # the thesis single-series colour
 
@@ -91,6 +92,9 @@ FAMILY_LEGEND = [("Replica", TUM_SECONDARY["gray"]),
                  ("Variance-optimal", TUM_EXT["purple"])]
 
 CONFOUNDED = {"a2d2", "4seasons", "durlar"}
+# MIRROR of bias_quant.CONFOUNDED_ACCEL, which is the owner — change it THERE
+# first. canonical.py falls back to this copy when bias_quant is off-path, so
+# a drift here would propagate silently.
 
 # 14-dataset palette / names — verbatim from bias_tier2_common.py
 DISPLAY_NAMES = {

@@ -2,7 +2,7 @@
 # Source: TUM Corporate Design Guidelines
 #
 # Color usage hierarchy:
-# 1. Simple graphs (1-3 categories)  → use blue shades only (TUM_BLUES)
+# 1. Simple graphs (1-3 categories)  → use blue shades only (TUM_SECONDARY ["blue2"])
 # 2. More categories needed          → add Akzentfarben (TUM_ACCENT)
 # 3. Complex diagrams                → extended palette permissible (TUM_EXT)
 
@@ -47,8 +47,8 @@ TUM_EXT = {
     'teal':        '#00778A',   # RGB 0/119/138
     'dark_green':  '#007C30',   # RGB 0/124/48
     'olive':       '#679A1D',   # RGB 103/154/29
-    'yellow':      '#FDC000',   # RGB 255/220/0
-    'gold':        '#F6BA00',   # RGB 249/186/0
+    'yellow':      '#FDC000',   # RGB 253/192/0
+    'gold':        '#F6BA00',   # RGB 246/186/0
     'orange':      '#D64C13',   # RGB 214/76/19
     'red':         '#C4071B',   # RGB 196/7/27
     'maroon':      '#9C0D16',   # RGB 156/13/22

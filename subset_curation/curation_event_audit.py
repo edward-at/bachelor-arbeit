@@ -8,7 +8,7 @@ applied is clean. Two questions, both console tables:
   A. Where do the guarded 0.6 g reserve windows come from?
      Per-dataset and per-regime composition of the event reserve that C01
      and C03 will force-include (D22). The count is asserted against the
-     frozen Section 11.3 canary (1,124 on the pre-restoration frame; the
+     superseded Section 11.3 canaries (1,124 pre-restoration, 1,115 pre-v4_4; the
      realised count on the current frame is printed and becomes the frozen
      constant for the build).
 
@@ -56,7 +56,7 @@ def main() -> None:
     ev = guarded[guarded["max_decel_ms2"] >= thr]
     print(f"\n=== A. Hard-decel reserve ({rs.DECEL_TRIGGER_G} g, guarded) ===")
     print(f"n_event = {len(ev):,}  ({100 * len(ev) / len(guarded):.3f}% of "
-          f"guarded frame)  [Section 11.3 canary on the previous frame: 1,124]")
+          f"guarded frame)  [superseded canaries: 1,124 pre-restoration, 1,115 pre-v4_4]")
 
     by_ds = (ev.groupby("dataset").size().sort_values(ascending=False)
              .rename("events").to_frame())

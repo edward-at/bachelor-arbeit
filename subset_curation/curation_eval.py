@@ -18,6 +18,9 @@ global patch at import time, logged old -> new.
 Patches:
   * TIER_DIRS["budget"] -> tier_n{BUDGET_N}
   * METHOD_NAMES gains C01..C03
+  * NOTE 2026-08-29: the harness EXPECTED block now derives from canonical.py,
+    so the re-anchoring below patches derived values with independently derived
+    values. Retained as a cross-check, no longer a fix.
   * discover_methods() also matches C??_*.parquet
   * EXPECTED re-anchored: frame_n, guarded_n, trigger_guarded (unit
     anchor), regime_supplies, predicate_union, budget_n, capability_n

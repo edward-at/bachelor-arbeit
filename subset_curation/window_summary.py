@@ -33,6 +33,7 @@ harness's join guard.
 
 from __future__ import annotations
 
+import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -199,9 +200,24 @@ def process_dataset(ds: str) -> None:
         except Exception:
             part_keys = set()
         if part_keys and part_keys == std_keys:
-            log(f"{ds}: partial matches current std_data "
-                f"({len(part_keys):,} windows), skipping")
-            return
+            # keys matching is NOT freshness: a standardization re-run with an
+            # unchanged window grid reproduces identical keys over new values,
+            # and reusing the partial would silently keep the old summaries
+            # (the exact shape of the 1,115-vs-1,088 confusion).
+            src_mtime = (STD_DATA_DIR / f"{ds}.parquet").stat().st_mtime
+            ds_dir_m = INERTIAL_DIR / ds
+            if ds_dir_m.exists():
+                src_mtime = max([src_mtime] +
+                                [e.stat().st_mtime for e in os.scandir(ds_dir_m)
+                                 if e.name.endswith(".parquet")])
+            if partial.stat().st_mtime >= src_mtime:
+                log(f"{ds}: partial matches current std_data "
+                    f"({len(part_keys):,} windows) and is newer than every "
+                    f"input, skipping")
+                return
+            log(f"{ds}: partial keys match but an input is NEWER "
+                f"(std_data or clips rewritten on an unchanged grid) — "
+                f"rebuilding to avoid stale values")
         log(f"{ds}: STALE partial ({len(part_keys):,} cached vs "
             f"{len(std_keys):,} current std windows; std_data "
             f"regenerated?) - rebuilding")

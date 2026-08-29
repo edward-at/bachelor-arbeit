@@ -3,7 +3,7 @@
 
 Resolves the limitation Section 12.5 carries openly: every method was
 realised by a single seeded draw, so the D4 tie-break value (C01's
-max within-regime shift, 0.148) had no error bar. This script rebuilds
+max within-regime shift) had no error bar. This script rebuilds
 the winner R times under a declared replicate seed family and evaluates
 each draw through the HARNESS'S OWN compute_row — the identical
 instrument, not a reimplementation — so replicated values are directly
@@ -147,8 +147,9 @@ def main() -> None:
           f"{args.r}")
     print(f"tie-break spread: {rep[TIE_BREAK].min():.4f} to "
           f"{rep[TIE_BREAK].max():.4f} "
-          f"(limit 0.500; single realised draw 0.148)")
-    print("\nDISCLOSURE (D22, print this in the prose): the 1,115-window "
+          f"(limit {GATES['top_source_share'][1]:.3f}; "
+          f"single realised draw: gate table, Section 13.2)")
+    print(f"\nDISCLOSURE (D22, print this in the prose): the {N_EVENT_RESERVE:,}-window "
           "reserve is a census with inclusion probability 1, identical in "
           "every replicate, so the spread above varies only the fill and "
           "UNDERSTATES total selection variance.")

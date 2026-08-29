@@ -27,6 +27,10 @@ interactive tool, not stages):
   replicate    curation_replicate.py          R=20 winner replication
   reveal       curation_reveal.py             sealed shelf + ex-confounded
   render       curation_render_winner.py      winner figures (flags below)
+  dossier      curation_winner_dossier.py     seven comparative winner
+                                              figures from the caches
+  pca          curation_winner_pca.py         winner occupancy of the
+                                              frozen PC space, 3D, two panels
 
 Usage:
   python curation_run_pipeline.py                       # all stages
@@ -55,6 +59,8 @@ STAGES: list[tuple[str, str, list[str]]] = [
     ("replicate",   "curation_replicate.py",     []),
     ("reveal",      "curation_reveal.py",        []),
     ("render",      "curation_render_winner.py", []),   # flags appended below
+    ("dossier",     "curation_winner_dossier.py", []),
+    ("pca",         "curation_winner_pca.py",     []),
 ]
 
 

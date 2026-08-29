@@ -63,7 +63,7 @@ GLOBAL_SEED = 42
 
 # ---- Protocol decisions (Section 11.0) — DECISION CONSTANTS ----------------
 # Chapter 10 preamble: the assignment grid is ALREADY non-overlapping
-# (402,975 windows). "auto" verifies this at run time from the median
+# (402,421 windows). "auto" verifies this at run time from the median
 # within-clip start spacing and applies stride-2 thinning ONLY if an
 # overlapping (10 s step) grid is detected. "on" forces thinning;
 # "off" takes the frame as given.
@@ -120,7 +120,7 @@ SCORE_COL_CANDIDATES = ["dynamic_score", "dyn_score", "composite_score",
                         "score_dynamic", "composite_dynamic_score"]
 STD_FEATURE_COLS = ["std_speed_kmh", "std_acc_mag", "std_yaw_rate"]
 
-STEP_S = 10.0               # window step, used to derive window_idx if absent
+STEP_S = 20.0               # window step, used to derive window_idx if absent
 
 METHOD_ORDER = ["M01", "M02", "M03", "M04", "M05",
                 "M06", "M07", "M08", "M09", "M10", "M11"]
@@ -348,7 +348,7 @@ def apply_dedup(pool: pd.DataFrame) -> pd.DataFrame:
     """Frame verification + overlap contingency (Section 11.1).
 
     The assignment grid is expected to be non-overlapping already
-    (Chapter 10 preamble: 402,975 non-overlapping windows). This guard
+    (Chapter 10 preamble: 402,421 non-overlapping windows). This guard
     measures the median within-clip start spacing: ~WINDOW_S means the frame
     is taken as given; ~STEP_S means an overlapping grid was detected and
     stride-2 systematic thinning (Madow & Madow 1944) engages.

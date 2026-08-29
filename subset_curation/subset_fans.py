@@ -27,7 +27,24 @@ ALPHA, LINEWIDTH = 0.16, 0.8
 EXTENT_PCT, SPEED_PCT = 99.0, 99.0
 COLORMAP = "viridis"
 SINGLE_IN_XY, SINGLE_IN_SPEED = (8.0, 5.0), (8.0, 4.5)
-GROUPS = ["R0_frame"] + [f"M{i:02d}" for i in range(1, 12)]
+def _groups_from_meta():
+    """Group order MUST match the frame-pass bitmask. The pass records it in
+    frame_pass_meta.json and may hold 13 groups once the winner is widened in
+    (curation_render_winner --frame-pass); the hard-coded 12 is only the
+    fallback for caches written before the meta carried the list."""
+    import json
+    meta = EVAL_DIR / "frame_pass_meta.json"
+    if meta.exists():
+        try:
+            g = json.load(open(meta)).get("groups")
+            if g:
+                return list(g)
+        except Exception:
+            pass
+    return ["R0_frame"] + [f"M{i:02d}" for i in range(1, 12)]
+
+
+GROUPS = _groups_from_meta()
 
 
 def _norm(vals):
@@ -105,7 +122,7 @@ def xy_fan(per, out_dir):
         sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
         fig.colorbar(sm, ax=ax, fraction=0.046, pad=0.02).set_label(
             "Absolute total heading change (rad)")
-        ax.set_title(f"Trajectory distribution, {ROW_LABELS[g]} "
+        ax.set_title(f"Trajectory distribution, {ROW_LABELS.get(g, g)} "
                      f"(window = {WINDOW_S:g}s)")
         rid = "frame" if g == "R0_frame" else g
         fig.savefig(out_dir / f"trajectory_fan_{rid}.png", dpi=DPI,
@@ -138,7 +155,7 @@ def speed_fan(per, out_dir):
         sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
         fig.colorbar(sm, ax=ax, fraction=0.046, pad=0.02).set_label(
             "Peak acceleration magnitude (m/s\u00b2)")
-        ax.set_title(f"Speed change per {WINDOW_S:g}s window ({ROW_LABELS[g]})")
+        ax.set_title(f"Speed change per {WINDOW_S:g}s window ({ROW_LABELS.get(g, g)})")
         rid = "frame" if g == "R0_frame" else g
         fig.savefig(out_dir / f"speed_change_fan_{rid}.png", dpi=DPI,
                     bbox_inches="tight")

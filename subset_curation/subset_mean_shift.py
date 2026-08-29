@@ -40,7 +40,7 @@ def main() -> None:
         cols = [f"shift_r{r}_{key}" for r in range(N_REGIMES)]
         mat = shifts.reindex(methods)[cols].to_numpy(dtype=float)
         vmax = max(1e-9, float(np.nanmax(np.abs(mat))))
-        ax.imshow(mat, cmap="RdBu_r", vmin=-vmax, vmax=vmax, aspect="auto")
+        ax.imshow(mat, cmap="Blues", vmin=-vmax, vmax=vmax, aspect="auto")
         for i in range(mat.shape[0]):
             for j in range(mat.shape[1]):
                 v = mat[i, j]

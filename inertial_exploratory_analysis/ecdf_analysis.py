@@ -10,7 +10,7 @@ Three vertical threshold lines partition each plot into 4 dynamic regime bands.
      the first curve. Now uses DATASET_COLORS (with fallback).
   2. DATASET_COLORS completed: durlar (blue1) and zod (red) were missing and
      would have collapsed onto the same fallback color in a 14-curve figure.
-  3. NOTE: THRESHOLDS were calibrated on pre-v3 (noisier) std values. After
+  3. NOTE: THRESHOLDS are frozen round conventions (D-5, 2026-08-29). After
      the 10 Hz / 3 Hz-band-limited re-run, re-check them against the new
      distributions before locking figures (see regime_classification.py).
 
@@ -98,12 +98,12 @@ SIGNALS = [
 # ─────────────────────────────────────────────────────────────────────────────
 # REGIME THRESHOLDS — shared with regime_classification.py
 # (t1, t2, t3): three boundaries defining four regimes
-# CAUTION: calibrated on pre-v3 std values — re-check after the v3 re-run.
+# FROZEN 2026-08-29 (D-5): a stated round convention, not a calibrated quantity; lineage disclosed in thesis 4.5, limitation in 6.6.
 # ─────────────────────────────────────────────────────────────────────────────
 
 THRESHOLDS = {
     "std_speed_kmh": (1.0,  5.0,  15.0),
-    "std_acc_mag":   (0.2,  0.5,   1.5),   # PLACEHOLDER (never calibrated) — keep in sync with regime_classification.py
+    "std_acc_mag":   (0.2,  0.5,   1.5),   # frozen convention (D-5) — keep in sync with regime_classification.py
     "std_yaw_rate":  (1.0,  5.0,  15.0),
 }
 
