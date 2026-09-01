@@ -13,10 +13,10 @@ no,dataset,year,Citation,camera,lidar,lidar_beam,radar,imu_freq,imu_grade,gps_gn
 12,4Seasons,2020,130,2,0,0,0,2000,Tactical,100,RTK,No,N/A,urban; tunnel; countryside; highway,Day; Night,Sun; Rain; Snow; Fog,0,0,0,0,0,1,0,0,1,0
 13,A2D2 (Audi Autonomous Driving Dataset),2020,658,6,5,16,0,N/A,Tactical,N/A,RTK,Yes,N/A,highway; country; city,Day,Sun; Cloud; Rain,38,1,0,1,0,1,0,1,0,0
 14,BDD100K (Berkley Deep Drive 100k),2020,3932,1,0,0,0,N/A,Consumer,N/A,Standard,No,1100,city; residential; highway,Day; Night,Sun; Rain; Snow; Fog,10,1,1,1,0,0,0,0,0,1
-15,CADC (Canadian Adverse Driving Conditions),2020,400,8,1,32,0,100; 200; 200,Tactical; Industrial; Industrial,100  ,RTK/PPP,Yes,N/A,urban,Day,Sun; Snow,10,1,1,0,0,0,0,0,0,0
+15,CADC (Canadian Adverse Driving Conditions),2020,400,8,1,32,0,100; 200; 200,Tactical; Industrial; Industrial,100,RTK/PPP,Yes,N/A,urban,Day,Sun; Snow,10,1,1,0,0,0,0,0,0,0
 16,Ford Multi-AV Seasonal Dataset,2020,201,7,4,32,0,200,Navigation,200,RTK,No,N/A,airport; highway; city; campus; suburban,Day,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0
 17,Oxford Radar RobotCar,2020,593,4,4,32; 0,1,50,Navigation,50,RTK,No,N/A,urban,Day; Night,Sun; Rain,0,0,0,1,0,1,0,0,0,0
-18,TITAN,2020,172,1,0,0,0,100,Consumer,N/A,-,No,10,urban,Day,0,3,1,1,0,0,0,1,0,0,0
+18,ApolloScape,2018,1593,2,2,2,0,N/A,Navigation,N/A,RTK,No,100,urban,Day; Night,0,27,1,1,1,1,1,1,0,1,1
 19,UrbanLoco,2020,200,7,2,32; 32,0,100,Industrial,1,Standard,No,N/A,urban; bridge; tunnel; construction; suburban,Day,0,0,0,0,0,0,1,0,0,0,0
 20,DurLAR,2021,34,1,1,128,0,250,Navigation,250,RTK,No,N/A,traffic; structures; hills; maneuvers,Day; Night,Sun; Rain,0,0,0,0,1,1,0,0,0,0
 21,KITTI-360,2021,1127,2,2,64; 1,0,100,Navigation,100,RTK,No,N/A,city; rural; highway; suburban,Day,0,19,1,1,1,1,1,0,0,0,0
