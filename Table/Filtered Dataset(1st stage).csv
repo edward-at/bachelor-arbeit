@@ -1,0 +1,42 @@
+No.,Dataset,Year,Paper Link,Dataset Link,Issuing Country,Recording Country,Real / Synthetic / Mixed,Public Availability,Original / Derived / Extension / Aggregated,Monocular Camera,Stereo Camera,Fisheye Camera,Event Camera,Thermal Camera,LiDAR,Radar,IMU,GPS_GNSS,Ego-motion IMU / INS,CAN Bus / Vehicle Odometry,Ego Pose / Trajectory
+1,KITTI,2012,https://ieeexplore.ieee.org/document/6248074,https://www.cvlibs.net/datasets/kitti/eval_stereo_flow.php?benchmark=stereo,Germany; USA,Germany,Real,Public-Registration,Original,Yes,Yes,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+2,Comma.ai,2016,https://arxiv.org/abs/1608.01230,https://research.comma.ai/,USA,USA,Real,Public-Free,Original,Yes,No,No,No,No,No,No,Yes,Yes,Yes,Yes,Yes
+3,Oxford RobotCar,2017,https://robotcar-dataset.robots.ox.ac.uk/images/robotcar_ijrr.pdf,https://robotcar-dataset.robots.ox.ac.uk/,UK,UK,Real,Public-Registration,Original,Yes,Yes,Yes,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+4,Paris-Lille-3D,2017,https://arxiv.org/abs/1712.00032,https://npm3d.fr/paris-lille-3d,France,France,Real,Public-Registration,Original,No,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+5,ApolloScape,2018,https://arxiv.org/abs/1803.06184,https://github.com/ApolloScapeAuto/dataset-api,China,China,Real,Public-Free,Original,Yes,Yes,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+6,HDD (HRI Driving Dataset),2018,https://arxiv.org/abs/1811.02307,https://usa.honda-ri.com/hdd,USA,USA,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,Yes,Yes
+7,Brno Urban Dataset,2019,https://ieeexplore.ieee.org/document/9197277,https://github.com/Robotics-BUT/Brno-Urban-Dataset,Czech Republic,Czech Republic,Real,Public-Free,Original,Yes,Yes,No,No,Yes,Yes,Yes,Yes,Yes,Yes,No,Yes
+8,Comma2k19,2019,https://arxiv.org/pdf/1812.05752,https://github.com/commaai/comma2k19,USA,USA,Real,Public-Free,Original,Yes,No,No,No,No,No,Yes,Yes,Yes,Yes,Yes,Yes
+9,EU Long-term (UTBM),2019,https://arxiv.org/pdf/1909.03330,https://epan-utbm.github.io/utbm_robocar_dataset/,France,France,Real,Public-Free,Original,Yes,Yes,Yes,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+10,KAIST Complex Urban Dataset,2019,https://ieeexplore.ieee.org/document/8460834,https://sites.google.com/view/complex-urban-dataset/download-lidar,South Korea,South Korea,Real,Public-Registration,Original,No,Yes,No,No,No,Yes,No,Yes,Yes,Yes,Yes,Yes
+11,nuScenes,2019,https://arxiv.org/abs/1903.11027,https://www.nuscenes.org/,USA; Singapore,USA; Singapore,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+12,Waymo Open Dataset,2021,https://arxiv.org/pdf/2104.10133,https://waymo.com/open/about/,USA,USA,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+13,Woodscape,2019,https://arxiv.org/abs/1905.01489,https://github.com/valeoai/WoodScape,Ireland; France,USA; Europe; China,Real,Public-Free,Original,Yes,No,Yes,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+14,4Seasons,2020,https://arxiv.org/abs/2009.06364,https://github.com/pmwenzel/4seasons-dataset/tree/main,Germany,Germany,Real,Public-Free,Original,No,Yes,No,No,No,No,No,Yes,Yes,Yes,No,Yes
+15,A2D2 (Audi Autonomous Driving Dataset),2020,https://arxiv.org/abs/2004.06320,https://www.a2d2.audi/,Germany,Germany,Real,Public-Free,Original,Yes,No,Yes,No,No,Yes,No,Yes,Yes,Yes,Yes,Yes
+16,BDD100K (Berkley Deep Drive 100k),2020,https://arxiv.org/abs/1805.04687,https://bdd-data.berkeley.edu/ https://github.com/bdd100k/bdd100k,USA,USA,Real,Public-Free,Original,Yes,No,No,No,No,No,No,Yes,Yes,Yes,No,Yes
+17,CADC (Canadian Adverse Driving Conditions),2020,https://arxiv.org/pdf/2001.10117,https://github.com/mpitropov/cadc_devkit,Canada,Canada,Real,Public-Free,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,Yes,Yes
+18,Ford Multi-AV Seasonal Dataset,2020,https://arxiv.org/abs/2003.07969,https://avdata.ford.com/downloads/default.aspx,USA,USA,Real,Public-Free,Original,Yes,Yes,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+19,LIBRE,2020,https://arxiv.org/abs/2003.06129,https://sites.google.com/g.sp.m.is.nagoya-u.ac.jp/libre-dataset,Japan,Japan,Real,Public-Free,Original,Yes,No,No,Yes,Yes,Yes,No,Yes,Yes,Yes,Yes,Yes
+20,Oxford Radar RobotCar,2020,https://arxiv.org/pdf/1909.01300,https://oxford-robotics-institute.github.io/radar-robotcar-dataset/,UK,UK,Real,Public-Registration,Original,Yes,Yes,No,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+21,UrbanLoco,2020,https://arxiv.org/abs/1912.09513,https://github.com/weisongwen/UrbanLoco,Hong Kong; USA,USA; Hong Kong,Real,Public-Free,Original,Yes,No,Yes,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+22,DurLAR,2021,https://durham-repository.worktribe.com/output/1138941,https://github.com/l1997i/DurLAR,UK,UK,Real,Public-Free,Original,Yes,Yes,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+23,KITTI-360,2021,https://arxiv.org/abs/2109.13410,https://www.cvlibs.net/datasets/kitti-360/,Germany,Germany,Real,Public-Registration,Extension,Yes,Yes,Yes,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+24,nuPlan,2021,https://arxiv.org/abs/2403.04133,https://www.nuscenes.org/nuplan,USA; Singapore,USA; Singapore,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+25,PandaSet,2021,https://arxiv.org/pdf/2112.12610,https://pandaset.org/,China; USA,USA,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+26,Ithaca365,2022,https://arxiv.org/pdf/2208.01166,https://github.com/cdiazruiz/ithaca365-devkit,USA,USA,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+27,LUCOOP,2022,https://ieeexplore.ieee.org/document/10186693,https://data.uni-hannover.de/vault/icsens/axmann/lucoop-leibniz-university-cooperative-perception-and-urban-navigation-dataset/,Germany,Germany,Real,Public-Free,Original,No,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+28,View-of-Delft,2022,https://ieeexplore.ieee.org/document/9699098,https://tudelft-iv.github.io/view-of-delft-dataset/,Netherlands,Netherlands,Real,Public-Registration,Original,Yes,Yes,No,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+29,Boreas,2023,https://arxiv.org/abs/2203.10168,https://www.boreas.utias.utoronto.ca/,Canada,Canada,Real,Public-Free,Original,Yes,No,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes
+30,UrbanNav,2023,https://www.researchgate.net/publication/372155742_Hong_Kong_UrbanNav_An_Open-Source_Multisensory_Dataset_for_Benchmarking_Urban_Navigation_Algorithms,https://github.com/IPNL-POLYU/UrbanNavDataset,Hong Kong,Hong Kong; Japan,Real,Public-Free,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+31,V2V4Real,2023,https://arxiv.org/abs/2303.07601,https://mobility-lab.seas.ucla.edu/v2v4real/,USA,USA,Real,Public-Free,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+32,ZOD (Zenseact Open Dataset),2023,https://arxiv.org/abs/2305.02008,https://zod.zenseact.com/,Sweden,Europe,Real,Public-Registration,Original,Yes,No,Yes,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+33,HeLiPR,2024,https://arxiv.org/abs/2309.14590,https://sites.google.com/view/heliprdataset/download,South Korea,South Korea,Real,Public-Registration,Original,No,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+34,MAN TruckScenes,2024,https://arxiv.org/abs/2407.07462,https://brandportal.man/d/QSf8mPdU5Hgj/downloads#/-/dataset,Germany,Europe,Real,Public-Free,Original,Yes,No,No,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+35,OmniHD-Scenes,2024,https://arxiv.org/abs/2412.10734,https://www.2077ai.com/OmniHD-Scenes,China,China,Real,Public-Free,Original,Yes,No,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes
+36,TUMTraf-V2X,2024,https://arxiv.org/abs/2403.01316,https://tum-traffic-dataset.github.io/tumtraf-v2x/,Germany,Germany,Real,Public-Free,Extension,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+37,V2X-Real,2024,https://arxiv.org/abs/2403.16034,https://mobility-lab.seas.ucla.edu/v2x-real/,USA,USA,Real,Public-Free,Original,No,Yes,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+38,HeRCULES,2025,https://arxiv.org/abs/2502.01946,https://sites.google.com/view/herculesdataset/download,South Korea,South Korea,Real,Public-Registration,Original,No,Yes,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes
+39,NVIDIA Physical AI Autonomous Vehicles,2025,-,https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles,USA,Multiple,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes
+40,Boreas Road Trip,2026,https://arxiv.org/abs/2602.16870,https://www.boreas.utias.utoronto.ca/,Canada,Canada,Real,Public-Free,Extension,Yes,No,No,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
+41,KIT Scenes Multimodal,2026,https://arxiv.org/abs/2606.02956,https://kitscenes.com/multimodal/,Germany,Germany,Real,Public-Free,Original,No,Yes,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes

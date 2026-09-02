@@ -9,10 +9,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 df = pd.read_csv(os.path.join(BASE_DIR, 'filtered_dataset_cleaned.csv'))
 
 # ── Qs = 0.5 * imu_grade + 0.5 * gps_type ────────────────────────────────────
-GRADE_SCORE = {'Navigation': 1.0, 'Tactical': 0.75, 'Industrial': 0.5, 'Consumer': 0.25}
+GRADE_SCORE = {'Navigation': 1.00, 'Tactical': 0.750, 'Industrial': 0.50, 'Consumer': 0.25}
 df['imu_grade_score'] = df['imu_grade_top'].map(GRADE_SCORE).fillna(0)
 df['gps_score'] = df['gps_type'].map({'RTK': 1.0, 'Standard': 0.0, 'Unknown': 0.0}).fillna(0)
-df['Qs'] = 0.5 * df['imu_grade_score'] + 0.5 * df['gps_score']
+df['Qs'] = 0.50 * df['imu_grade_score'] + 0.50 * df['gps_score']
 
 # ── Ds = 0.5 * road_type + 0.5 * weather ─────────────────────────────────────
 ROAD_MAP = {
@@ -51,7 +51,7 @@ df['Ps'] = df['can_bus'].fillna(0)
 # ── DSS = 0.6*Qs + 0.25*Ds + 0.15*Ps ──────────────────────────────────────────
 # Citation score removed — citation count reflects perception task adoption,
 # not inertial signal quality, which is the focus of this thesis
-df['DSS'] = 0.6 * df['Qs'] + 0.25 * df['Ds'] + 0.15 * df['Ps']
+df['DSS'] = 0.600 * df['Qs'] + 0.250 * df['Ds'] + 0.150 * df['Ps']
 
 # ── Plot A — Horizontal bar (DSS sorted) ─────────────────────────────────────
 df_sorted = df[['dataset', 'DSS']].sort_values('DSS')
@@ -87,7 +87,7 @@ for i in range(len(heat_df.index)):
     for j in range(len(heat_df.columns)):
         val = heat_df.values[i, j]
         color = 'white' if val > 0.5 else 'black'
-        ax.text(j, i, f'{val:.2f}', ha='center', va='center', fontsize=7.5, color=color)
+        ax.text(j, i, f'{val:.3f}', ha='center', va='center', fontsize=7.5, color=color)
 
 ax.set_title('Score Components Heatmap per Dataset\n(sorted by DSS)', fontsize=13, pad=12)
 plt.tight_layout()
