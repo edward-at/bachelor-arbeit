@@ -8,7 +8,7 @@ no,dataset,year,Citation,camera,lidar,lidar_beam,radar,imu_freq,imu_grade,gps_gn
 7,EU Long-term (UTBM),2019,150.0,2,4,32; 4; 1,1,100,Industrial,10,RTK,0,,downtown; suburban; construction,Day; Night,Sun; Cloud; Snow,0,0,0,0,0,1,0,0,1,0,Industrial,100.0,10.0
 8,KAIST Complex Urban Dataset,2019,92.0,2,4,16; 1,0,100,Consumer,10,RTK,0,,urban,Day,Unknown,0,0,0,0,0,1,0,0,0,0,Consumer,100.0,10.0
 9,nuScenes,2019,10681.0,6,1,32,5,1000,Industrial,1000,RTK,1,15.0,urban; residential; nature; industrial,Day; Night,Sun; Cloud; Rain,23,1,1,1,0,1,1,0,1,1,Industrial,1000.0,1000.0
-10,Waymo Open Dataset,2019,5288.0,5,5,64,0,,Navigation,,RTK,0,6.39,urban; suburban,Day; Night,Sun; Rain,23,1,1,1,0,0,1,1,1,1,Navigation,,
+10,Waymo Open Motion Dataset,2021,1206.0,5,5,64,0,,Navigation,,RTK,0,6.39,urban; suburban,Day; Night,Sun; Rain,23,1,1,1,0,0,1,1,1,1,Navigation,,
 11,Woodscape,2019,434.0,4,1,64,0,200,Industrial,20; 1,RTK,1,,highway; urban; parking,Day,Unknown,40,1,0,1,1,1,0,1,0,1,Industrial,200.0,20.0
 12,4Seasons,2020,130.0,2,0,0,0,2000,Tactical,100,RTK,0,,urban; tunnel; countryside; highway,Day; Night,Sun; Rain; Snow; Fog,0,0,0,0,0,1,0,0,1,0,Tactical,2000.0,100.0
 13,A2D2 (Audi Autonomous Driving Dataset),2020,658.0,6,5,16,0,,Tactical,,RTK,1,,highway; country; city,Day,Sun; Cloud; Rain,38,1,0,1,0,1,0,1,0,0,Tactical,,
@@ -32,4 +32,4 @@ no,dataset,year,Citation,camera,lidar,lidar_beam,radar,imu_freq,imu_grade,gps_gn
 31,HeRCULES,2025,20.0,2,1,0,1,100,Industrial,50,RTK,0,,urban; bridge; campus,Day; Night,Sun; Cloud; Rain; Snow,0,0,0,0,0,1,0,0,1,0,Industrial,100.0,50.0
 32,NVIDIA Physical AI Autonomous Vehicles,2025,,0,0,0,0,,Navigation,,RTK,0,1700.0,nan,Day; Night,Sun; Rain; Fog; Snow,0,0,0,0,0,0,0,0,0,0,Navigation,,
 33,Boreas Road Trip,2026,1.0,1,2,128; 0,1,200,Tactical,200,RTK,0,,suburbs; industrial; urban; forest; farm; tunnel; skyway; regional; freeway,Day; Night,Sun; Snow,0,0,0,0,0,1,0,0,0,0,Tactical,200.0,200.0
-34,KIT Scenes Multimodal,2026,0.0,6,4,128,1,10,Navigation,10,RTK,0,5.7,urban; metropolitan; suburb; industrial,Day; Night,Unknown,120,0,0,0,1,1,1,1,1,1,Navigation,10.0,10.0
+34,KITScenes Multimodal,2026,0.0,6,4,128,1,10,Navigation,10,RTK,0,5.7,urban; metropolitan; suburb; industrial,Day; Night,Unknown,120,0,0,0,1,1,1,1,1,1,Navigation,10.0,10.0

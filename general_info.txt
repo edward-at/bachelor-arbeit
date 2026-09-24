@@ -5,12 +5,12 @@ GENERAL INFO — thesis numeric ground truth (derived from artifacts)
 ==============================================================================
 [0  provenance — snapshot, paths, timestamp]
 ==============================================================================
-generated: 2026-09-03 01:06
+generated: 2026-09-09 11:24
 project root: /Users/edward/Downloads
 
-canonical_snapshot.json (2026-08-30):
+canonical_snapshot.json (2026-09-07):
 {
- "frozen_on": "2026-08-30",
+ "frozen_on": "2026-09-07",
  "values": {
   "frame_n": 402421,
   "guarded_n": 401230,

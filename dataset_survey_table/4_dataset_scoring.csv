@@ -1,6 +1,4 @@
-,,,,,,,,,
-,,,,,,,,,
-,,,,,,,,,
+
 ,No.,Dataset Name,Year,Paper Title,Paper Link,Qs,Ds,Ps,Inertial Score
 ,5,HDD (HRI Driving Dataset),2018,Toward Driving Scene Understanding: A Dataset for Learning Driver Behavior and Causal Reasoning,https://arxiv.org/abs/1811.02307,1.00,0.40,1.00,0.850
 ,13,A2D2 (Audi Autonomous Driving Dataset),2020,A2D2: Audi Autonomous Driving Dataset,https://arxiv.org/abs/2004.06320,0.88,0.60,1.00,0.828
@@ -16,11 +14,11 @@
 ,19,DurLAR,2021,DurLAR: A High-Fidelity 128-Channel LiDAR Dataset with Panoramic Ambient and Reflectivity Imagery for Multi-Modal Autonomous Driving Applications,https://arxiv.org/abs/2406.10068,1.00,0.40,0.00,0.700
 "no raw imu, only gnss + velocity",26,Boreas,2023,Boreas: A Multi-Season Autonomous Driving Dataset,https://arxiv.org/abs/2203.10168,1.00,0.40,0.00,0.700
 request email are not answered ,30,OmniHD-Scenes,2024,OmniHD-Scenes: A Next-Generation Multimodal Dataset for Autonomous Driving,https://arxiv.org/abs/2412.10734,1.00,0.40,0.00,0.700
-,34,KIT Scenes Multimodal,2026,The Road Ahead in Autonomous Driving: The KITScenes Multimodal Dataset,https://arxiv.org/abs/2606.02956,1.00,0.40,0.00,0.700
+,34,KITScenes Multimodal,2026,The Road Ahead in Autonomous Driving: The KITScenes Multimodal Dataset,https://arxiv.org/abs/2606.02956,1.00,0.40,0.00,0.700
 ,33,Boreas Road Trip,2026,Boreas Road Trip: A Multi-Sensor Autonomous Driving Dataset on Challenging Roads,https://arxiv.org/abs/2602.16870,0.88,0.60,0.00,0.678
 trajectory recorded at 2Hz (frequency too small),4,ApolloScape,2018,The ApolloScape Open Dataset for Autonomous Driving and its Application,https://arxiv.org/abs/1803.06184,1.00,0.30,0.00,0.675
 same area as Oxford RobotCar Dataset and website download page is error during data downloading process,17,Oxford Radar RobotCar,2020,The Oxford Radar RobotCar Dataset: A Radar Extension to the Oxford RobotCar Dataset,https://arxiv.org/pdf/1909.01300,1.00,0.30,0.00,0.675
-,23,Waymo Open Dataset,2021,Large Scale Interactive Motion Forecasting for Autonomous Driving : The WAYMO OPEN MOTION DATASET,https://arxiv.org/pdf/2104.10133,1.00,0.30,0.00,0.675
+,23,Waymo Open Motion Dataset,2021,Large Scale Interactive Motion Forecasting for Autonomous Driving : The WAYMO OPEN MOTION DATASET,https://arxiv.org/pdf/2104.10133,1.00,0.30,0.00,0.675
 ,28,ZOD (Zenseact Open Dataset),2023,Zenseact Open Dataset: A large-scale and diverse multimodal dataset for autonomous driving,https://arxiv.org/abs/2305.02008,1.00,0.30,0.00,0.675
 ,24,Ithaca365,2022,Ithaca365: Dataset and Driving Perception under Repeated and Challenging Weather Conditions,https://arxiv.org/pdf/2208.01166,0.75,0.80,0.00,0.650
 ,31,HeRCULES,2025,HeRCULES: Heterogeneous Radar Dataset in Complex Urban Environment for Multi-session Radar SLAM,https://arxiv.org/abs/2502.01946,0.75,0.70,0.00,0.625

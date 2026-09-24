@@ -9,7 +9,7 @@ No.,Dataset,Year,Paper Link,Dataset Link,Issuing Country,Recording Country,Real 
 8,EU Long-term (UTBM),2019,https://arxiv.org/pdf/1909.03330,https://epan-utbm.github.io/utbm_robocar_dataset/,France,France,Real,Public-Free,Original,Yes,Yes,Yes,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
 9,KAIST Complex Urban Dataset,2019,https://ieeexplore.ieee.org/document/8460834,https://sites.google.com/view/complex-urban-dataset/download-lidar,South Korea,South Korea,Real,Public-Registration,Original,No,Yes,No,No,No,Yes,No,Yes,Yes,Yes,Yes,Yes
 10,nuScenes,2019,https://arxiv.org/abs/1903.11027,https://www.nuscenes.org/,USA; Singapore,USA; Singapore,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
-11,Waymo Open Dataset,2021,https://arxiv.org/pdf/2104.10133,https://waymo.com/open/about/,USA,USA,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
+11,Waymo Open Motion Dataset,2021,https://arxiv.org/pdf/2104.10133,https://waymo.com/open/about/,USA,USA,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,No,Yes,Yes,Yes,No,Yes
 12,Woodscape,2019,https://arxiv.org/abs/1905.01489,https://github.com/valeoai/WoodScape,Ireland; France,USA; Europe; China,Real,Public-Free,Original,Yes,No,Yes,No,No,Yes,No,Yes,Yes,Yes,No,Yes
 13,4Seasons,2020,https://arxiv.org/abs/2009.06364,https://github.com/pmwenzel/4seasons-dataset/tree/main,Germany,Germany,Real,Public-Free,Original,No,Yes,No,No,No,No,No,Yes,Yes,Yes,No,Yes
 14,A2D2 (Audi Autonomous Driving Dataset),2020,https://arxiv.org/abs/2004.06320,https://www.a2d2.audi/,Germany,Germany,Real,Public-Free,Original,Yes,No,Yes,No,No,Yes,No,Yes,Yes,Yes,Yes,Yes
@@ -32,4 +32,4 @@ No.,Dataset,Year,Paper Link,Dataset Link,Issuing Country,Recording Country,Real 
 31,HeRCULES,2025,https://arxiv.org/abs/2502.01946,https://sites.google.com/view/herculesdataset/download,South Korea,South Korea,Real,Public-Registration,Original,No,Yes,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes
 32,NVIDIA Physical AI Autonomous Vehicles,2025,-,https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles,USA,Multiple,Real,Public-Registration,Original,Yes,No,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes
 33,Boreas Road Trip,2026,https://arxiv.org/abs/2602.16870,https://www.boreas.utias.utoronto.ca/,Canada,Canada,Real,Public-Free,Extension,Yes,No,No,No,No,Yes,Yes,Yes,Yes,Yes,Yes,Yes
-34,KIT Scenes Multimodal,2026,https://arxiv.org/abs/2606.02956,https://kitscenes.com/multimodal/,Germany,Germany,Real,Public-Free,Original,No,Yes,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes
+34,KITScenes Multimodal,2026,https://arxiv.org/abs/2606.02956,https://kitscenes.com/multimodal/,Germany,Germany,Real,Public-Free,Original,No,Yes,No,No,No,Yes,Yes,Yes,Yes,Yes,No,Yes

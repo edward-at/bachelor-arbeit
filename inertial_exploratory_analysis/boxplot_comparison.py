@@ -1,7 +1,19 @@
 """
-cross_dataset_boxplot.py  (v2)
+boxplot_comparison.py  (v3)
 ========================
 Section 4.5.3 — Cross-Dataset Variability Boxplots
+
+v3 CHANGES (layout only — no statistic changed):
+  1. Legend moved OUT of the data area to a single row below the x-axis, so it
+     can never cover a box, a violin, or a tail annotation.
+  2. Tail annotations ("▲ max ≈ X") moved to a strip ABOVE the plot frame and
+     packed greedily into up to ANNOT_MAX_ROWS rows using an estimated text
+     width, so neighbouring labels never overlap. The title pad grows with the
+     number of rows actually used.
+  3. Annotation text shortened: the median is dropped from the clipped-box
+     form because y_top >= 1.5 × max(median) guarantees every median is
+     inside the axes. The mean is added ONLY when the mean dot itself would be
+     clipped, so nothing disappears silently.
 
 v2 CHANGES:
   1. Violin KDE is trimmed to where density actually exists (was drawn over
@@ -170,6 +182,16 @@ CONSENSUS_PCTL = 80.0    # y_top from the 80th pctl of per-dataset p99s, so a
 HEADROOM       = 1.08
 DENSITY_FLOOR  = 0.005   # violin drawn only where density > floor × max
 LOG_SCALE      = False   # True → symlog supplementary view (suffix _log)
+
+# Layout of legend and tail annotations (v3):
+LEGEND_Y_OFFSET   = -0.10  # axes fraction; legend hangs below the x-tick labels
+ANNOT_FONTSIZE    = 7.5    # documented small-font exception (packed annotations)
+ANNOT_OFFSET_PT   = 3.0    # gap between the top frame line and annotation row 0
+ANNOT_ROW_PT      = 11.0   # vertical distance between annotation rows
+ANNOT_MAX_ROWS    = 3      # rows available for packing before labels may touch
+ANNOT_CHAR_EM     = 0.60   # assumed mean glyph width (fraction of fontsize)
+ANNOT_GAP_UNITS   = 0.15   # minimum horizontal gap between labels (x-axis units)
+TITLE_PAD_BASE_PT = 10.0   # title pad when no annotation row is used
 
 # ---------------------------------------------------------------------------
 # DATA LOADING
@@ -349,7 +371,8 @@ def plot_signal(sig: dict, data: dict[str, pd.DataFrame],
     # ── 3. Set up figure ────────────────────────────────────────────────────
     fig, ax = plt.subplots(figsize=FIGSIZE)
 
-    ax.set_title(sig["title"], fontsize=13, pad=10)
+    # (title is set at the end of step 5 — its pad depends on how many
+    #  annotation rows the tail strip needs)
     ax.set_ylabel(sig["ylabel"], fontsize=11)
     ax.grid(axis="y", linestyle="--", alpha=0.7, zorder=0)
     ax.set_axisbelow(True)
@@ -398,26 +421,67 @@ def plot_signal(sig: dict, data: dict[str, pd.DataFrame],
     if not np.isfinite(y_top) or y_top <= 0:
         y_top = clip_hi
 
+    rows_used = 0
     if LOG_SCALE:
         ax.set_yscale("symlog", linthresh=max(y_top * 1e-3, 1e-3))
         ax.set_ylim(0, clip_hi)
     else:
         ax.set_ylim(0, y_top)
-        # Annotate datasets whose tail exceeds the visible range
+
+        # ── v3: tail annotations in a strip ABOVE the frame ─────────────────
+        # Each label sits at its dataset's x, just above the top frame line
+        # (axes-fraction y = 1.0), so it can never be covered by data. Labels
+        # are packed greedily into rows: a label goes on the lowest row whose
+        # last label ends far enough to the left of it. Text width is
+        # estimated from the character count, converted to x-axis units.
         def _fmt(v):
             return f"{v:.0f}" if v >= 100 else (f"{v:.1f}" if v >= 10 else f"{v:.2f}")
+
+        ax_w_pt = ax.get_window_extent().width / fig.dpi * 72.0     # pre-tight_layout
+        x_lo, x_hi = ax.get_xlim()
+        units_per_pt = (x_hi - x_lo) / ax_w_pt
+
+        def _width_units(text: str) -> float:
+            return len(text) * ANNOT_CHAR_EM * ANNOT_FONTSIZE * units_per_pt
+
+        row_right_edge = [-np.inf] * ANNOT_MAX_ROWS     # right edge of last label per row
         for x_pos, ds in zip(x_positions, order):
             vals  = arrays[ds]
             v_max = float(vals.max())
-            if v_max > y_top:
-                v_med = float(np.median(vals))
-                v_q3  = float(np.percentile(vals, 75))
-                if v_q3 > y_top:   # even the box is clipped — disclose more
-                    note = f"▲ med {_fmt(v_med)} · q3 {_fmt(v_q3)} · max {_fmt(v_max)}"
-                else:
-                    note = f"▲ max ≈ {_fmt(v_max)}"
-                ax.text(x_pos, y_top * 0.985, note, ha="center", va="top",
-                        fontsize=7.5, color="black")
+            if v_max <= y_top:
+                continue
+            parts = []
+            v_q3 = float(np.percentile(vals, 75))
+            if v_q3 > y_top:                      # box top is clipped — disclose it
+                parts.append(f"q3 = {_fmt(v_q3)}")
+            v_mean = float(vals.mean())
+            if v_mean > y_top:                    # mean dot would vanish — disclose it
+                parts.append(f"mean = {_fmt(v_mean)}")
+            parts.append(f"max ≈ {_fmt(v_max)}")
+            note = "▲ " + " , ".join(parts)
+
+            half_w = 0.5 * _width_units(note)
+            for row in range(ANNOT_MAX_ROWS):
+                if x_pos - half_w >= row_right_edge[row] + ANNOT_GAP_UNITS:
+                    break
+            else:                                 # no free row — take the emptiest
+                row = int(np.argmin(row_right_edge))
+                print(f"  [WARN] {ds}: tail label may touch a neighbour "
+                      f"(increase ANNOT_MAX_ROWS or FIGSIZE width)")
+            row_right_edge[row] = x_pos + half_w
+            rows_used = max(rows_used, row + 1)
+
+            ax.annotate(note, xy=(x_pos, 1.0), xycoords=("data", "axes fraction"),
+                        xytext=(0.0, ANNOT_OFFSET_PT + row * ANNOT_ROW_PT),
+                        textcoords="offset points", ha="center", va="bottom",
+                        fontsize=ANNOT_FONTSIZE, color="black",
+                        annotation_clip=False, clip_on=False)
+
+    # Title last: leave room for however many annotation rows were used
+    title_pad = TITLE_PAD_BASE_PT
+    if rows_used:
+        title_pad += ANNOT_OFFSET_PT + rows_used * ANNOT_ROW_PT
+    ax.set_title(sig["title"], fontsize=13, pad=title_pad)
 
     # ── 6. Legend ────────────────────────────────────────────────────────────
     legend_elements = [
@@ -431,8 +495,11 @@ def plot_signal(sig: dict, data: dict[str, pd.DataFrame],
         plt.Line2D([0], [0], color="grey", linewidth=WHISKER_LW,
                    label="Whiskers (1.5 × IQR)"),
     ]
-    ax.legend(handles=legend_elements, loc="upper left",
-              frameon=True, facecolor="white", fontsize=9)
+    # v3: one row BELOW the x-tick labels — outside the data area, so it can
+    # never cover a box, a violin, or a tail annotation.
+    ax.legend(handles=legend_elements, loc="upper center",
+              bbox_to_anchor=(0.5, LEGEND_Y_OFFSET), ncol=len(legend_elements),
+              frameon=False, fontsize=9)
 
     fig.tight_layout()
 
@@ -451,7 +518,7 @@ def plot_signal(sig: dict, data: dict[str, pd.DataFrame],
 
 def main() -> None:
     print("=" * 60)
-    print("cross_dataset_boxplot.py — Section 4.5.3")
+    print("boxplot_comparison.py (v3) — Section 4.5.3")
     print("=" * 60)
     print(f"  std_data dir : {STD_DATA_DIR}")
     print(f"  output dir   : {FIG_DIR}")
