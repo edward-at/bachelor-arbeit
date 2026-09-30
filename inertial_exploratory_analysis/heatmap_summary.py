@@ -283,6 +283,16 @@ def main():
     out_path = render(datasets, cols, raw, inten, index)
     print(f"\nOutput: {out_path}")
 
+    # Persist the assembled numbers (real values, per-column intensities, index) so that the
+    # thesis reads them from an artifact and never off the PNG (added 2026-09-24).
+    inten_df = pd.DataFrame(inten, index=[DISPLAY_NAMES.get(d, d) for d in datasets],
+                            columns=[c["key"] + "_intensity" for c in cols])
+    full = table.join(inten_df)
+    full.insert(0, "frame_sample_clips", FRAME_SAMPLE_CLIPS if COMPUTE_FRAME_METRICS else "none")
+    csv_path = Path(out_path).with_name("heatmap_summary.csv")
+    full.to_csv(csv_path, index_label="dataset")
+    print(f"Saved -> {csv_path}")
+
 
 if __name__ == "__main__":
     main()

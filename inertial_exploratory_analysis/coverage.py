@@ -4,7 +4,9 @@ Script: coverage_heatmaps.py
 Bachelor Thesis: "Identifying Dynamic Biases in Large-Scale Public Datasets
 via Distributional Analysis"
 
-Produces three coverage heatmaps for all 13 datasets × 6 kinematic signals:
+Produces three coverage heatmaps for all 14 datasets × 6 kinematic signals, and
+persists the three matrices as one CSV so that the thesis reads numbers from an
+artifact and never off a PNG:
 
   1. signal_coverage.png  — % non-NaN values per signal per dataset
   2. non_zero.png         — % non-zero values (among non-NaN) per signal per dataset
@@ -18,9 +20,12 @@ Physical bounds (same as distributional_analysis.py):
   jerk_lat  : [-30,  30]  m/s³
   yaw_rate  : [-1.57, 1.57] rad/s  (stored in rad/s, bounds applied before conversion)
 
-Output: figures/Coverage/signal_coverage.png
+Output: figures/coverage/signal_coverage.png
                           non_zero.png
                           boundary.png
+                          coverage_matrices.csv   (long format: dataset, dataset_key,
+                                                   signal, n_frames, coverage_pct,
+                                                   nonzero_pct, boundary_pct)
 
 Usage:
     python coverage_heatmaps.py
@@ -69,11 +74,18 @@ BOUNDS = {
     "yaw_rate":   (-1.57,   1.57),   # rad/s
 }
 
-# Display order for datasets (rows), top to bottom
+# Folder key -> thesis display name (Section 4.2.3 short names, used in every row label)
+DISPLAY_NAMES = {
+    "4seasons": "4Seasons", "a2d2": "A2D2", "boreas_rt": "Boreas", "durlar": "DurLAR",
+    "ford": "Ford", "hdd": "HDD", "kitscenes": "KITScenes", "kitti": "KITTI",
+    "kitti360": "KITTI-360", "nuscene": "nuScenes", "nvidia": "NVIDIA",
+    "oxford": "Oxford", "waymo": "Waymo", "zod": "ZOD",
+}
+
+# Display order for datasets (rows), top to bottom: alphabetical by display name
 DATASET_ORDER = [
-    "4seasons", "a2d2", "boreas_rt", "durlar", "ford",
-    "hdd", "kitti", "kitti360", "nuscene", "nvidia",
-    "oxford", "waymo", "zod", "kitscenes"
+    "4seasons", "a2d2", "boreas_rt", "durlar", "ford", "hdd", "kitscenes",
+    "kitti", "kitti360", "nuscene", "nvidia", "oxford", "waymo", "zod",
 ]
 
 # Sample at most this many frames per dataset to keep runtime reasonable.
@@ -184,7 +196,7 @@ def _plot_heatmap(matrix: np.ndarray,
                   col_labels: list[str],
                   title: str,
                   out_path: Path,
-                  cmap: str = "RdYlGn") -> None:
+                  cmap: str = "Blues") -> None:
     """
     Plot a heatmap where:
       - rows = datasets
@@ -204,14 +216,13 @@ def _plot_heatmap(matrix: np.ndarray,
 
     # Colorbar
     cbar = fig.colorbar(im, ax=ax, fraction=0.03, pad=0.02)
-    cbar.set_label("% of frames", fontsize=9)
-    cbar.ax.tick_params(labelsize=8)
+    cbar.set_label("% of frames")
 
     # Axis ticks
     ax.set_xticks(np.arange(n_cols))
     ax.set_yticks(np.arange(n_rows))
-    ax.set_xticklabels(col_labels, fontsize=8.5, ha="center")
-    ax.set_yticklabels(row_labels, fontsize=9)
+    ax.set_xticklabels(col_labels, ha="center")
+    ax.set_yticklabels(row_labels)
 
     # Cell text — white on dark cells, black on light cells
     for i in range(n_rows):
@@ -221,19 +232,19 @@ def _plot_heatmap(matrix: np.ndarray,
             rgba      = plt.get_cmap(cmap)(norm(val))
             luminance = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
             txt_color = "white" if luminance < 0.5 else "black"
+            # documented exception (thesis-plot skill): one small in-cell annotation size
             ax.text(j, i, f"{val:.1f}%",
                     ha="center", va="center",
-                    fontsize=8, color=txt_color, fontweight="bold")
+                    fontsize=8, color=txt_color)
 
     # Grid lines between cells
     ax.set_xticks(np.arange(n_cols + 1) - 0.5, minor=True)
     ax.set_yticks(np.arange(n_rows + 1) - 0.5, minor=True)
     ax.grid(which="minor", color="white", linewidth=1.5)
-    ax.tick_params(which="minor", bottom=False, left=False)
 
-    ax.set_title(title, fontsize=12, fontweight="bold", pad=12)
-    ax.set_xlabel("Signal", fontsize=9, labelpad=6)
-    ax.set_ylabel("Dataset", fontsize=9, labelpad=6)
+    ax.set_title(title)
+    ax.set_xlabel("Signal")
+    ax.set_ylabel("Dataset")
 
     fig.tight_layout()
     plt.savefig(out_path, dpi=300, bbox_inches="tight")
@@ -315,29 +326,43 @@ def main():
             mat_boundary[i, j] = res.get(f"{col}__boundary", np.nan)
 
     col_labels = [s["label"] for s in SIGNALS]
-    row_labels = present_names
+    row_labels = [DISPLAY_NAMES.get(n, n) for n in present_names]
+
+    # Persist the three matrices (long format) so every number has an artifact
+    rows = []
+    for i, ds_name in enumerate(present_names):
+        for j, sig in enumerate(SIGNALS):
+            rows.append({
+                "dataset": DISPLAY_NAMES.get(ds_name, ds_name), "dataset_key": ds_name,
+                "signal": sig["col"], "n_frames": results_by_ds[ds_name]["n_frames"],
+                "coverage_pct": mat_coverage[i, j], "nonzero_pct": mat_nonzero[i, j],
+                "boundary_pct": mat_boundary[i, j],
+            })
+    csv_path = fig_root / "coverage_matrices.csv"
+    pd.DataFrame(rows).to_csv(csv_path, index=False)
+    print(f"  Saved → {csv_path}")
 
     print(f"\n{'='*60}\n  Saving figures\n{'='*60}")
 
     _plot_heatmap(
         mat_coverage, row_labels, col_labels,
-        title="Signal Coverage Percentage Non-NaN Values",
+        title="Coverage",
         out_path=fig_root / "signal_coverage.png",
-        cmap="RdYlGn",
+        cmap="Blues",
     )
 
     _plot_heatmap(
         mat_nonzero, row_labels, col_labels,
-        title="Non-Zero Coverage Percentage Non-Zero Values (of all frames)",
+        title="Non-zero coverage",
         out_path=fig_root / "non_zero.png",
-        cmap="RdYlGn",
+        cmap="Blues",
     )
 
     _plot_heatmap(
         mat_boundary, row_labels, col_labels,
-        title="Boundary Coverage Percentage Values Within Physical Bounds",
+        title="Boundary coverage",
         out_path=fig_root / "boundary.png",
-        cmap="RdYlGn",
+        cmap="Blues",
     )
 
     print(f"\n{'='*60}")

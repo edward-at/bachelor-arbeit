@@ -104,9 +104,10 @@ def _plot_ari(ari: np.ndarray, caps: list[int], out_fp: Path):
     # the same dark blue. Cells are annotated, so the truncation costs nothing
     # and is stated in the caption.
     im = ax.imshow(ari, cmap="Blues", vmin=ARI_VMIN, vmax=1.0)
-    labels = [f"{c//1000}k" if c >= 1000 else str(c) for c in caps]
+    labels = [f"{c:,}" for c in caps]           # exact caps ("2,500", not "2k"; block 5D)
     ax.set_xticks(range(len(caps))); ax.set_yticks(range(len(caps)))
     ax.set_xticklabels(labels); ax.set_yticklabels(labels)
+    ax.set_xlabel("fit cap (windows per dataset)"); ax.set_ylabel("fit cap (windows per dataset)")
     ax.set_title("Cap robustness: cross-cap assignment agreement (ARI)")
     thresh = ARI_VMIN + 0.55 * (1.0 - ARI_VMIN)
     for i in range(len(caps)):
@@ -116,7 +117,9 @@ def _plot_ari(ari: np.ndarray, caps: list[int], out_fp: Path):
     fig.colorbar(im, ax=ax, fraction=0.046)
     fig.tight_layout()
     out_fp.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_fp, dpi=DPI)
+    # bbox_inches="tight": the equal-aspect image plus the colorbar leaves the
+    # y label outside the canvas under tight_layout alone (block 5D)
+    fig.savefig(out_fp, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
 
 

@@ -28,21 +28,34 @@ REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
 OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "regime_discovery" / "figures" / "regime_profile"
 DPI             = 300
 
-LABELS = {"mean_speed_kmh": "mean speed", "std_speed_kmh": "σ speed",
-          "mean_acc_pos": "acc⁺", "mean_acc_neg": "acc⁻",
-          "mean_abs_a_lat": "|a_lat|", "mean_abs_yaw_rate": "|yaw rate|",
-          "mean_abs_jerk": "|jerk|"}
+LABELS = {"mean_speed_kmh": "mean speed (km/h)", "std_speed_kmh": "σ speed (km/h)",
+          "mean_acc_pos": "acc⁺ (m/s²)", "mean_acc_neg": "acc⁻ (m/s²)",
+          "mean_abs_a_lat": "|a_lat| (m/s²)", "mean_abs_yaw_rate": "|yaw rate| (°/s)",
+          "mean_abs_jerk": "|jerk| (m/s³)"}
+
+# display convention of Section 4.6.1: yaw rate is stored in rad/s and shown in °/s.
+# The conversion is applied to the printed cell only; the standardization across
+# regimes that drives the color is scale-invariant, so no color changes (block 5D).
+DISPLAY_SCALE = {"mean_abs_yaw_rate": 180.0 / np.pi}
+# one fixed precision per feature so a column reads uniformly
+CELL_FMT = {"mean_speed_kmh": "{:.1f}", "std_speed_kmh": "{:.1f}",
+            "mean_acc_pos": "{:.3f}", "mean_acc_neg": "{:.3f}",
+            "mean_abs_a_lat": "{:.3f}", "mean_abs_yaw_rate": "{:.2f}",
+            "mean_abs_jerk": "{:.3f}"}
 
 
-def _fmt(v: float) -> str:
-    """Physical-unit cell label: more decimals for the small (rad/s) channels."""
-    return f"{v:.3f}" if abs(v) < 1 else f"{v:.1f}"
+def _fmt(v: float, feat: str = "") -> str:
+    """Physical-unit cell label with the feature's fixed precision."""
+    return CELL_FMT.get(feat, "{:.3f}" if abs(v) < 1 else "{:.1f}").format(v)
 
 
 def main():
     df = pd.read_parquet(REGIME_DATA_DIR / "cluster_profile.parquet").sort_values("regime")
     feats = [c for c in df.columns if c not in ("regime", "n_windows", "share_pct")]
 
+    for f, k in DISPLAY_SCALE.items():                  # display units only (block 5D)
+        if f in df.columns:
+            df[f] = df[f] * k
     M = df[feats].to_numpy(float)                       # regimes × features, physical units
     std = M.std(0); std[std == 0] = 1.0                 # guard a constant feature column
     Z = (M - M.mean(0)) / std                           # standardise each feature across regimes
@@ -60,10 +73,10 @@ def main():
     # documented heatmap exception: a single small fontsize for the in-cell values
     for i in range(len(df)):
         for j in range(len(feats)):
-            ax.text(j, i, _fmt(M[i, j]), ha="center", va="center", fontsize=8)
+            ax.text(j, i, _fmt(M[i, j], feats[j]), ha="center", va="center", fontsize=8)
 
     cb = fig.colorbar(im, ax=ax, fraction=0.046)
-    cb.set_label("standardised across regimes (z-score)")
+    cb.set_label("standardized across regimes (z-score)")
     fig.tight_layout()
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)

@@ -102,6 +102,44 @@ PANEL_IN = 3.4
 COLORMAP = "viridis"
 DPI      = 300
 SEPARATE_FILES  = True         # True  = ONE PNG per dataset (avoids tiny panels / label overlap)
+GRID_FILES      = True         # 2026-09-25: ALSO draw the 14-panel comparison grid per view
+NCOLS_GRID      = 4            # 14 panels on a 4 x 4 grid, two cells empty
+DISPLAY_NAMES = {
+    "4seasons": "4Seasons", "a2d2": "A2D2", "boreas_rt": "Boreas", "durlar": "DurLAR",
+    "ford": "Ford", "hdd": "HDD", "kitscenes": "KITScenes", "kitti": "KITTI",
+    "kitti360": "KITTI-360", "nuscene": "nuScenes", "nvidia": "NVIDIA",
+    "oxford": "Oxford", "waymo": "Waymo", "zod": "ZOD",
+}
+def _panel_order(per_ds):
+    return sorted(per_ds.keys(), key=lambda d: DISPLAY_NAMES.get(d, d).lower())
+
+
+def _grid_figure(n, panel_w, panel_h):
+    """Small-multiples canvas: n panels on NCOLS_GRID columns, shared axes so that tick
+    labels appear on the outer panels only. Returns (fig, axes2d)."""
+    ncols = min(NCOLS_GRID, n); nrows = (n + ncols - 1) // ncols
+    fig, axes = plt.subplots(nrows, ncols, figsize=(panel_w * ncols, panel_h * nrows),
+                             sharex=True, sharey=True, squeeze=False)
+    return fig, axes
+
+
+def _finish_grid(fig, axes, n, xlabel, ylabel):
+    """Hide unused cells, keep one x label per column (on its last visible panel) and one
+    y label per row (first column), and tighten the spacing."""
+    flat = axes.ravel()
+    for ax in flat[:n]:
+        ax.set_xlabel(""); ax.set_ylabel("")
+    for ax in flat[n:]:
+        ax.set_visible(False)
+    ncols = axes.shape[1]
+    for c in range(ncols):
+        col = [ax for ax in axes[:, c] if ax.get_visible()]
+        if col:
+            col[-1].set_xlabel(xlabel); col[-1].tick_params(labelbottom=True)
+    for ax in axes[:, 0]:
+        if ax.get_visible():
+            ax.set_ylabel(ylabel)
+    fig.subplots_adjust(hspace=0.35, wspace=0.12)
                                # False = all datasets in one combined grid PNG
 SINGLE_IN_XY    = (8.0, 5.0)   # figure size (inches) for a single-dataset X-Y fan
 SINGLE_IN_SPEED = (8.0, 4.5)   # figure size for a single-dataset speed-change fan
@@ -277,24 +315,26 @@ def plot_xy_fan(per_ds, out_dir):
             _draw_xy_panel(ax, per_ds[ds], cmap, norm, xlim, ylim)
             sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
             fig.colorbar(sm, ax=ax, fraction=0.046, pad=0.02).set_label(label)
-            ax.set_title(f"Trajectory distribution {ds}  (window = {WINDOW_S:g}s)")
+            ax.set_title(f"Trajectory distribution {DISPLAY_NAMES.get(ds, ds)}  (window = {WINDOW_S:g}s)")
             fig.savefig(out_dir / f"trajectory_fan_xy_{ds}_w{int(WINDOW_S)}.png",
                         dpi=DPI, bbox_inches="tight")
             plt.close(fig)
-        return
+        if not GRID_FILES:
+            return
 
-    nrows, ncols = _grid(len(per_ds))
-    fig, axes = plt.subplots(nrows, ncols, figsize=(PANEL_IN * ncols, PANEL_IN * nrows), squeeze=False)
-    axes = axes.ravel()
-    for ax, ds in zip(axes, per_ds.keys()):
+    # comparison grid: all datasets as small multiples on the shared extent and colour scale
+    order = _panel_order(per_ds)
+    panel_w = PANEL_IN * 1.15
+    ratio = (ylim[1] - ylim[0]) / max(xlim[1] - xlim[0], 1e-9)      # data aspect of the shared extent
+    panel_h = max(panel_w * ratio, 1.4) if ASPECT_EQUAL else PANEL_IN * 0.75
+    fig, axes = _grid_figure(len(order), panel_w, panel_h)
+    for ax, ds in zip(axes.ravel(), order):
         _draw_xy_panel(ax, per_ds[ds], cmap, norm, xlim, ylim)
-        ax.set_title(ds)
-    for ax in axes[len(per_ds):]:
-        ax.axis("off")
+        ax.set_title(DISPLAY_NAMES.get(ds, ds))
+    _finish_grid(fig, axes, len(order), "X position (m)", "Y position (m)")
     sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
-    fig.colorbar(sm, ax=axes.tolist(), fraction=0.02, pad=0.02).set_label(label)
-    fig.suptitle(f"Trajectory distribution per dataset  (window = {WINDOW_S:g}s, non-overlapping)")
-    plt.savefig(out_dir / f"trajectory_fan_xy_w{int(WINDOW_S)}.png", dpi=DPI, bbox_inches="tight")
+    fig.colorbar(sm, ax=axes.ravel().tolist(), fraction=0.02, pad=0.02).set_label(label)
+    plt.savefig(out_dir / f"trajectory_fan_xy_grid_w{int(WINDOW_S)}.png", dpi=DPI, bbox_inches="tight")
     plt.close(fig)
 
 
@@ -328,24 +368,22 @@ def plot_speed_time_fan(per_ds, out_dir):
             _draw_speed_panel(ax, per_ds[ds], cmap, norm, vmax)
             sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
             fig.colorbar(sm, ax=ax, fraction=0.046, pad=0.02).set_label(label)
-            ax.set_title(f"Speed change per {WINDOW_S:g}s window ({ds})")
+            ax.set_title(f"Speed change per {WINDOW_S:g}s window ({DISPLAY_NAMES.get(ds, ds)})")
             fig.savefig(out_dir / f"speed_change_fan_{ds}_w{int(WINDOW_S)}.png",
                         dpi=DPI, bbox_inches="tight")
             plt.close(fig)
-        return
+        if not GRID_FILES:
+            return
 
-    nrows, ncols = _grid(len(per_ds))
-    fig, axes = plt.subplots(nrows, ncols, figsize=(PANEL_IN * 1.15 * ncols, PANEL_IN * nrows), squeeze=False)
-    axes = axes.ravel()
-    for ax, ds in zip(axes, per_ds.keys()):
+    order = _panel_order(per_ds)
+    fig, axes = _grid_figure(len(order), PANEL_IN * 1.05, PANEL_IN * 0.85)
+    for ax, ds in zip(axes.ravel(), order):
         _draw_speed_panel(ax, per_ds[ds], cmap, norm, vmax)
-        ax.set_title(ds)
-    for ax in axes[len(per_ds):]:
-        ax.axis("off")
+        ax.set_title(DISPLAY_NAMES.get(ds, ds))
+    _finish_grid(fig, axes, len(order), "Time within window (s)", "Speed change from start (km/h)")
     sm = ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
-    fig.colorbar(sm, ax=axes.tolist(), fraction=0.02, pad=0.02).set_label(label)
-    fig.suptitle(f"Speed change per window  (window = {WINDOW_S:g}s; 0 = speed at window start)")
-    plt.savefig(out_dir / f"speed_change_fan_w{int(WINDOW_S)}.png", dpi=DPI, bbox_inches="tight")
+    fig.colorbar(sm, ax=axes.ravel().tolist(), fraction=0.02, pad=0.02).set_label(label)
+    plt.savefig(out_dir / f"speed_change_fan_grid_w{int(WINDOW_S)}.png", dpi=DPI, bbox_inches="tight")
     plt.close(fig)
 
 

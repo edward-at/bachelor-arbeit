@@ -167,6 +167,22 @@ FIG_H     = 6.0
 
 X_PAD_FRAC      = 0.10
 YLIN_CAP_FACTOR = 1.20
+
+# 2026-09-25: comparison grids, one per signal, 14 panels on a shared display window per signal
+# (a display window, not a validity mask; chosen to hold every dataset's p05 to p95 with margin).
+# Frames outside the window are excluded from the bars and their share is persisted per panel.
+GRID_WINDOWS = {
+    "speed":     (0.0, 120.0),
+    "lon_accel": (-4.0, 4.0),
+    "lat_accel": (-3.0, 3.0),
+    "lon_jerk":  (-4.0, 4.0),
+    "lat_jerk":  (-3.0, 3.0),
+    "yaw_rate":  (-30.0, 30.0),
+}
+GRID_COLS    = 4
+GRID_SHARED_Y = True   # True: one y scale per signal grid (peak heights comparable); False: per-panel y scales
+GRID_PANEL_W = 3.0
+GRID_PANEL_H = 2.1
 GRID_HZ         = 10        # sampling rate of v3 standardized clips
 
 BATCH_SIZE = 5_000          # clip files concatenated per streaming batch
@@ -177,7 +193,7 @@ BATCH_SIZE = 5_000          # clip files concatenated per streaming batch
 # ─────────────────────────────────────────────────────────────────────────────
 
 DISPLAY_NAMES = {
-    "boreas_rt": "Boreas RT", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
+    "boreas_rt": "Boreas", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
     "kitti360": "KITTI-360", "nuscene": "nuScenes", "nvidia": "NVIDIA",
     "oxford": "Oxford", "waymo": "Waymo", "zod": "ZOD",
     "4seasons": "4Seasons", "hdd": "HDD", "a2d2": "A2D2", "kitscenes": "KITScenes"
@@ -422,11 +438,20 @@ def _process_dataset(args: tuple) -> dict | None:
         out_path  = fig_root / f"{ds_name}_{sig['key']}.png"
         bar_color = _get_bar_color(ds_name, sig["key"])
         plot_signal(ds_name, sig, vals, out_path, n_raw, bar_color)
+        vals64 = vals.astype(np.float64) if len(vals) > 0 else vals
+        g_lo, g_hi = GRID_WINDOWS[sig["key"]]
+        g_counts, _ = np.histogram(vals64, bins=np.linspace(g_lo, g_hi, N_BINS + 1)) if len(vals) > 0 else (np.zeros(N_BINS), None)
         results.append({
+            "grid_counts": g_counts.astype(float).tolist(),
+            "grid_n_in":   int(g_counts.sum()),
             "key":    sig["key"],
             "unit":   sig["unit"],
             "n":      len(vals),
-            "mean":   float(np.mean(vals)) if len(vals) > 0 else float("nan"),
+            "mean":   float(np.mean(vals64)) if len(vals) > 0 else float("nan"),
+            # the same statistics plot_signal annotates on the panel (added 2026-09-24)
+            "std":    float(np.std(vals64)) if len(vals) > 0 else float("nan"),
+            "p05":    float(np.percentile(vals64, 5)) if len(vals) > 0 else float("nan"),
+            "p95":    float(np.percentile(vals64, 95)) if len(vals) > 0 else float("nan"),
             "fname":  out_path.name,
         })
 
@@ -440,6 +465,81 @@ def _process_dataset(args: tuple) -> dict | None:
 # ─────────────────────────────────────────────────────────────────────────────
 # MAIN
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _render_hist_grid(sig: dict, all_results: list, fig_root: Path) -> Path:
+    """One comparison figure per signal: every dataset's histogram on the shared display
+    window of GRID_WINDOWS, 125 bins, y = fraction of frames inside the window, panels in
+    alphabetical order. The y axis is SHARED across the 14 panels so that peak heights compare
+    directly: each panel's cap is computed by the standstill rule of plot_signal, the largest
+    capped height sets the shared limit, and any bar above it is marked with the same triangle."""
+    g_lo, g_hi = GRID_WINDOWS[sig["key"]]
+    edges   = np.linspace(g_lo, g_hi, N_BINS + 1)
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    width   = edges[1] - edges[0]
+    order = sorted(all_results, key=lambda r: DISPLAY_NAMES.get(r["dataset"], r["dataset"]).lower())
+    # pass 1: densities and per-panel caps -> shared y limit
+    panels = []
+    for res in order:
+        r = next((x for x in res["signals"] if x["key"] == sig["key"]), None)
+        if r is None or r["grid_n_in"] < 5:
+            panels.append((res, None, None))
+            continue
+        counts  = np.asarray(r["grid_counts"], dtype=float)
+        density = counts / max(1.0, counts.sum())
+        cap = _ylin_cap(density)
+        panels.append((res, density, cap if cap is not None else float(density.max())))
+    # Shared limit: the largest per-panel cap, where a panel's cap is the standstill rule of
+    # plot_signal if it fires and otherwise 1.2 x the panel's tallest bar OUTSIDE the two edge
+    # bins (an edge bin can hold a clipped spike). Bars above the limit are marked, never drawn.
+    heights = []
+    for _, d, cap in panels:
+        if d is None:
+            continue
+        interior = d[1:-1] if d.size > 2 else d
+        heights.append(min(cap, YLIN_CAP_FACTOR * float(interior.max())) if interior.size else cap)
+    y_max = 1.05 * max(heights) if heights else 1.0
+    # pass 2: draw
+    n = len(order); rows = int(np.ceil(n / GRID_COLS))
+    fig, axes = plt.subplots(rows, GRID_COLS, figsize=(GRID_PANEL_W * GRID_COLS, GRID_PANEL_H * rows),
+                             sharex=True, sharey=GRID_SHARED_Y)
+    axes = np.atleast_2d(axes)
+    fig.subplots_adjust(wspace=0.15 if GRID_SHARED_Y else 0.45, hspace=0.45)
+    for k, ax in enumerate(axes.flat):
+        if k >= n:
+            ax.set_visible(False)
+            continue
+        res, density, _ = panels[k]
+        ax.set_title(DISPLAY_NAMES.get(res["dataset"], res["dataset"]))
+        ax.grid(True)
+        ax.set_axisbelow(True)
+        if density is None:
+            ax.text(0.5, 0.5, "Insufficient data", ha="center", va="center", transform=ax.transAxes, color="gray")
+            continue
+        color = _get_bar_color(res["dataset"], sig["key"])
+        ax.bar(centers, density, width=width, color=color, zorder=2)
+        limit = y_max if GRID_SHARED_Y else panels[k][2]
+        if not GRID_SHARED_Y:
+            ax.set_ylim(0, limit)
+        if density.max() > limit:
+            _draw_cap_markers(ax, density, centers, limit, color)
+        if g_lo < 0 < g_hi:
+            ax.axvline(0, color=MEAN_LINE_COLOR, lw=0.5, ls="-", alpha=1, zorder=1)
+    axes[0, 0].set_xlim(g_lo, g_hi)
+    if GRID_SHARED_Y:
+        axes[0, 0].set_ylim(0, y_max)
+    for c in range(GRID_COLS):
+        colax = [ax for ax in axes[:, c] if ax.get_visible()]
+        if colax:
+            colax[-1].set_xlabel(sig["xlabel"])
+            colax[-1].tick_params(labelbottom=True)
+    for ax in axes[:, 0]:
+        if ax.get_visible():
+            ax.set_ylabel("Fraction of frames")
+    out = fig_root / f"hist_grid_{sig['key']}.png"
+    fig.savefig(out, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    return out
+
 
 def main():
     import concurrent.futures
@@ -476,6 +576,7 @@ def main():
     args = [(ds_dir, ds_dir.name, fig_root, i) for i, ds_dir in enumerate(datasets)]
 
     summary_rows = []
+    all_results  = []   # every worker result, kept for the statistics CSV (added 2026-09-24)
     with concurrent.futures.ProcessPoolExecutor(max_workers=n_workers) as pool:
         futures = {pool.submit(_process_dataset, a): a[1] for a in args}
         for fut in concurrent.futures.as_completed(futures):
@@ -490,6 +591,7 @@ def main():
                 print(f"── {ds_name.upper()}: no usable data — skipped\n")
                 continue
 
+            all_results.append(result)
             print(f"── {ds_name.upper()} {'─' * max(1, 40 - len(ds_name))}  [{_now()}]")
             print(f"   Frames: {_format_count(result['n_frames'])} on the {GRID_HZ} Hz grid")
             for r in result["signals"]:
@@ -505,6 +607,38 @@ def main():
             })
 
     summary_rows.sort(key=lambda r: r["dataset"])
+
+    # Persist the per-panel statistics (one row per dataset and signal) so that the thesis reads
+    # mu, sigma, p05, p95, the valid and total frame counts, and the masked share from an
+    # artifact and never off the 84 PNGs (added 2026-09-24).
+    stat_rows = []
+    for result in all_results:
+        for r in result["signals"]:
+            stat_rows.append({
+                "dataset": result["dataset"], "signal": r["key"], "unit": r["unit"],
+                "n_valid": r["n"], "n_total": result["n_frames"],
+                "masked_share_pct": 100.0 * (1.0 - r["n"] / result["n_frames"]) if result["n_frames"] else float("nan"),
+                "mean": r["mean"], "std": r["std"], "p05": r["p05"], "p95": r["p95"],
+            })
+    stats_path = fig_root / "distribution_stats.csv"
+    pd.DataFrame(stat_rows).sort_values(["dataset", "signal"]).to_csv(stats_path, index=False)
+    print(f"\nSaved -> {stats_path}")
+
+    # 2026-09-25: comparison grids (one per signal) on the shared display windows, plus the
+    # per-panel share of valid frames outside the window, so every grid panel is disclosed.
+    grid_rows = []
+    for result in all_results:
+        for r in result["signals"]:
+            g_lo, g_hi = GRID_WINDOWS[r["key"]]
+            grid_rows.append({"dataset": result["dataset"], "signal": r["key"], "window_lo": g_lo, "window_hi": g_hi,
+                              "n_valid": r["n"], "n_in_window": r["grid_n_in"],
+                              "share_outside_window_pct": 100.0 * (1.0 - r["grid_n_in"] / r["n"]) if r["n"] else float("nan")})
+    grid_path = fig_root / "distribution_grid_stats.csv"
+    pd.DataFrame(grid_rows).sort_values(["signal", "dataset"]).to_csv(grid_path, index=False)
+    print(f"Saved -> {grid_path}")
+    for sig in SIGNALS:
+        print(f"Saved -> {_render_hist_grid(sig, all_results, fig_root)}")
+
     if summary_rows:
         col_w  = 12
         header = f"  {'Dataset':<15} {'Total':>10}" + "".join(

@@ -46,6 +46,9 @@ Reads:   dataset/regime_data/kselect_curves.parquet
 Writes:  dataset/regime_data/hmm_transitions.parquet
          dataset/regime_data/hmm_durations.parquet
          dataset/regime_data/hmm_states.parquet   (decoded example timelines)
+         dataset/regime_data/hmm_sequences.parquet   (per dataset: clips used, sub-windows; block 5D)
+         dataset/regime_data/hmm_alignment.parquet   (emission means vs k-means centroids, physical; block 5D)
+         dataset/regime_data/hmm_run_summary.parquet (sequences, sub-windows, EM convergence; block 5D)
 ────────────────────────────────────────────────────────────────────────────
 """
 
@@ -157,7 +160,10 @@ def _subwindow_features(df: pd.DataFrame):
         fd = {"mean_speed_kmh":    np.nanmean(spw),
               "std_speed_kmh":     np.nanstd(spw),
               "mean_acc_pos":      float(pos.mean()) if pos.size else 0.0,
-              "mean_acc_neg":      float(neg.mean()) if neg.size else 0.0,
+              # magnitude of the negative part, on the polarity of the window layer's
+              # mean_acc_neg (block 5D fix: the signed conditional mean carried the
+              # opposite sign and swapped the Braking / Accelerating alignment)
+              "mean_acc_neg":      float(-neg.mean()) if neg.size else 0.0,
               "mean_abs_yaw_rate": np.nanmean(np.abs(yrw))}
         row = [fd[f] for f in FEATURES]
         if not np.all(np.isfinite(row)):
@@ -237,6 +243,7 @@ def main():
     print(f"\n  Building {HMM_WIN_S:.0f}s sub-window sequences (all 14 datasets):")
     print(f"    {'dataset':<12}{'clips used':>12}{'sub-windows':>14}")
     X_list, starts_list, seq_meta = [], [], []
+    seq_rows = []                                   # per-dataset collection (block 5D)
     for ds in tqdm(pop, desc="frame layer"):
         seqs, total = _collect_dataset(ds)
         used = 0
@@ -244,6 +251,7 @@ def main():
             X_list.append(Xs); starts_list.append(st)
             seq_meta.append((ds_, cid, len(Xs)))
             used += 1
+        seq_rows.append({"dataset": ds, "clips_used": int(used), "sub_windows": int(total)})
         print(f"    {ds:<12}{used:>12,}{total:>14,}")
 
     X_sub    = np.vstack(X_list)
@@ -274,6 +282,13 @@ def main():
     print(f"    {'regime':>7}{'k-means centroid':>18}{'HMM emission':>15}")
     for st, rg in sorted(state2reg.items(), key=lambda kv: kv[1]):
         print(f"    {rg:>7}{kcent_phys[rg, si]:>18.1f}{means_phys[st, si]:>15.1f}")
+    align_rows = []                                 # all five features, physical units (block 5D)
+    for st, rg in sorted(state2reg.items(), key=lambda kv: kv[1]):
+        row = {"regime": int(rg), "state": int(st)}
+        for fi, f in enumerate(FEATURES):
+            row[f"emission_{f}"] = float(means_phys[st, fi])
+            row[f"centroid_{f}"] = float(kcent_phys[rg, fi])
+        align_rows.append(row)
 
     # ── reordered transition matrix (rows/cols = regimes) ─────────────────────
     T = hmm.transmat_
@@ -333,8 +348,26 @@ def main():
     pd.DataFrame(dur_rows).to_parquet(ARTIFACT_DIR / "hmm_durations.parquet", index=False)
     tl.to_parquet(ARTIFACT_DIR / "hmm_states.parquet", index=False)
 
+    # ── persisted for Chapter 5 (appended 2026-09-26, block 5D): the collection per
+    #    dataset, the alignment check, and the run summary the console printed.
+    #    No existing output changes.
+    pd.DataFrame(seq_rows).to_parquet(ARTIFACT_DIR / "hmm_sequences.parquet", index=False)
+    pd.DataFrame(align_rows).to_parquet(ARTIFACT_DIR / "hmm_alignment.parquet", index=False)
+    hist = list(getattr(hmm.monitor_, "history", []))
+    pd.DataFrame([{"n_sequences": int(len(seq_meta)),
+                   "n_subwindows": int(len(X_sub)),
+                   "median_seq_len": int(np.median(lengths)),
+                   "longest_seq_len": int(lengths.max()),
+                   "n_iter_max": int(HMM_N_ITER),
+                   "n_iter_done": int(getattr(hmm.monitor_, "iter", len(hist))),
+                   "converged": bool(getattr(hmm.monitor_, "converged", False)),
+                   "final_loglik": float(hist[-1]) if hist else float("nan"),
+                   "timeline_clips": ", ".join(f"{seq_meta[i][0]}/{seq_meta[i][1]}" for i in top_idx)}]
+                 ).to_parquet(ARTIFACT_DIR / "hmm_run_summary.parquet", index=False)
+
     print(f"\n  Saved → {ARTIFACT_DIR}")
     print(f"          (hmm_transitions · hmm_durations · hmm_states)")
+    print(f"          (hmm_sequences · hmm_alignment · hmm_run_summary)   (block 5D)")
     print(f"  Reproduce: rerun under seed {SEED}.")
     print(f"{'='*78}\n")
 

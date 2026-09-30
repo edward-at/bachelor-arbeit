@@ -69,6 +69,9 @@ MEDIAN_LW       = 1.8
 GRID_ALPHA      = 0.3
 FIG_W           = 9.0
 FIG_H_PER_PANEL = 2.2
+GRID_COLS       = 4        # 2026-09-25: comparison grids, 14 panels per signal on a 4 x 4 grid
+GRID_PANEL_W    = 3.0
+GRID_PANEL_H    = 2.1
 
 # Stacked panels: (col, label, unit, lo, hi, rad_to_deg) — physical bounds masked at viz time
 SIGNALS = [
@@ -80,7 +83,7 @@ SIGNAL_COLS = [s["col"] for s in SIGNALS]
 NEEDED_COLS = ["t_rel_s"] + SIGNAL_COLS
 
 DISPLAY_NAMES = {
-    "boreas_rt": "Boreas RT", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
+    "boreas_rt": "Boreas", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
     "kitti360": "KITTI-360", "nuscene": "nuScenes", "nvidia": "NVIDIA",
     "oxford": "Oxford", "waymo": "Waymo", "zod": "ZOD",
     "4seasons": "4Seasons", "hdd": "HDD", "a2d2": "A2D2", "kitscenes": "KITScenes"
@@ -182,9 +185,82 @@ def load_dataset_windows(folder):
 # PLOT (one stacked figure per dataset)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def render(folder, arrays, n_windows):
+def compute_stats(arrays):
+    """Per signal: median, outer band, inner band at each of the WINDOW_FRAMES instants,
+    after the unit conversion and the physical-bounds mask of render(). Small enough to
+    keep for all 14 datasets and to persist."""
+    stats = {}
+    for sig in SIGNALS:
+        A = arrays.get(sig["col"])
+        if A is None:
+            continue
+        A = A.astype(float)
+        if sig["rad_to_deg"]:
+            A = A * (180.0 / np.pi)
+        A = np.where((A >= sig["lo"]) & (A <= sig["hi"]), A, np.nan)
+        med = np.nanmedian(A, axis=0)
+        lo_o, hi_o = np.nanpercentile(A, BAND_OUTER, axis=0)
+        lo_i, hi_i = np.nanpercentile(A, BAND_INNER, axis=0)
+        stats[sig["col"]] = {"median": med, "lo_o": lo_o, "hi_o": hi_o, "lo_i": lo_i, "hi_i": hi_i}
+    return stats
+
+
+def _draw_band(ax, st, color, t):
+    ax.fill_between(t, st["lo_o"], st["hi_o"], color=color, alpha=ALPHA_OUTER, linewidth=0,
+                    label=f"{int(BAND_OUTER[0])}–{int(BAND_OUTER[1])}%")
+    ax.fill_between(t, st["lo_i"], st["hi_i"], color=color, alpha=ALPHA_INNER, linewidth=0,
+                    label=f"{int(BAND_INNER[0])}–{int(BAND_INNER[1])}% (IQR)")
+    ax.plot(t, st["median"], color=color, linewidth=MEDIAN_LW, label="median")
+
+
+def render_grids(all_stats, n_windows_by_folder):
+    """One comparison figure per signal: all datasets as small multiples, alphabetical,
+    shared time axis and a shared y range (the largest outer band over all datasets)."""
+    t = np.arange(WINDOW_FRAMES) * DT_GRID
+    folders = sorted(all_stats.keys(), key=lambda f: DISPLAY_NAMES.get(f, f).lower())
+    outs = []
+    for sig in SIGNALS:
+        col = sig["col"]
+        have = [f for f in folders if col in all_stats[f]]
+        if not have:
+            continue
+        ymax = max(float(np.nanmax(all_stats[f][col]["hi_o"])) for f in have)
+        ymin = min(float(np.nanmin(all_stats[f][col]["lo_o"])) for f in have)
+        pad = 0.05 * (ymax - ymin if ymax > ymin else 1.0)
+        n = len(have); rows = int(np.ceil(n / GRID_COLS))
+        fig, axes = plt.subplots(rows, GRID_COLS, figsize=(GRID_PANEL_W * GRID_COLS, GRID_PANEL_H * rows),
+                                 sharex=True, sharey=True)
+        axes = np.atleast_2d(axes)
+        for k, ax in enumerate(axes.flat):
+            if k >= n:
+                ax.set_visible(False)
+                continue
+            f = have[k]
+            _draw_band(ax, all_stats[f][col], DATASET_COLORS.get(f, DATASET_COLOR_FALLBACK), t)
+            ax.set_title(f"{DISPLAY_NAMES.get(f, f)} (n = {n_windows_by_folder[f]:,})")
+            ax.grid(True, alpha=GRID_ALPHA)
+            ax.set_axisbelow(True)
+        axes[0, 0].set_ylim(ymin - pad, ymax + pad)
+        for c in range(GRID_COLS):
+            colax = [ax for ax in axes[:, c] if ax.get_visible()]
+            if colax:
+                colax[-1].set_xlabel("time within window [s]")
+                colax[-1].tick_params(labelbottom=True)
+        for ax in axes[:, 0]:
+            ax.set_ylabel(f"{sig['label']} [{sig['unit']}]")
+        OUT_DIR.mkdir(parents=True, exist_ok=True)
+        out = OUT_DIR / f"density_bands_grid_{col}.png"
+        fig.savefig(out, dpi=DPI, bbox_inches="tight")
+        plt.close(fig)
+        outs.append(out)
+    return outs
+
+
+def render(folder, arrays, n_windows, stats=None):
     color = DATASET_COLORS.get(folder, DATASET_COLOR_FALLBACK)
     t = np.arange(WINDOW_FRAMES) * DT_GRID
+    if stats is None:
+        stats = compute_stats(arrays)
 
     fig, axes = plt.subplots(len(SIGNALS), 1,
                              figsize=(FIG_W, FIG_H_PER_PANEL * len(SIGNALS)),
@@ -196,27 +272,14 @@ def render(folder, arrays, n_windows):
         ax.set_ylabel(f"{sig['label']}\n[{sig['unit']}]")
         ax.grid(True, alpha=GRID_ALPHA)
         ax.set_axisbelow(True)
-        if A is None:
+        if A is None or sig["col"] not in stats:
             continue
-        A = A.astype(float)
-        if sig["rad_to_deg"]:
-            A = A * (180.0 / np.pi)
-        A = np.where((A >= sig["lo"]) & (A <= sig["hi"]), A, np.nan)
-
-        med = np.nanmedian(A, axis=0)
-        lo_o, hi_o = np.nanpercentile(A, BAND_OUTER, axis=0)
-        lo_i, hi_i = np.nanpercentile(A, BAND_INNER, axis=0)
-
-        ax.fill_between(t, lo_o, hi_o, color=color, alpha=ALPHA_OUTER, linewidth=0,
-                        label=f"{int(BAND_OUTER[0])}–{int(BAND_OUTER[1])}%")
-        ax.fill_between(t, lo_i, hi_i, color=color, alpha=ALPHA_INNER, linewidth=0,
-                        label=f"{int(BAND_INNER[0])}–{int(BAND_INNER[1])}% (IQR)")
-        ax.plot(t, med, color=color, linewidth=MEDIAN_LW, label="median")
+        _draw_band(ax, stats[sig["col"]], color, t)
 
     axes[-1].set_xlabel("time within window [s]")
     axes[0].legend(loc="upper right", framealpha=0.9)
     fig.suptitle(f"{DISPLAY_NAMES.get(folder, folder)} multi-signal density bands "
-                 f"across {n_windows} windows")
+                 f"across {n_windows:,} windows")
     fig.tight_layout()
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -228,6 +291,7 @@ def render(folder, arrays, n_windows):
 
 def main():
     count = 0
+    all_stats, n_by_folder = {}, {}
     for folder in DATASET_ORDER:
         res = load_dataset_windows(folder)
         if res is None:
@@ -237,9 +301,29 @@ def main():
         if n_windows < MIN_WINDOWS:
             print(f"[DB] {folder}: only {n_windows} windows (< {MIN_WINDOWS}), skipped")
             continue
-        out = render(folder, arrays, n_windows)
+        stats = compute_stats(arrays)
+        all_stats[folder], n_by_folder[folder] = stats, n_windows
+        out = render(folder, arrays, n_windows, stats)
         print(f"[DB] saved {out}  ({n_windows} windows)")
         count += 1
+        del arrays
+
+    # 2026-09-25: persist the band statistics (artifact for Section 5.3) and draw the grids
+    t = np.arange(WINDOW_FRAMES) * DT_GRID
+    rows = []
+    for f, stats in all_stats.items():
+        for col, st in stats.items():
+            for i in range(WINDOW_FRAMES):
+                rows.append({"dataset": DISPLAY_NAMES.get(f, f), "dataset_key": f, "signal": col,
+                             "t_s": round(float(t[i]), 1), "n_windows": n_by_folder[f],
+                             "median": st["median"][i], "p10": st["lo_o"][i], "p25": st["lo_i"][i],
+                             "p75": st["hi_i"][i], "p90": st["hi_o"][i]})
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    stats_path = OUT_DIR / "density_band_stats.csv"
+    pd.DataFrame(rows).to_csv(stats_path, index=False)
+    print(f"[DB] band statistics written to {stats_path}")
+    for out in render_grids(all_stats, n_by_folder):
+        print(f"[DB] grid saved {out}")
     print(f"[DB] done — {count} figures to {OUT_DIR}")
 
 

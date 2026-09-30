@@ -35,6 +35,9 @@ and VIF are scale-invariant, so no standardisation is applied here.
 Outputs (all parquet):
   dataset/regime_data/feature_gate_vector.parquet   — the locked vector (ordered)
   dataset/regime_data/feature_gate_stats.parquet    — per-feature VIF (before/after) + decision
+  dataset/regime_data/feature_gate_correlations.parquet — the 15 pairwise Pearson/Spearman coefficients (block 5D)
+  dataset/regime_data/feature_gate_population.parquet   — per dataset: layer windows, six-feature windows,
+                                                          share, a_lat–yaw Pearson (block 5D)
   figures/feature_gate/feature_correlation_gate.png — Pearson | Spearman (annotated)
 ────────────────────────────────────────────────────────────────────────────
 """
@@ -218,6 +221,7 @@ def main():
 
     full = pd.concat(frames, ignore_index=True)
     n_raw = len(full)
+    n_layer_per = full.groupby("dataset").size()          # per-dataset layer windows (block 5D)
     full = full.dropna(subset=FEATURES).reset_index(drop=True)
     n_cc  = len(full)
 
@@ -278,9 +282,33 @@ def main():
         "drop_reason": [drop_reason.get(f, "") for f in FEATURES],
     }).to_parquet(ARTIFACT_DIR / "feature_gate_stats.parquet", index=False)
 
+    # ── persisted for Chapter 5 (appended 2026-09-26, block 5D): the two matrices
+    #    the figure annotates, and the per-dataset control the console printed.
+    #    Both computed on the six-feature complete-case population above; no
+    #    existing output changes.
+    pairs = []
+    for i in range(len(FEATURES)):
+        for j in range(i + 1, len(FEATURES)):
+            pairs.append({"feature_a": FEATURES[i], "feature_b": FEATURES[j],
+                          "pearson": float(P[i, j]), "spearman": float(S[i, j])})
+    pd.DataFrame(pairs).to_parquet(ARTIFACT_DIR / "feature_gate_correlations.parquet", index=False)
+
+    pop_rows = []
+    for name, g in full.groupby("dataset"):
+        r_ds = (float(g["mean_abs_a_lat"].corr(g["mean_abs_yaw_rate"]))
+                if {"mean_abs_a_lat", "mean_abs_yaw_rate"} <= set(FEATURES) else float("nan"))
+        pop_rows.append({"dataset": name,
+                         "n_layer": int(n_layer_per.get(name, 0)),
+                         "n_gate": int(len(g)),
+                         "gate_share_pct": float(100.0 * len(g) / n_cc),
+                         "pearson_alat_yaw": r_ds})
+    pd.DataFrame(pop_rows).to_parquet(ARTIFACT_DIR / "feature_gate_population.parquet", index=False)
+
     print(f"\n  Figure → {fig_fp}")
     print(f"  Saved  → {ARTIFACT_DIR / 'feature_gate_vector.parquet'}")
     print(f"           {ARTIFACT_DIR / 'feature_gate_stats.parquet'}")
+    print(f"           {ARTIFACT_DIR / 'feature_gate_correlations.parquet'}   (block 5D)")
+    print(f"           {ARTIFACT_DIR / 'feature_gate_population.parquet'}     (block 5D)")
     print(f"{'='*78}\n")
 
 

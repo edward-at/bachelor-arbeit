@@ -36,7 +36,7 @@ CELL_FS = 7    # documented heatmap exception: in-cell + group-label font
 
 # key, on-figure label, facet group, format
 COLUMNS = [
-    ("low_dyn_share",   "LowDyn",        "Regime balance", "%.3f"),
+    ("low_dyn_share",   "Calm",          "Regime balance", "%.3f"),  # block 5F: calm share (Section 4.10.6)
     ("entropy_norm",    "H (norm)",      "Regime balance", "%.3f"),
     ("d2_regimes",      "$D_2$ reg",     "Regime balance", "%.2f"),
     ("js_to_frame",     "JS frame",      "Regime balance", "%.4f"),

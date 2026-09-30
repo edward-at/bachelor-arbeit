@@ -61,6 +61,12 @@ Usage
   python subset_eval_harness.py --tiers budget  # one tier only
   python subset_eval_harness.py --reveal        # also print sealed metrics (12.4)
   python subset_eval_harness.py --force         # downgrade hard canaries to warnings
+  python subset_eval_harness.py --canaries-only # steps 1-3 only: persist the import-time
+                                                # canaries to eval/harness_canaries.json and
+                                                # stop; the cache is not touched (block 5F,
+                                                # 2026-09-26: the reproduced predicate union
+                                                # and the unit-hypothesis counts were console
+                                                # output only)
 
 No matplotlib here — this is the compute stage. Figures are separate scripts
 that read the cache (Tier-1 batch follows this file).
@@ -552,6 +558,8 @@ def calibrate_units(master: pd.DataFrame, meta: dict) -> None:
         master["decel_g"] = d_abs / G_MS2
         chosen, got = "m/s^2", c_ms
     decisions["peak_decel"] = f"stored in {chosen} (anchor-calibrated)"
+    meta["decel_hypothesis_counts"] = {"g_units": c_g, "ms2_units": c_ms,
+                                      "expected": int(exp), "chosen": chosen}
     check("trigger_guarded(0.6g)", got, exp, hard=True,
           tol=0.02)  # unit calibration is load-bearing for I5
 
@@ -573,6 +581,7 @@ def calibrate_units(master: pd.DataFrame, meta: dict) -> None:
             med_sp = float(sp.median())
             log(f"  median within-clip start spacing: {med_sp:.1f} s "
                 f"(20.0 confirms the non-overlapping grid)")
+            meta["median_start_spacing_s"] = med_sp
             if abs(med_sp - 20.0) > 1.0:
                 warn("spacing not ~20 s — verify the frame is the assignment "
                      "grid, not the overlapping variability layer")
@@ -646,6 +655,28 @@ def add_score_and_predicates(master: pd.DataFrame, meta: dict,
     log(f"  per-regime top-supplier shares: "
         f"{ {int(k): round(float(v), 3) for k, v in per_reg.items()} } "
         f"(record: ~0.89 for Highway Cruising)")
+    per_reg_name = (master.groupby("regime")["dataset"]
+                          .apply(lambda s: s.value_counts(normalize=True).index[0]))
+    # persisted canaries (block 5F): everything this step prints and the
+    # prose of Section 5.7 reads, written as one JSON beside the cache so
+    # that no number of the harness exists only in a console line.
+    meta["canaries"] = {
+        "frame_n": int(len(master)),
+        "guarded_n": int(guard.sum()),
+        "trigger_guarded": int(master["p_hard_decel"].sum()),
+        "predicate_union_harness": union,
+        "predicate_union_expected": EXPECTED["predicate_union"],
+        "predicate_counts_frame": {p: int(master[p].sum()) for p in
+                                   ["p_hard_decel", "p_high_yaw", "p_high_speed",
+                                    "p_stop_go", "p_near_stat", "p_top_score"]},
+        "score_p99_guarded": thr_score,
+        "frame_top_source": str(top_src.index[0]),
+        "frame_top_source_share": float(top_src.iloc[0]),
+        "per_regime_top_supplier": {int(k): str(v) for k, v in per_reg_name.items()},
+        "per_regime_top_supplier_share": {int(k): float(v) for k, v in per_reg.items()},
+        "regime_supplies": {int(k): int(v) for k, v in
+                            master["regime"].value_counts().sort_index().items()},
+    }
 
 
 # ============================================================================
@@ -1072,6 +1103,9 @@ def main() -> None:
                     help="print input schemas and exit")
     ap.add_argument("--force", action="store_true",
                     help="downgrade hard canary failures to warnings")
+    ap.add_argument("--canaries-only", action="store_true",
+                    help="persist the import-time canaries to eval/harness_canaries.json "
+                         "and stop before any tier is evaluated (cache untouched)")
     args = ap.parse_args()
     _FORCE = args.force
     K_ENVELOPE = args.k_envelope
@@ -1087,6 +1121,21 @@ def main() -> None:
     calibrate_units(master, meta)
     manifests = {t: read_manifest(d) for t, d in TIER_DIRS.items()}
     add_score_and_predicates(master, meta, manifests)
+
+    if args.canaries_only:
+        EVAL_DIR.mkdir(parents=True, exist_ok=True)
+        payload = {"metric_version": METRIC_VERSION,
+                   "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                   "unit_decisions": meta.get("unit_decisions", {}),
+                   "decel_hypothesis_counts": meta.get("decel_hypothesis_counts", {}),
+                   "median_start_spacing_s": meta.get("median_start_spacing_s"),
+                   "pooled_means": meta.get("pooled_means", {}),
+                   **meta.get("canaries", {})}
+        out = EVAL_DIR / "harness_canaries.json"
+        with open(out, "w") as f:
+            json.dump(payload, f, indent=2, default=str)
+        log(f"\n  --canaries-only: wrote {out}; the eval cache was not touched.")
+        return
 
     tiers = TIER_ORDER if args.tiers == "both" else [args.tiers]
     all_rows, env_rows, dist_chunks = [], [], []

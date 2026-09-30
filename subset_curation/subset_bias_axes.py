@@ -47,8 +47,8 @@ def main() -> None:
 
     panels = [
         ("low_dyn_share",
-         f"Low-dynamic share\n({regime_label(LOW_DYN_REGIME)}, "
-         f"regime {LOW_DYN_REGIME})", True),
+         f"Calm share\n({regime_label(LOW_DYN_REGIME)}, "
+         f"regime {LOW_DYN_REGIME})", True),  # block 5F: the calm share of Section 4.10.6, not the two-regime headline of Section 4.8.3
         ("top_source_share", "Top-source share", False),
     ]
     fig, axes = plt.subplots(1, 2, figsize=(12, 7), sharey=True)

@@ -42,7 +42,9 @@ def main():
 
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     out = OUT_DIR / "transition_matrix.png"
-    fig.savefig(out, dpi=DPI)
+    # bbox_inches="tight": the equal-aspect image beside the colorbar leaves the
+    # y label outside the canvas under tight_layout alone (block 5D)
+    fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     print(f"  → {out}")
 

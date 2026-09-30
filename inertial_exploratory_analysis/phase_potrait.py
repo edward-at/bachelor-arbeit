@@ -17,6 +17,11 @@ v2 changes (each fixes a diagnosed defect of v1):
      applied AFTER the frame data itself was proven clean (pipeline v4.3
      validity gates); a floor applied earlier would have buried six real
      defects. Never reverse that order.
+     v2.2 (2026-09-25): the disclosure moved from the second title line to
+     phase_portrait_disclosure.csv (one row per figure) so the figures carry a
+     one-line title and the numbers keep an artifact for the captions, and one
+     comparison grid per view (phase_portrait_grid_<view>.png) tiles all 14
+     datasets as small multiples on the shared axes and colour scale.
   2  HONEST DENOMINATOR: v1 normalised by in-panel frames only, silently
      inflating every colour for datasets with mass outside the axes. v2
      normalises by ALL valid frames and discloses the outside-panel share in
@@ -86,6 +91,9 @@ DPI = 300
 # their frame share are disclosed in each figure title and printed per dataset.
 MIN_FRAMES_PER_BIN = 5
 
+GRID_COLS       = 4        # 14 panels on a 4 x 4 grid, two cells empty
+GRID_PANEL_W    = 3.2      # inches per panel
+GRID_PANEL_H    = 2.4
 CMAP            = "viridis"
 CENTROID_COLOR  = "red"
 CENTROID_SIZE   = 30
@@ -180,7 +188,7 @@ def load_dataset(folder):
 # PLOT (one figure per dataset per view)
 # ─────────────────────────────────────────────────────────────────────────────
 
-def render(folder, view, counts, n_valid, norm, log):
+def render(folder, view, counts, n_valid, norm, log, disclosure):
     """counts = raw per-bin frame counts; n_valid = the honest denominator."""
     # Occupancy floor: mask empty AND sub-floor bins; account for the disclosure.
     keep = counts >= MIN_FRAMES_PER_BIN
@@ -209,12 +217,7 @@ def render(folder, view, counts, n_valid, norm, log):
     ax.set_ylabel(view["y_label"])
     # Self-disclosing title: the floor and the outside-panel share travel with
     # the figure, so no reader can mistake masking for absence of data.
-    ax.set_title(
-        f"{view['title']} ({DISPLAY_NAMES.get(folder, folder)})\n"
-        f"bins < {MIN_FRAMES_PER_BIN} frames masked "
-        f"({n_subfloor_bins} bins, {pct_floor:.2f}% of frames); "
-        f"{pct_outside:.2f}% of frames outside panel"
-    )
+    ax.set_title(f"{view['title']} ({DISPLAY_NAMES.get(folder, folder)})")
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("fraction of valid frames (log)")
     fig.tight_layout()
@@ -224,8 +227,60 @@ def render(folder, view, counts, n_valid, norm, log):
     fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     log.append(f"  {DISPLAY_NAMES.get(folder, folder):<10} {view['tag']:<12} "
-               f"floor-masked {n_subfloor_bins:>5} bins = {pct_floor:>6.3f}% of frames"
-               f" | outside panel {pct_outside:>6.3f}%")
+               f"masked bins {n_subfloor_bins:>5}  ({pct_floor:.2f}% of valid frames)  "
+               f"outside panel {pct_outside:.2f}%")
+    disclosure.append({
+        "dataset": DISPLAY_NAMES.get(folder, folder), "dataset_key": folder, "view": view["tag"],
+        "n_valid": int(n_valid), "n_in_panel": int(in_panel),
+        "n_subfloor_bins": n_subfloor_bins, "n_subfloor_frames": int(n_subfloor_frames),
+        "pct_subfloor": round(pct_floor, 4), "pct_outside_panel": round(pct_outside, 4),
+    })
+    return out
+
+
+def render_grid(view, hists, norm, disclosure_rows):
+    """v2.2 — one comparison figure per view: all 14 datasets as small multiples on
+    shared axes and the shared colour scale, one colourbar, panels in alphabetical order.
+    The per-dataset floor and denominator are the same as in render()."""
+    folders = sorted([f for f in DATASET_ORDER if f in hists and hists[f][view["tag"]]["n_valid"] > 0],
+                     key=lambda f: DISPLAY_NAMES.get(f, f).lower())   # alphabetical, as in Table 5.2
+    n = len(folders)
+    rows = int(np.ceil(n / GRID_COLS))
+    fig, axes = plt.subplots(rows, GRID_COLS, figsize=(GRID_PANEL_W * GRID_COLS, GRID_PANEL_H * rows),
+                             sharex=True, sharey=True)
+    axes = np.atleast_2d(axes)
+    y_abs = view["y_abs"]
+    extent = [0.0, SPEED_MAX_MS, -y_abs, y_abs]
+    im = None
+    for k, ax in enumerate(axes.flat):
+        if k >= n:
+            ax.set_visible(False)
+            continue
+        folder = folders[k]
+        h = hists[folder][view["tag"]]
+        counts, n_valid = h["counts"], h["n_valid"]
+        keep = counts >= MIN_FRAMES_PER_BIN
+        frac = counts / n_valid
+        im = ax.imshow(np.ma.masked_where(~keep, frac).T, origin="lower", extent=extent,
+                       aspect="auto", cmap=CMAP, norm=norm)
+        ax.set_title(DISPLAY_NAMES.get(folder, folder))
+    for ax in axes[-1, :]:
+        if ax.get_visible():
+            ax.set_xlabel("speed [m/s]")
+    for ax in axes[:, 0]:
+        ax.set_ylabel(view["y_label"])
+    # the last row may end early: label the x axis of the last visible panel of each column
+    for c in range(GRID_COLS):
+        col = [ax for ax in axes[:, c] if ax.get_visible()]
+        if col:
+            col[-1].set_xlabel("speed [m/s]")
+            col[-1].tick_params(labelbottom=True)
+    cbar = fig.colorbar(im, ax=axes.ravel().tolist(), fraction=0.025, pad=0.02)
+    cbar.set_label("fraction of valid frames (log)")
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out = OUT_DIR / f"phase_portrait_grid_{view['tag']}.png"
+    fig.savefig(out, dpi=DPI, bbox_inches="tight")
+    plt.close(fig)
     return out
 
 
@@ -267,7 +322,7 @@ def main():
     if stale:
         print(f"[A10] purged {len(stale)} existing figures from {OUT_DIR}")
 
-    count, log = 0, []
+    count, log, disclosure = 0, [], []
     for folder in DATASET_ORDER:
         if folder not in hists:
             continue
@@ -287,12 +342,23 @@ def main():
                 kept = h["counts"][h["counts"] >= MIN_FRAMES_PER_BIN]
                 vmax = (float(kept.max()) / h["n_valid"]) if (kept.size and h["n_valid"]) else 1.0
                 norm = LogNorm(vmin=vmax / VMIN_RATIO, vmax=vmax)
-            render(folder, view, h["counts"], h["n_valid"], norm, log)
+            render(folder, view, h["counts"], h["n_valid"], norm, log, disclosure)
             count += 1
 
     print("\n[A10] disclosure summary (paste-ready for captions):")
     for line in log:
         print(line)
+    # v2.2 — comparison grids, one per view, on the same shared scale as the singles
+    for view in VIEWS:
+        norm = shared_norm[view["tag"]] if SHARED_COLOR_SCALE else None
+        if norm is None:
+            continue
+        out = render_grid(view, hists, norm, disclosure)
+        print(f"[A10] grid saved to {out}")
+
+    disc_path = OUT_DIR / "phase_portrait_disclosure.csv"
+    pd.DataFrame(disclosure).to_csv(disc_path, index=False)
+    print(f"[A10] disclosure written to {disc_path}")
     print(f"\n[A10] saved {count} figures to {OUT_DIR}")
 
 

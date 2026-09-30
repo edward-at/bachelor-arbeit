@@ -30,7 +30,7 @@ FIGS = [
     ]),
     ("heldout", "held-out summary channels", [
         ("w1_mean_speed",   "Mean speed\n1-Wasserstein (km/h)"),
-        ("w1_peak_decel",   "Peak deceleration\n1-Wasserstein (m/s\u00b2) *"),
+        ("w1_peak_decel",   "Peak deceleration\n1-Wasserstein (g) *"),  # block 5F: the harness computes this W1 on decel_g (Section 4.10.6)
         ("w1_peak_abs_yaw", "Peak |yaw|\n1-Wasserstein (\u00b0/s)"),
     ]),
 ]
