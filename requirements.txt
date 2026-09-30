@@ -1,8 +1,42 @@
+# Python 3.12.2
+#
+# Environment "venv": the environment that produced the window layer (std_data),
+# the k-means partition and its validation (clustering, validity, GMM, HMM,
+# reseed and resample stability), the bias quantification, the sampling and
+# curation subsets, the evaluation caches, and the figures of
+# 05_regime_discovery, 06_bias_quantification and 07_subset_curation.
+# The standardization and part of the figures were produced in a second
+# environment, pinned in requirements-standardization.txt.
+#
+#   python3.12 -m venv .venv
+#   .venv/bin/pip install -r requirements.txt
+
 numpy==2.4.4
 pandas==3.0.2
 pyarrow==24.0.0
-matplotlib==3.10.9
 scipy==1.17.1
 scikit-learn==1.8.0
 hmmlearn==0.3.3
+matplotlib==3.10.9
 tqdm==4.67.3
+pillow==12.2.0
+
+# 01_survey_and_scoring/total_dataset_analysis/04a_recording_country_map.py
+geopandas==1.1.3
+pyogrio==0.12.1
+shapely==2.1.2
+pyproj==3.7.2
+
+# pinned transitive dependencies
+contourpy==1.3.3
+cycler==0.12.1
+fonttools==4.62.1
+joblib==1.5.3
+kiwisolver==1.5.0
+packaging==26.2
+pyparsing==3.3.2
+python-dateutil==2.9.0.post0
+six==1.17.0
+threadpoolctl==3.6.0
+tzdata==2026.2
+certifi==2026.4.22

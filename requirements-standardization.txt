@@ -1,0 +1,39 @@
+# Python 3.12.2
+#
+# Environment "standardization": the second environment used for the thesis
+# results. It produced
+#   - the standardized clips (03_standardization/standardize_inertial_data.py),
+#   - the feature redundancy screen (05_regime_discovery/feature_gate.py),
+#   - the cap sensitivity control (05_regime_discovery/cap_sensitivity.py),
+#   - the survey figures of 01_survey_and_scoring and most figures of
+#     04_exploratory_analysis.
+# The versions are the ones reported by the imported modules at run time; they
+# are also recorded in the artifacts (pandas version in the parquet metadata,
+# matplotlib version in the PNG metadata). hmmlearn is not part of this
+# environment; the HMM was fitted in the environment of requirements.txt.
+#
+#   python3.12 -m venv .venv-std
+#   .venv-std/bin/pip install -r requirements-standardization.txt
+
+numpy==1.26.4
+pandas==2.3.2
+pyarrow==24.0.0
+scipy==1.15.2
+scikit-learn==1.5.1
+matplotlib==3.10.0
+tqdm==4.66.5
+pillow==10.4.0
+
+geopandas==1.1.3
+pyogrio==0.10.0
+shapely==2.0.5
+pyproj==3.6.1
+
+contourpy==1.2.0
+fonttools==4.51.0
+joblib==1.4.2
+kiwisolver==1.4.4
+python-dateutil==2.9.0.post0
+pytz==2024.1
+threadpoolctl==3.5.0
+tzdata==2026.2
