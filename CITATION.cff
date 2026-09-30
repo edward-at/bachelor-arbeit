@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the thesis it was written for."
+title: "Identifying Dynamic Biases in Large-Scale Public Datasets via Distributional Analysis: analysis code"
+type: software
+authors:
+  - family-names: Tamin
+    given-names: Edward Anderson
+repository-code: "https://github.com/edward-at/bachelor-arbeit"
+keywords:
+  - autonomous driving
+  - dataset bias
+  - ego-motion
+  - distributional analysis
+  - driving regimes
+preferred-citation:
+  type: thesis
+  thesis-type: "Bachelor's thesis"
+  title: "Identifying Dynamic Biases in Large-Scale Public Datasets via Distributional Analysis"
+  authors:
+    - family-names: Tamin
+      given-names: Edward Anderson
+  institution:
+    name: "Technical University of Munich, TUM School of Engineering and Design, Professorship of Autonomous Vehicle Systems"
+    city: Garching
+    country: DE
+  year: 2026
+  month: 10
