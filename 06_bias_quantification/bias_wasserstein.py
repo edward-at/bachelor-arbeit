@@ -1,16 +1,17 @@
 """
-bias_wasserstein.py  —  Chapter 10 continuous-signal distance (Chapter 8 bridge)
+bias_wasserstein.py  —  Section 4.8 continuous-signal distance (bridge to Section 4.6)
 ════════════════════════════════════════════════════════════════════════════
-Three horizontal-bar panels — one per Chapter-8 ECDF channel — of the
+Three horizontal-bar panels, one per ECDF channel of Section 4.6.8, of the
 1-Wasserstein distance from each dataset's distribution to the POOLED
 distribution, in physical units. This is the quantitative version of the
-Chapter 8 ECDF overlays: Chapter 8 showed the curves differ; this says by how
+ECDF overlays of Section 4.6.8: those show the curves differ, this says by how
 much. Separate axes per channel (units differ; never a shared colour scale).
 
 Reads : ARTIFACT_DIR/bias_per_dataset.parquet
-Output: figures/bias_quant/bias_wasserstein.png
+Output: 06_bias_quantification/figures/bias_wasserstein.png
 ════════════════════════════════════════════════════════════════════════════
 """
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -20,11 +21,12 @@ import matplotlib.pyplot as plt
 from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_ACCENT, TUM_EXT
 from bias_quant import CONFOUNDED_ACCEL
 
-# ── canonical constants block ────────────────────────────────────────────────
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-# Chapter 10 code + figures live under bachelor-arbeit/06_bias_quantification/
-OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "06_bias_quantification" / "figures"
+# ── paths and constants ──────────────────────────────────────────────────────
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
+# bias-quantification code + figures live under 06_bias_quantification/
+OUT_DIR      = REPO_ROOT / "06_bias_quantification" / "figures"
 
 DISPLAY_NAMES = {
     "boreas_rt": "Boreas", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",

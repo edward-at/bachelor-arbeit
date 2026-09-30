@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""curation_feasibility.py — per-dataset internal-balance retention (13.1).
+"""curation_feasibility.py — per-dataset internal-balance retention (thesis 4.11).
 
 The figure behind the pooling justification: a regime-balanced subset of a
 single dataset can keep at most 5 x (its rarest regime's share) of that
-dataset. Pooled, the frame keeps 88.7 per cent; most individual datasets
-collapse to a few per cent because they lack entire regimes. One bar per
+dataset. Pooled, the frame keeps a large share, while most individual
+datasets collapse to a few per cent because they lack entire regimes. One bar per
 dataset, the pooled frame as the reference line. Winner-independent, so it
-may be produced before the gates run (D25 untouched: it reads no method).
+may be produced before the gates run (it reads no method).
 
 Output: figures/curation/curation_feasibility.png (300 dpi)
 """

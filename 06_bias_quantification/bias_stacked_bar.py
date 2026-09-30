@@ -1,5 +1,5 @@
 """
-bias_stacked_bar.py  —  Chapter 10 HEADLINE figure
+bias_stacked_bar.py  —  Section 4.8 HEADLINE figure
 ════════════════════════════════════════════════════════════════════════════
 Horizontal stacked bars: each dataset's five regime shares, datasets ordered by
 low-dynamic share (RQ1). Two reference bars appended below a separator — POOLED
@@ -7,9 +7,10 @@ low-dynamic share (RQ1). Two reference bars appended below a separator — POOLE
 and the volume-induced gap are visible in the same figure.
 
 Reads : ARTIFACT_DIR/bias_per_dataset.parquet, bias_corpus_profiles.parquet
-Output: figures/bias_quant/bias_stacked_bar.png
+Output: 06_bias_quantification/figures/bias_stacked_bar.png
 ════════════════════════════════════════════════════════════════════════════
 """
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -26,11 +27,12 @@ def dname(ds, names):
     n = names.get(ds, ds)
     return n + "*" if ds in CONFOUNDED_ACCEL else n
 
-# ── canonical constants block ────────────────────────────────────────────────
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-# Chapter 10 code + figures live under bachelor-arbeit/06_bias_quantification/
-OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "06_bias_quantification" / "figures"
+# ── paths and constants ──────────────────────────────────────────────────────
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
+# bias-quantification code + figures live under 06_bias_quantification/
+OUT_DIR      = REPO_ROOT / "06_bias_quantification" / "figures"
 
 DISPLAY_NAMES = {
     "boreas_rt": "Boreas", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",

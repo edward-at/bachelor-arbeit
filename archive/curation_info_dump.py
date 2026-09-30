@@ -1,28 +1,30 @@
 #!/usr/bin/env python3
-"""curation_info_dump.py — one paste-back for everything still owed (13.x).
+"""curation_info_dump.py — read-only console summary of the curation records.
 
-Gathers, read-only, into a single console dump:
+Prints, read-only, in a single console run:
 
-  [1] Both curation_manifest.json files, full — the D23 per-regime cap
+  [1] Both curation_manifest.json files, full: the per-regime source-cap
       disclosure (realised top shares, forced counts, breach flags).
-  [2] Replication + run metadata one-liners, for the record.
-  [3] Tier-threshold numeric check (replaces the eyeball): the fresh
+  [2] Replication + run metadata one-liners.
+  [3] Tier-threshold numeric check: the fresh
       pooled ECDF value at every t1/t2/t3 in regime_classification.py's
       own THRESHOLDS, plus the pooled tier shares and the per-dataset
       spread of the High-Dynamic share. Constants are imported from the
       module, never retyped.
-  [4] The S7.3 coverage numbers from audit_baseline.json — full blocks
-      for a2d2 / 4seasons / hdd and a compact table for all 14 — the
-      post-cleaning values the TODO paragraph needs.
-  [5] D5 best effort: searches the usual folders for the Dingus / Perez /
-      100-Car / SHRP PDFs and, if pypdf is available, extracts the
-      passages around "0.6", "0.75", "lateral acceleration",
-      "deceleration" and "trigger" so the threshold verification can be
-      settled from pasted text. If nothing is found the verification
-      stays a manual read — the script gathers, it does not judge.
+  [4] The coverage numbers (thesis 4.4) from audit_baseline.json: full
+      blocks for a2d2 / 4seasons / hdd and a compact table for all 14,
+      post-cleaning values.
+  [5] A search of the usual folders for the Dingus / Perez / 100-Car /
+      SHRP literature PDFs behind the 0.6 g and 0.75 g thresholds. If
+      pypdf is available, the passages around "0.6", "0.75", "lateral
+      acceleration", "deceleration" and "trigger" are extracted. The
+      script gathers, it does not judge.
 
 Sections run independently: one failure prints and the rest continue.
 Nothing is written or modified anywhere.
+
+The script imports curation_common and regime_classification, so run it
+with 07_subset_curation and 04_exploratory_analysis on PYTHONPATH.
 
 Usage:  python curation_info_dump.py
 """
@@ -35,9 +37,10 @@ from pathlib import Path
 
 import numpy as np
 
-from curation_common import PROJECT_ROOT, BUDGET_N, EVAL_DIR
+from curation_common import DATA_ROOT, REPO_ROOT, BUDGET_N, EVAL_DIR
+PROJECT_ROOT = DATA_ROOT.parent
 
-SUBSET_DIR = PROJECT_ROOT / "dataset" / "subset_data"
+SUBSET_DIR = DATA_ROOT / "subset_data"
 AUDIT_BASELINE = None  # resolved in section 4 (two known locations)
 PDF_KEYWORDS = ["dingus", "perez", "100car", "100-car", "shrp",
                 "naturalistic"]
@@ -84,7 +87,7 @@ def s2():
 @section("3  tier thresholds vs fresh distributions (numeric eyeball)")
 def s3():
     import sys as _sys
-    _sys.path.insert(0, str(PROJECT_ROOT / "bachelor-arbeit"
+    _sys.path.insert(0, str(REPO_ROOT
                             / "04_exploratory_analysis"))
     import regime_classification as rc
     data = rc.load_std_data()
@@ -120,8 +123,8 @@ def s3():
 @section("4  S7.3 coverage numbers (audit_baseline.json, post-cleaning)")
 def s4():
     candidates = [
-        PROJECT_ROOT / "dataset" / "audit_baseline.json",
-        PROJECT_ROOT / "bachelor-arbeit" / "04_exploratory_analysis"
+        DATA_ROOT / "audit_baseline.json",
+        REPO_ROOT / "04_exploratory_analysis"
         / "audit_baseline.json",
     ]
     p = next((c for c in candidates if c.exists()), None)
@@ -155,7 +158,7 @@ def s4():
 
 @section("5  D5 best effort — trigger-threshold passages from local PDFs")
 def s5():
-    roots = [PROJECT_ROOT, PROJECT_ROOT / "bachelor-arbeit",
+    roots = [PROJECT_ROOT, REPO_ROOT,
              PROJECT_ROOT / "literature"]
     found = []
     for r in roots:

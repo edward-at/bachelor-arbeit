@@ -1,5 +1,5 @@
 """
-kselect_curve.py  —  Section 4.6.4 figure (cluster-number selection)
+k_select_curve.py  —  Section 4.7.5 figure (cluster-number selection)
 ────────────────────────────────────────────────────────────────────────────
 Shows why k was chosen. Left panel: the mean silhouette against k together with
 its null baseline (k-means on independently shuffled features), so the reader
@@ -11,15 +11,17 @@ Thin reader of dataset/regime_data/kselect_curves.parquet — no recomputation.
 ────────────────────────────────────────────────────────────────────────────
 """
 
+import sys
 from pathlib import Path
 
 import pandas as pd
 import matplotlib.pyplot as plt
 from tum_colors import TUM_SECONDARY, TUM_ACCENT
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "model_selection"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "model_selection"
 DPI             = 300
 
 

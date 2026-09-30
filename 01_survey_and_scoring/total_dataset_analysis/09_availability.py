@@ -13,7 +13,7 @@ sizes = [counts.get(k, 0) for k in [0, 1, 2]]
 names = [labels[k] for k in [0, 1, 2]]
 
 DARK_COLORS = {TUM_SECONDARY['blue1'], TUM_SECONDARY['blue2']}
-pie_colors = [TUM_SECONDARY['blue2'], TUM_SECONDARY['gray'], TUM_SECONDARY['light_gray'], TUM_SECONDARY['blue1']]  # adjust per chart
+pie_colors = [TUM_SECONDARY['blue2'], TUM_SECONDARY['gray'], TUM_SECONDARY['light_gray'], TUM_SECONDARY['blue1']]
 
 plt.figure()
 wedges, texts, autotexts = plt.pie(sizes, labels=names, autopct='%1.1f%%',

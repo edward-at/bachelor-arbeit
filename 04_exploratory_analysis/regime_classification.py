@@ -1,5 +1,5 @@
 """
-regime_classification.py  (v3 — variability tiers)
+regime_classification.py  (variability tiers, thesis Section 4.5.6 / 4.6.8)
 ────────────────────────────────────────────────────────────────────────────
 Sorts every analysis window into one of four VARIABILITY TIERS using fixed
 absolute thresholds on within-window standard deviations.
@@ -13,15 +13,12 @@ the regime-discovery stage (RQ2). The term "regime" is reserved for those; here
 everything is a "tier". (The script filename and the figures/regime output
 folder are kept unchanged for path stability.)
 
-v3 CHANGES:
-  1. Terminology: "regime" -> "variability tier" throughout (labels, title,
-     identifiers, docstring) to avoid clashing with the RQ2 clustering chapter.
-v2 CHANGES:
-  1. Tier colors from the official TUM palette (were generic Office colors).
+Design:
+  1. Tier colors from the official TUM palette.
   2. Per-segment label color chosen for contrast (black on green/orange).
-  3. Legend moved outside the axes (was overlapping the right-most bars).
-  4. CAUTION: THRESHOLDS were calibrated on pre-v3 std values — re-check
-     against the new ECDFs after the v3 re-run before locking figures.
+  3. Legend outside the axes, so it cannot overlap the right-most bars.
+  4. THRESHOLDS are frozen: a stated round convention, not a calibrated
+     quantity (lineage in Section 4.5.6, limitation in Section 6.6).
 
 Output: figures/regime/regime_<signal_name>.png  (dpi=300)
 Input:  std_data/<dataset>.parquet
@@ -31,15 +28,17 @@ Input:  std_data/<dataset>.parquet
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 from pathlib import Path
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PATHS
 # ─────────────────────────────────────────────────────────────────────────────
 
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-OUT_DIR      = PROJECT_ROOT /"bachelor-arbeit"/"04_exploratory_analysis"/ "figures" / "regime"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+STD_DATA_DIR = DATA_ROOT / "std_data"
+OUT_DIR      = REPO_ROOT/"04_exploratory_analysis"/ "figures" / "regime"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DATASETS — fixed display order; NOT auto-synced to the heatmap rank-sum order.
@@ -78,12 +77,13 @@ SIGNALS = [
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TIER THRESHOLDS — shared with ecdf_analysis.py
+# TIER THRESHOLDS — ecdf_analysis.py and time_series_analysis.py keep their own
+# copies of these values (not imported); keep them identical by hand.
 # ─────────────────────────────────────────────────────────────────────────────
 
 THRESHOLDS = {
     "std_speed_kmh": (1.0,  5.0,  15.0),
-    "std_acc_mag":   (0.2,  0.5,   1.5),   # FROZEN 2026-08-29 (D-5): a stated round convention, not a calibrated quantity; lineage disclosed in thesis 4.5, limitation in 6.6.
+    "std_acc_mag":   (0.2,  0.5,   1.5),   # Frozen: a stated round convention, not a calibrated quantity. Lineage disclosed in Section 4.5.6, limitation in Section 6.6.
     "std_yaw_rate":  (1.0,  5.0,  15.0),
 }
 

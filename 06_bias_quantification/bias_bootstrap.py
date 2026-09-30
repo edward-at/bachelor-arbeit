@@ -1,7 +1,7 @@
 """
-bias_bootstrap.py  —  Tier-2 uncertainty quantification (Chapter 10, §4.7).
+bias_bootstrap.py  —  Tier-2 uncertainty quantification (thesis Section 4.8).
 
-DC7 (locked): clip-level nonparametric bootstrap, B = 1000 replicates,
+Fixed design: clip-level nonparametric bootstrap, B = 1000 replicates,
 percentile 95 % confidence intervals, seed 42, POOLED REFERENCE HELD FIXED
 (resampling the reference too would answer a different question and is
 computationally brutal). Metrics covered: the RQ1 headline low_dynamic_share
@@ -9,17 +9,14 @@ and js_to_pooled — the two quantities the chapter makes ranking claims about,
 and the two that are DISPLAYED with intervals. Metric names match the Tier-1
 bias_per_dataset.parquet columns exactly.
 
-Hill D_1 was previously computed here and never displayed; it is dropped
-rather than carried unread, so the section's claim that every ranked quantity
-carries an interval is literally true of what the figures show. The Hill
-family remains a point-estimate instrument (§10.4), read for profile SHAPE
-rather than for exact height.
+Hill D_1 is not bootstrapped, so every ranked quantity that carries an
+interval is one the figures show. The Hill family remains a point-estimate
+instrument, read for profile SHAPE rather than for exact height.
 
-DC14 addition — rank probabilities: for the headline metric, the fraction of
-replicates strictly above the pooled and balanced references is stored as
+Rank probabilities: for the headline metric, the fraction of replicates
+strictly above the pooled and balanced references is stored as
 p_above_pooled / p_above_balanced. This turns CI-vs-line eyeballing into a
-quotable number ("Ford exceeds the pooled corpus in 100 % of resamples;
-KITTI in only 74 %"). It is a PRESENTATION of the existing uncertainty, not
+single number per dataset. It is a PRESENTATION of the existing uncertainty, not
 a new bias axis. It applies to the headline metric only: the Jensen-Shannon
 distance has no reference line to be above or below.
 
@@ -28,7 +25,7 @@ recording session; resampling windows would pretend they are independent and
 produce dishonestly narrow intervals. Resampling whole clips preserves the
 within-clip correlation structure.
 
-Honest caveats:
+Caveats:
   * Clip exchangeability within a dataset is itself an approximation — clips
     from one campaign share routes. The intervals are best read as lower
     bounds on the real uncertainty.
@@ -38,7 +35,8 @@ Honest caveats:
 
 Reads : ARTIFACT_DIR/cluster_assignments.parquet   (canonical)
 Writes: ARTIFACT_DIR/bias_bootstrap_ci.parquet
-Output: figures/low_dyn_share_ci.png, figures/js_to_pooled_ci.png
+Output: 06_bias_quantification/figures/low_dyn_share_ci.png,
+        06_bias_quantification/figures/js_to_pooled_ci.png
 
 Strict matplotlib: pure defaults, dpi=300, TUM colours, asterisked labels.
 """
@@ -62,9 +60,9 @@ from bias_tier2_common import (
 
 OUT_DIR = FIG_ROOT
 
-B = 1000            # DC7
-SEED = 42           # DC7
-CI = (2.5, 97.5)    # DC7: percentile 95 %
+B = 1000
+SEED = 42
+CI = (2.5, 97.5)    # percentile 95 %
 MIN_CLIPS_WARN = 30
 
 METRICS = ["low_dynamic_share", "js_to_pooled"]   # Tier-1 names; both displayed
@@ -86,7 +84,7 @@ def bootstrap_dataset(df_ds, pooled, refs, rng):
     Builds the (n_clips x N_REGIMES) regime-count matrix once, then each
     replicate resamples clip rows with replacement and sums — O(n_clips) per
     replicate, no window-level copies, tractable even for NVIDIA (~298k clips).
-    Also returns DC14 rank probabilities: fraction of replicates whose
+    Also returns rank probabilities: fraction of replicates whose
     headline low_dynamic_share lies strictly above each fixed reference.
     """
     C = (df_ds.groupby(["clip_id", "regime"]).size()
@@ -111,7 +109,7 @@ def bootstrap_dataset(df_ds, pooled, refs, rng):
 def build_table():
     df = load_assignments()
     datasets, counts = regime_counts(df)
-    pooled = pooled_shares(counts)          # fixed reference (DC7)
+    pooled = pooled_shares(counts)          # fixed reference
     balanced = balanced_shares(counts)
     low_idx = list(LOW_DYNAMIC_REGIMES)
     refs = {"pooled_low_dyn": float(pooled[low_idx].sum()),
@@ -126,7 +124,7 @@ def build_table():
                "n_windows": int(df["dataset"].eq(ds).sum())}
         for j, m in enumerate(METRICS):
             rec[f"{m}_pt"], rec[f"{m}_lo"], rec[f"{m}_hi"] = pt[j], lo[j], hi[j]
-        rec.update(probs)                    # DC14
+        rec.update(probs)
         rows.append(rec)
 
     tab = pd.DataFrame(rows).set_index("dataset")
@@ -205,7 +203,7 @@ def main():
         print(f"\nWARNING — fewer than {MIN_CLIPS_WARN} clips (intervals are the finding): "
               f"{', '.join(label(d) for d in small)}")
 
-    # DC14 quotable lines: unambiguous vs unrankable datasets
+    # summary lines: unambiguous vs unrankable datasets
     sure_hi = tab.index[tab["p_above_pooled"] >= 0.975].tolist()
     sure_lo = tab.index[tab["p_above_pooled"] <= 0.025].tolist()
     unclear = tab.index[(tab["p_above_pooled"] > 0.025)

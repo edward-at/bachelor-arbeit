@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""F3 — within-window variability per method: THREE figures, one per signal.
+"""Within-window variability per method: THREE figures, one per signal.
 
 Mirrors boxplot_comparison.py (v2 grammar) exactly: right-side half-violin
 (KDE trimmed to real support), white IQR box with coloured edges, thick
@@ -7,7 +7,7 @@ coloured median, mean dot (white fill, black edge), capped whiskers at
 1.5xIQR, robust y-limit with tail disclosure ("max ~ X" annotations), proxy
 legend upper-left, dashed y-grid. Two deliberate deviations, stated:
 (1) fixed slate order with the Frame as the leading group behind a separator
-    instead of a median sort — ordering methods by outcome before D4 would
+    instead of a median sort — ordering methods by outcome before the decision rule would
     presuppose the rule;
 (2) statistics are computed on the seeded 25k-per-method distribution cache
     (deterministic; quartiles at that n are indistinguishable from full-n).
@@ -29,7 +29,7 @@ from subset_eval_common import (DPI, METHOD_COLORS, ROW_LABELS, TIER,
 
 FIG_H = 7.0
 FIG_W_MIN = 16.0
-FIG_W_PER_GROUP = 1.35   # axes width scales with the slate (M11 now, C-rows at 13.2)
+FIG_W_PER_GROUP = 1.35   # axes width scales with the slate size
 VIOLIN_WIDTH, BOX_WIDTH, WHISKER_WIDTH = 0.35, 0.12, 0.08
 MEAN_DOT_SIZE, VIOLIN_ALPHA = 7, 0.40
 BOX_LINEWIDTH, MEDIAN_LW, WHISKER_LW = 1.6, 2.2, 1.4
@@ -111,7 +111,7 @@ def _fmt(v):
 
 def plot_signal(sig, dist, rows, n_real):
     arrays = dist_arrays(dist, sig["ch"], rows)
-    # the dist cache is a raw row-paired sample (v12.1.2 contract), so NaNs
+    # the dist cache is a raw row-paired sample, so NaNs
     # pass through; filter here and report, because non-finite sigma values in
     # the restored corpus are themselves a data-state signal worth seeing
     n_bad = int(sum((~np.isfinite(a)).sum() for a in arrays))
@@ -164,7 +164,7 @@ def plot_signal(sig, dist, rows, n_real):
     ]
     # legend outside the axes: with Frame leading in fixed slate order, its
     # clipped-max annotation and upper tail sit exactly where an in-axes
-    # upper-left legend would (the median-sorted Chapter 8 originals never
+    # upper-left legend would (the median-sorted Section 4.6 originals never
     # collided because their leftmost group was the calmest, unclipped one)
     ax.legend(handles=legend, loc="upper left", bbox_to_anchor=(1.005, 1.0),
               frameon=True, facecolor="white", fontsize=9)

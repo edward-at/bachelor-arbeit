@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""F1 — regime composition per sampling method (budget tier).
+"""Regime composition per sampling method (budget tier).
 
-Mirrors the Chapter-10 headline grammar (bias_stacked_bar.py): HORIZONTAL
+Mirrors the Section 4.8 headline grammar (bias_stacked_bar.py): HORIZONTAL
 stacked bars in percent, regime colours from regime_style, white segment
 edges, and the reference bars BELOW a separator — here Frame (R0) and the
 guarded frame (R1) take the place of Pooled/Balanced. One deliberate
 deviation, stated: rows keep the fixed M01..M11 slate order instead of a
 headline sort, because ordering methods by outcome before the decision rule
-exists (D4) would presuppose the rule. Identical bars for M03/M05/M09/M10
+exists would presuppose the rule. Identical bars for M03/M05/M09/M10
 are the construction (all four use the equal regime quotas of M03; M05, M09
-and M10 change only WHICH windows fill them), pre-stated in Section 11.9.
+and M10 change only WHICH windows fill them), pre-stated in Section 4.9.9.
 Reads ONLY the eval cache. Output: figures/subset_eval/subset_stacked_bar.png
 """
 

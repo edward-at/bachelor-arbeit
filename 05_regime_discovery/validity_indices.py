@@ -1,5 +1,5 @@
 """
-validity_indices.py  —  Section 4.6.7 figure
+validity_indices.py  —  Section 4.7.8 figure
 Reads validity_indices.parquet → Davies–Bouldin / Calinski–Harabasz / gap vs k,
 with the silhouette-selected k marked, so the reader can see whether the three
 criteria corroborate it. Thin reader; no recomputation.
@@ -10,15 +10,17 @@ reported with its known uniform-null caveat rather than as a co-equal selector,
 so it reads as the disclosed dissenter rather than as a third vote.
 """
 
+import sys
 from pathlib import Path
 
 import pandas as pd
 import matplotlib.pyplot as plt
 from tum_colors import TUM_ACCENT, TUM_EXT
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "validity"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "validity"
 DPI             = 300
 
 # methodology order: corroborating indices first, gap (disclosed dissenter) last

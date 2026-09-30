@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""D17 figure (amended) — the Chapter-10 bias axes as paired bars.
+"""The Section 4.8 bias axes as paired bars.
 
 Replaces the landscape scatter: with half the slate x-pinned at 0.20 by
 construction, the 2D view collapses into one unreadable vertical strip.
 The same two numbers in the thesis barh grammar instead — one panel per
 bias axis, fixed slate order, guarded-frame context bar below a separator.
 Reference lines: black = frame value; grey (left panel only) = the uniform
-20 % balance target. At 12.3 the proposed method's two bars against the
-frame lines carry the "reaches the good corner" reading directly.
+20 % balance target. In the Section 4.10 figures the proposed method's two
+bars against the frame lines carry the "reaches the good corner" reading directly.
 Reads ONLY the eval cache. Output: figures/subset_eval/subset_bias_axes.png
 """
 
@@ -48,7 +48,7 @@ def main() -> None:
     panels = [
         ("low_dyn_share",
          f"Calm share\n({regime_label(LOW_DYN_REGIME)}, "
-         f"regime {LOW_DYN_REGIME})", True),  # block 5F: the calm share of Section 4.10.6, not the two-regime headline of Section 4.8.3
+         f"regime {LOW_DYN_REGIME})", True),  # the calm share of Section 4.10.6, not the two-regime headline of Section 4.8.3
         ("top_source_share", "Top-source share", False),
     ]
     fig, axes = plt.subplots(1, 2, figsize=(12, 7), sharey=True)

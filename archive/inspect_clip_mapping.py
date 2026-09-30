@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-inspect_clip_mapping.py — 60-second diagnostic. For every dataset, prints the
-evidence needed to fix the std clip_id -> inertial filename mapping:
+inspect_clip_mapping.py — short diagnostic. For every dataset, prints the
+evidence needed to check the std clip_id -> inertial filename mapping:
 
   * sample std_data clip_id values (+ dtype, unique count)
   * sample inertial file stems (+ file count)
@@ -10,20 +10,22 @@ evidence needed to fix the std clip_id -> inertial filename mapping:
   * an estimated resolve rate using the current (raw + numeric-normalized)
     resolver on a 200-clip sample
 
-Run it, paste the FULL output back into the chat. No files are written.
+Output goes to the console only. No files are written.
 """
 
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 import pandas as pd
 import pyarrow.parquet as pq
 
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-INERTIAL_DIR = PROJECT_ROOT / "dataset" / "inertial_data"
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+INERTIAL_DIR = DATA_ROOT / "inertial_data"
+STD_DATA_DIR = DATA_ROOT / "std_data"
 
 ID_CANDIDATES = ["clip_id", "orig_clip_id", "source_clip", "clip",
                  "clip_name", "scene_id", "scene_token", "sequence_id",
@@ -87,7 +89,7 @@ def main():
                             print(f"    id-like column '{cand}': "
                                   f"unreadable ({e})")
 
-            # estimated resolve rate with the v2 resolver
+            # estimated resolve rate with the numeric-normalizing resolver
             index = set(stems)
             nindex = {norm_key(s) for s in stems} - {None}
             sample = uniq[:200]

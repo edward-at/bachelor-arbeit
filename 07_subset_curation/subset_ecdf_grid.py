@@ -4,7 +4,7 @@
 One panel per method (Frame profile leading), each showing the method's
 dynamic-score ECDF in the thesis blue against the frame's ECDF as a black
 ghost — the readable all-methods form of the ECDF. The 3-5-line OVERLAY
-version remains the finalist / 12.3 figure, where the proposed curation
+version remains the finalist figure of Section 4.10, where the proposed curation
 method is the highlighted line against the strongest baselines. Change
 CHANNEL to a sigma channel for per-channel grids.
 Reads ONLY the eval cache. Output: figures/subset_eval/subset_ecdf_grid.png

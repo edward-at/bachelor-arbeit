@@ -1,26 +1,27 @@
 """
 bias_tier2_common.py  —  shared constants, loaders and metric math for the
-Tier-2 bias-quantification scripts (Chapter 10, §4.7).
+Tier-2 bias-quantification scripts (thesis Section 4.8).
 
-Why this module exists: five Tier-2 scripts consume the same canonical
-artifact (cluster_assignments.parquet) and the same metric definitions.
-Duplicating the share-pivot / Hill / JS / PSI code five times is exactly the
-divergence risk the compute-once architecture forbids, so it lives here once.
+Why this module exists: the Tier-2 scripts and bias_fingerprint.py consume
+the same canonical artifact (cluster_assignments.parquet) and the same metric
+definitions. Duplicating the share-pivot / Hill / JS / PSI code in each script
+would risk divergence, so it lives here once.
 
 Position in the architecture:
-    dataset/regime_data/cluster_assignments.parquet   (canonical, Chapter 9)
-    dataset/regime_data/bias_per_dataset.parquet      (Tier-1, bias_quant.py)
-    dataset/std_data/<ds>.parquet                     (windowed sigma layer)
+    DATA_ROOT/regime_data/cluster_assignments.parquet   (canonical, Section 4.7)
+    DATA_ROOT/regime_data/bias_per_dataset.parquet      (Tier-1, bias_quant.py)
+    DATA_ROOT/std_data/<ds>.parquet                     (windowed sigma layer)
                 |
         bias_tier2_common.py  (this file: loaders + metric functions)
                 |
     bias_diversity.py / bias_volume.py / bias_bootstrap.py /
-    bias_fingerprint.py / bias_pca_map.py
+    bias_gmm_entropy.py / bias_shape_metrics.py / bias_regime_supply.py /
+    bias_fingerprint.py
                 |
-    dataset/regime_data/*.parquet  +  bias_quantification/figures/*
+    DATA_ROOT/regime_data/*.parquet  +  06_bias_quantification/figures/*
 
-Schema alignment (verified against bias_quant.py, 2026-07-03):
-  * ARTIFACT_DIR is dataset/regime_data — the SAME home as the Tier-1
+Schema alignment (verified against bias_quant.py):
+  * ARTIFACT_DIR is DATA_ROOT/regime_data, the SAME home as the Tier-1
     bias_* artifacts. Tier-2 artifacts join them there.
   * JS convention: Jensen-Shannon DISTANCE, base-2 logs, bounded [0, 1] —
     IDENTICAL to bias_quant.js_distance_to_reference (jensenshannon base=2).
@@ -30,8 +31,8 @@ Schema alignment (verified against bias_quant.py, 2026-07-03):
   * W1 columns in bias_per_dataset.parquet are `w_std_speed_kmh`,
     `w_std_acc_mag`, `w_std_yaw_rate` (yaw already in deg/s). The std_data
     fallback below reproduces bias_quant.wasserstein_per_channel exactly
-    (all std_data windows — non-overlapping since 2026-08-29 — pooled includes self, NaN-drop only).
-  * Equivalences to Tier-1 columns (disclosed in §10.4 of the note):
+    (all std_data windows, non-overlapping, pooled includes self, NaN-drop only).
+  * Equivalences to Tier-1 columns:
     Hill D1 = N_REGIMES ** entropy_norm  and  Hill D2 = 1 / hhi.
     cross_check_tier1() verifies all of this at runtime when the Tier-1
     artifact is present.
@@ -42,6 +43,7 @@ threshold by construction — treated as a correct diagnosis (a missing regime
 IS a major shift), not a bug.
 """
 
+import sys
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
@@ -63,10 +65,11 @@ from regime_style import N_REGIMES, LOW_DYNAMIC_REGIMES
 from bias_quant import CONFOUNDED_ACCEL   # bias_quant is __main__-guarded
 
 # ────────────────────────────── paths ──────────────────────────────
-PROJECT_ROOT  = Path("/Users/edward/Downloads")
-ARTIFACT_DIR  = PROJECT_ROOT / "dataset" / "regime_data"     # Tier-1 + Tier-2 artifacts
-STD_DATA_DIR  = PROJECT_ROOT / "dataset" / "std_data"
-FIG_ROOT      = PROJECT_ROOT / "bachelor-arbeit" / "06_bias_quantification" / "figures"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+ARTIFACT_DIR  = DATA_ROOT / "regime_data"     # Tier-1 + Tier-2 artifacts
+STD_DATA_DIR  = DATA_ROOT / "std_data"
+FIG_ROOT      = REPO_ROOT / "06_bias_quantification" / "figures"
 
 REGIME_ASSIGN      = ARTIFACT_DIR / "cluster_assignments.parquet"
 TIER1_PER_DATASET  = ARTIFACT_DIR / "bias_per_dataset.parquet"
@@ -104,7 +107,7 @@ DPI = 300
 JS_BASE = 2            # matches bias_quant.JS_BASE (JS DISTANCE, bounded [0,1])
 PSI_EPS = 1e-4         # zero-cell floor, standard industry convention
 
-# Wasserstein channels — DC5 (the three Chapter-8 ECDF channels, window grain)
+# Wasserstein channels: the three ECDF channels of Section 4.6.8, window grain
 W1_CHANNELS = ["std_speed_kmh", "std_acc_mag", "std_yaw_rate"]
 
 # tier-2 internal key -> Tier-1 column in bias_per_dataset.parquet
@@ -200,9 +203,9 @@ def psi(p, ref, eps=PSI_EPS):
 def gini(x):
     """Gini coefficient of a non-negative vector (0 = equal, 1 = one holder).
 
-    NAMING RULE: in Chapter 10 prose this is always the qualified
-    "volume-share Gini". The unqualified word "Gini" is reserved for the
-    exposé §3.7 dynamic-content Gini (see bias_quant.py D4 note / DC10).
+    Naming: in the thesis this is always the qualified "volume-share Gini".
+    The unqualified word "Gini" refers to the dynamic-content Gini (see the
+    note in bias_quant.py).
     """
     x = np.sort(np.asarray(x, dtype=float))
     n = x.size
@@ -228,7 +231,7 @@ def _read_std(ds):
 
 
 def load_std_channels(datasets):
-    """Threaded read of the three DC5 channels for every dataset."""
+    """Threaded read of the three W1 channels for every dataset."""
     data = {}
     with ThreadPoolExecutor(max_workers=8) as ex:
         for ds, chans in tqdm(ex.map(_read_std, datasets), total=len(datasets),
@@ -238,7 +241,7 @@ def load_std_channels(datasets):
 
 
 def w1_vs_pooled(datasets):
-    """1-Wasserstein per DC5 channel vs the pooled window set — reproduces
+    """1-Wasserstein per channel vs the pooled window set — reproduces
     bias_quant.wasserstein_per_channel (all std_data windows, non-overlapping, pooled
     includes the dataset itself, yaw in deg/s). Fallback path only."""
     data = load_std_channels(datasets)
@@ -253,7 +256,7 @@ def w1_vs_pooled(datasets):
 
 # ══════════════════ the Tier-2 metric table builder ════════════════
 def build_bias_metric_table(verbose=True):
-    """One row per dataset, every Chapter-10 scalar metric as a column.
+    """One row per dataset, every scalar bias metric as a column.
 
     Categorical metrics (shares, Hill, JS, PSI) are recomputed from the
     canonical assignment artifact — deterministic, so identical to Tier-1

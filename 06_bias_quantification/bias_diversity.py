@@ -1,5 +1,5 @@
 """
-bias_diversity.py  —  Tier-2 diversity metrics (Chapter 10, §4.7).
+bias_diversity.py  —  Tier-2 diversity metrics (thesis Section 4.8).
 
 Two instruments, one artifact:
 
@@ -9,11 +9,11 @@ Two instruments, one artifact:
      are exact transforms of the Tier-1 entropy and HHI columns. The family
      UNIFIES them in interpretable effective-regime units and adds one
      genuinely new member, D_0 (richness), which ties directly to the
-     sparse-regime table. DC8: the per-dataset regime-share Gini stays
-     dropped; this family is the diversity instrument.
+     sparse-regime table. There is no per-dataset regime-share Gini. This
+     family is the diversity instrument.
 
   2. PSI of each dataset's regime distribution against the pooled reference,
-     plotted against the conventional 0.10 / 0.25 thresholds. DC9: PSI is a
+     plotted against the conventional 0.10 / 0.25 thresholds. PSI is a
      CALIBRATION COMPANION to the primary JS metric — it borrows an external
      severity convention; it never replaces JS. Zero-cell datasets are
      floor-dominated by construction and read as "major shift", which is the
@@ -22,7 +22,8 @@ Two instruments, one artifact:
 Reads : ARTIFACT_DIR/cluster_assignments.parquet   (canonical)
         ARTIFACT_DIR/bias_per_dataset.parquet      (cross-check only, optional)
 Writes: ARTIFACT_DIR/bias_diversity.parquet
-Output: figures/hill_profiles.png, figures/psi_thresholds.png
+Output: 06_bias_quantification/figures/hill_profiles.png,
+        06_bias_quantification/figures/psi_thresholds.png
 
 Strict matplotlib: pure defaults, dpi=300, TUM dataset colours; confounded
 datasets carry the Tier-1 asterisk in every label.

@@ -1,7 +1,7 @@
 """
 density_band_analysis.py
 ────────────────────────────────────────────────────────────────────────────
-Per-dataset stacked multi-signal density bands (C4 layout × C5 style).
+Per-dataset stacked multi-signal density bands.
 For each dataset, ONE figure with three vertically stacked panels — speed,
 accel-magnitude, yaw rate — sharing the within-window time axis. Each panel
 shows, across all of the dataset's 20 s windows:
@@ -9,12 +9,12 @@ shows, across all of the dataset's 20 s windows:
   • interquartile band (25–75 %)
   • wide band (10–90 %)
 
-Replaces the earlier representative-clip tier grid. Group = all windows of a
+Group = all windows of a
 dataset (capped at N_SAMPLE for I/O). Windows come from std_data; frames are
 recovered through the back-reference contract (clip_id, window_start_s,
 window_end_s) against the standardized clips.
 
-NOTE on option (a): aggregating every window of a dataset mixes calm and
+NOTE: aggregating every window of a dataset mixes calm and
 dynamic windows, so for the calm-skewed datasets the bands will be wide and the
 median roughly flat — that is the expected signature, and band WIDTH across
 datasets is still a usable read (narrow = homogeneous, wide = diverse).
@@ -24,6 +24,7 @@ thread-safe). Pure default style; dpi=300; tum_colors; all tunables top-level.
 """
 
 import warnings
+import sys
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
@@ -42,10 +43,11 @@ warnings.filterwarnings("ignore")   # silence all-NaN-slice warnings from nanper
 # PATHS  (data and code live in separate folders)
 # ─────────────────────────────────────────────────────────────────────────────
 
-PROJECT_ROOT      = Path("/Users/edward/Downloads")
-STD_DATA_DIR      = PROJECT_ROOT / "dataset" / "std_data"
-INERTIAL_DATA_DIR = PROJECT_ROOT / "dataset" / "inertial_data"
-OUT_DIR           = PROJECT_ROOT / "bachelor-arbeit" / "04_exploratory_analysis" / "figures" / "density_band"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+STD_DATA_DIR      = DATA_ROOT / "std_data"
+INERTIAL_DATA_DIR = DATA_ROOT / "inertial_data"
+OUT_DIR           = REPO_ROOT / "04_exploratory_analysis" / "figures" / "density_band"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PARAMETERS  (all tunables here — never hardcoded inside functions)
@@ -69,7 +71,7 @@ MEDIAN_LW       = 1.8
 GRID_ALPHA      = 0.3
 FIG_W           = 9.0
 FIG_H_PER_PANEL = 2.2
-GRID_COLS       = 4        # 2026-09-25: comparison grids, 14 panels per signal on a 4 x 4 grid
+GRID_COLS       = 4        # comparison grids, 14 panels per signal on a 4 x 4 grid
 GRID_PANEL_W    = 3.0
 GRID_PANEL_H    = 2.1
 
@@ -308,7 +310,7 @@ def main():
         count += 1
         del arrays
 
-    # 2026-09-25: persist the band statistics (artifact for Section 5.3) and draw the grids
+    # persist the band statistics (artifact for Section 5.3) and draw the grids
     t = np.arange(WINDOW_FRAMES) * DT_GRID
     rows = []
     for f, stats in all_stats.items():

@@ -1,5 +1,5 @@
 """
-state_durations.py  —  Section 4.6.9 figure
+state_duration.py  —  Section 4.7.11 figure
 Reads hmm_durations.parquet → MEDIAN dwell time per regime (seconds), coloured by
 regime. Median, not mean: the dwell distributions are heavily right-skewed (a few
 very long recordings inflate the mean), so the median is the honest "typical
@@ -7,15 +7,17 @@ dwell before switching". The full per-regime spread (p25–p90, max, and the mea
 is carried in the parquet. Thin reader.
 """
 
+import sys
 from pathlib import Path
 
 import pandas as pd
 import matplotlib.pyplot as plt
 from regime_style import regime_label, regime_color
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "hmm"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "hmm"
 DPI             = 300
 
 

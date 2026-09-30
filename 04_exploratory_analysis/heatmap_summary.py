@@ -1,11 +1,11 @@
 """
-heatmap_summary.py  —  Chapter-8 "scorecard" heatmap.
+heatmap_summary.py  —  exploratory "scorecard" heatmap (Section 4.6.10).
 
-A single summary figure for the whole exploratory chapter.
+A single summary figure for the whole exploratory analysis.
 
   Rows    : the auto-discovered datasets (one std_data parquet each).
   Columns : one headline metric per facet, GROUPED and traceable to a section
-            in 8.1-8.8, oriented so that "more dynamic" -> darker.
+            in 4.6.2-4.6.9, oriented so that "more dynamic" -> darker.
   Spine   : a Dynamic-Index column (mean of the per-column normalised
             intensities) that sets the row order.
   Colour  : per-column min-max normalised intensity, Blues colormap
@@ -14,19 +14,19 @@ A single summary figure for the whole exploratory chapter.
 
 Most columns are cheap and come straight from std_data, which is the single
 source of truth for windowed analysis. One facet that std_data simply cannot
-express -- frame-level stationarity (8.1) -- needs one streaming pass over the
+express -- frame-level stationarity (4.6.2) -- needs one streaming pass over the
 frame layer. Set COMPUTE_FRAME_METRICS = False to skip that pass entirely and
 drop that column for a fast, std_data-only run.
 
-Honest caveats (carried into the §8.9 methodology):
+Caveats (Section 4.6.10):
   * The columns are correlated by construction (a calm dataset is calm on most
     of them). That redundancy is a finding, not a bug -- the eye should SEE the
     same light/dark stripe repeat across a row.
   * Per-column min-max stretches the contrast: a column where all datasets are
     nearly identical still spans light->dark. That is why the real value is
     printed in every cell -- read the numbers, not just the shade.
-  * sigma Yaw (8.6) doubles as the cornering / geometry proxy for 8.4, and IQR
-    of sigma-speed (8.3) is a homogeneity proxy, not the literal per-time band
+  * sigma Yaw (4.6.7) doubles as the cornering / geometry proxy for 4.6.5, and
+    IQR of sigma-speed (4.6.4) is a homogeneity proxy, not the literal per-time band
     width.
 
 Strict matplotlib: pure defaults, dpi=300. The only deliberate deviation is a
@@ -34,6 +34,7 @@ single small font size for in-cell text and the column-group labels, which is
 the documented latitude every packed grid figure in this thesis uses.
 """
 
+import sys
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
@@ -48,10 +49,11 @@ except Exception:  # tqdm is optional -> degrade to a no-op
         return x
 
 # ────────────────────────────── paths ──────────────────────────────
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-INERTIAL_DIR = PROJECT_ROOT / "dataset" / "inertial_data"
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-OUT_DIR = PROJECT_ROOT / "bachelor-arbeit" / "04_exploratory_analysis" / "figures" / "summary"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+INERTIAL_DIR = DATA_ROOT / "inertial_data"
+STD_DATA_DIR = DATA_ROOT / "std_data"
+OUT_DIR = REPO_ROOT / "04_exploratory_analysis" / "figures" / "summary"
 
 # ───────────────────────── display names ───────────────────────────
 DISPLAY_NAMES = {
@@ -71,7 +73,7 @@ FRAME_SAMPLE_CLIPS = 3000        # cap clips read per dataset (None = all). Esti
                                  # for Stat % are stable under sampling, and this
                                  # keeps NVIDIA (~298k clips) and Waymo tractable.
 N_FRAME_WORKERS = 8
-STATIONARY_KMH = 0.5             # a frame is "stationary" below this speed (8.1)
+STATIONARY_KMH = 0.5             # a frame is "stationary" below this speed (4.6.2)
 
 # ────────────── physical-validity bounds (NaN-mask only) ────────────
 SPEED_MAX_KMH = 200.0
@@ -138,7 +140,7 @@ def _accum_clip(clip_path):
 
 
 def frame_metrics(dataset_dir):
-    """Stat % (8.1) from one streaming pass over clips."""
+    """Stat % (4.6.2) from one streaming pass over clips."""
     clips = sorted(dataset_dir.glob("clip_*.parquet"))
     if not clips:
         return {"stat_frac": np.nan}
@@ -270,7 +272,7 @@ def render(datasets, cols, raw, inten, index):
 def main():
     datasets, cols, raw = build_table()
 
-    # echo the assembled numbers so they can be eyeballed and reused in prose
+    # echo the assembled numbers so they can be checked on the console
     table = pd.DataFrame(raw, index=[DISPLAY_NAMES.get(d, d) for d in datasets],
                          columns=[c["key"] for c in cols])
     inten, index = normalise(raw, cols)
@@ -284,7 +286,7 @@ def main():
     print(f"\nOutput: {out_path}")
 
     # Persist the assembled numbers (real values, per-column intensities, index) so that the
-    # thesis reads them from an artifact and never off the PNG (added 2026-09-24).
+    # thesis reads them from an artifact and never off the PNG.
     inten_df = pd.DataFrame(inten, index=[DISPLAY_NAMES.get(d, d) for d in datasets],
                             columns=[c["key"] + "_intensity" for c in cols])
     full = table.join(inten_df)

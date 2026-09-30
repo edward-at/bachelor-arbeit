@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""F7 — event & predicate retention per method (budget tier).
+"""Event & predicate retention per method (budget tier).
 
 Six panels, one per M08 predicate (the 0.6 g trigger is the hard-decel
 panel): bars of retention ratio = (rate in subset) / (rate in frame).

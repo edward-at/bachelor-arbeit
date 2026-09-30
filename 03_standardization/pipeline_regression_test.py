@@ -3,12 +3,11 @@ pipeline_regression_test.py — synthetic regression test for the
 standardization pipeline (standardize_inertial_data.build_standard_frame).
 
 Plants every targeted failure mode into generated clips and asserts the
-output behaviour (Section 7.3, "Pipeline validation"):
+output behaviour (Section 4.4.6, "Pipeline validation"):
 
   T1a planted hard-braking event (-5.0 m/s^2, rectangular acceleration
       pulse) survives the full pipeline within the acceptance tolerance;
-      the measured peak is printed so the methodology text can quote the
-      exact figure. (A rectangular pulse has discontinuous edges, so the
+      the measured peak is printed. (A rectangular pulse has discontinuous edges, so the
       3 Hz zero-phase band-limit produces a slight peak OVERSHOOT, not
       attenuation.)
   T1b planted smooth braking event (raised-cosine acceleration pulse,

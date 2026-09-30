@@ -1,11 +1,12 @@
 """
-consensus_matrix.py  —  Section 4.6.7 figure
+consensus_matrix.py  —  Sections 4.7.8–4.7.9 figure
 Reads consensus_matrix.parquet + consensus_rows.parquet → the ordered consensus
 matrix as a Blues heatmap with regime block separators. A genuine partition is
 block-diagonal: pairs within a regime co-assigned almost always, pairs across
 regimes almost never. Thin reader.
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -13,9 +14,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from regime_style import regime_label
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "validity"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "validity"
 DPI             = 300
 
 

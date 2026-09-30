@@ -1,27 +1,26 @@
 #!/usr/bin/env python3
-"""subset_run_pipeline.py — run every Chapter 12 subset_* figure script in order.
+"""subset_run_pipeline.py — run every Section 4.10 subset_* figure script in order.
 
-Figure scripts only, by design. The Chapter 12 note fixes the contract:
-figures read the eval caches and recompute nothing, so this runner renders
-and never evaluates. Cache regeneration is deliberately NOT here —
-subset_eval_harness.py run standalone would fail the stale frame canaries
-of the local copy AND drop the C-rows from the caches; the one correct
-cache path is curation_eval.py (canaries re-anchored, C-rows discovered).
+Figure scripts only, by design. The contract: figures read the eval caches
+and recompute nothing, so this runner renders and never evaluates. Cache
+regeneration is deliberately NOT here. subset_eval_harness.py run standalone
+writes the caches without the C-rows, the one correct cache path is
+curation_eval.py, which runs the harness with the C-rows discovered.
 This runner verifies the caches exist and are newer than the frame, then
 renders.
 
 Excluded on purpose:
   subset_eval_common.py           imported module, not a stage
-  subset_eval_harness.py          superseded by curation_eval.py (above)
-  run_sampling.py                 Chapter 11 selection, compute-once
-  window_summary.py               Section 11.4 summary pass, compute-once
-  inspect_clip_mapping.py         diagnostic scratch
+  subset_eval_harness.py          run through curation_eval.py (above)
+  run_sampling.py                 Section 4.9 selection, compute-once
+  window_summary.py               Section 4.9.4 summary pass, compute-once
+  inspect_clip_mapping.py         diagnostic (in archive/)
 
-Note on C-rows: the frame caches now carry 13 groups, so the frame-grain
-dossier scripts (histogram / phase / fans / time series) will also emit
-C01 pages into figures/subset_eval/. Chapter 12's comparative figures are
-unaffected (they iterate the M-slate constant); delete or ignore the C01
-singles in the subset_eval dossier folders — the canonical C01 dossier
+Note on C-rows: the frame caches carry 13 groups, so the frame-grain
+dossier scripts for phase portraits, fans and time series also emit C01
+pages into figures/subset_eval/. subset_histogram.py keeps its fixed
+Frame + M01..M11 list, and the Section 4.10 comparative figures are
+unaffected (they iterate the M-slate constant). The canonical C01 dossier
 lives in figures/curation/.
 
 Usage:
@@ -40,9 +39,9 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from curation_common import EVAL_DIR, PROJECT_ROOT  # noqa: E402
+from curation_common import EVAL_DIR, DATA_ROOT  # noqa: E402
 
-FRAME = PROJECT_ROOT / "dataset" / "regime_data" / "cluster_assignments.parquet"
+FRAME = DATA_ROOT / "regime_data" / "cluster_assignments.parquet"
 
 STAGES: list[tuple[str, list[str]]] = [
     ("cache figures", [

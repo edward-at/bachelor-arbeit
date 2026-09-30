@@ -1,14 +1,14 @@
 """
-bias_quant.py  —  Chapter 10 / §4.7 Tier-1 bias quantification (COMPUTE stage)
+bias_quant.py  —  Section 4.8 Tier-1 bias quantification (COMPUTE stage)
 ════════════════════════════════════════════════════════════════════════════
 Compute-once → save-to-parquet → read-in-figures. This script does ALL the
-number-crunching for Chapter 10; every figure script just reads its outputs.
+number-crunching for Section 4.8; every figure script just reads its outputs.
 
 INPUTS
-  • ARTIFACT_DIR/cluster_assignments.parquet   (Chapter 9 output; the spine)
+  • ARTIFACT_DIR/cluster_assignments.parquet   (Section 4.7 output; the spine)
         cols: dataset, clip_id, window_start_s, window_end_s, regime, pc1,pc2,pc3
         one row per NON-OVERLAPPING 20 s window, tagged with dataset + regime.
-  • STD_DATA_DIR/<dataset>.parquet             (Chapter 8's windowed signals)
+  • STD_DATA_DIR/<dataset>.parquet             (windowed signals, Section 4.5)
         the three ECDF channels: std_speed_kmh, std_acc_mag, std_yaw_rate.
 
 OUTPUTS  (parquet only, ARTIFACT_DIR)
@@ -17,11 +17,11 @@ OUTPUTS  (parquet only, ARTIFACT_DIR)
   • bias_corpus_scalars.parquet     volume-gap, mean pairwise JS, counts
   • bias_sparse_regimes.parquet     long (dataset×regime) under-fill table for RQ3
 
-METRIC PROVENANCE  (kept explicit so the methodology writes itself)
-  regime shares / entropy / JS / directional / sparse  ← Chapter 9 (regimes)
-  per-channel Wasserstein                              ← Chapter 8 (distributions)
+METRIC PROVENANCE
+  regime shares / entropy / JS / directional / sparse  ← Section 4.7 (regimes)
+  per-channel Wasserstein                              ← Section 4.6 (distributions)
 
-REFERENCES  (each metric, its own scoped reference — see build log DC1)
+REFERENCES  (each metric, its own scoped reference)
   directional low-dynamic share : NONE (absolute, self-contained property)
   normalized Shannon entropy     : UNIFORM (entropy maximal at uniform)
   Jensen–Shannon distance        : POOLED empirical regime distribution
@@ -33,6 +33,7 @@ project only for the clustering stage). Reproducibility = code + fixed inputs.
 """
 
 import itertools
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -43,11 +44,12 @@ from scipy.stats import wasserstein_distance
 from regime_style import N_REGIMES, LOW_DYNAMIC_REGIMES
 
 # ─────────────────────────────────────────────────────────────────────────────
-# PATHS  (canonical — data and code live in separate trees under ~/Downloads)
+# PATHS  (data under DATA_ROOT, figures under REPO_ROOT, see thesis_paths.py)
 # ─────────────────────────────────────────────────────────────────────────────
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
+STD_DATA_DIR = DATA_ROOT / "std_data"
 
 ASSIGN_FILE = ARTIFACT_DIR / "cluster_assignments.parquet"
 
@@ -59,16 +61,16 @@ UNIFORM = np.full(N_REGIMES, 1.0 / N_REGIMES)
 JS_BASE = 2  # bounds Jensen–Shannon DISTANCE to [0, 1]
 
 RAD_TO_DEG = 180.0 / np.pi
-# The three Chapter-8 ECDF channels the Wasserstein metric quantifies.
+# The three ECDF channels (Section 4.6.8) the Wasserstein metric quantifies.
 # std_yaw_rate is stored in rad/s → convert to °/s on load (as ecdf_analysis.py does).
 WASSERSTEIN_CHANNELS = ["std_speed_kmh", "std_acc_mag", "std_yaw_rate"]
 
 # Population for the Wasserstein channels. "all" = every std_data window
-# (the full std_data layer, non-overlapping since 2026-08-29), reproducing
-# Chapter 8's ECDFs exactly. See build log note.
+# (the full non-overlapping std_data layer), reproducing the ECDFs of
+# Section 4.6.8 exactly.
 WASSERSTEIN_POPULATION = "all_windows"
 
-# ── MEASUREMENT-FIDELITY FLAG (single source of truth for Chapter 10) ────────
+# ── MEASUREMENT-FIDELITY FLAG (single source of truth, Sections 4.4.5 and 4.8.2)
 # a_long is derived uniformly as the SG-derivative of speed (standardize
 # pipeline, W_D1 = 0.7 s). Accel fidelity therefore equals SPEED-SOURCE
 # fidelity, and the 14-dataset audit (frame-level a_long p1/p99) found three
@@ -90,7 +92,7 @@ CONFOUNDED_ACCEL = {"a2d2", "4seasons", "durlar"}
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# PER-DATASET REGIME METRICS  (all from cluster_assignments — Chapter 9)
+# PER-DATASET REGIME METRICS  (all from cluster_assignments, Section 4.7)
 # ═════════════════════════════════════════════════════════════════════════════
 def regime_share_matrix(assign: pd.DataFrame) -> pd.DataFrame:
     """14×5 share matrix: cell = fraction of a dataset's windows in each regime.
@@ -150,9 +152,9 @@ def hhi_normalized(shares: pd.DataFrame) -> pd.Series:
     return (hhi(shares) - 1.0 / N_REGIMES) / (1.0 - 1.0 / N_REGIMES)
 
 
-# NOTE (D4): the regime-share Gini was REMOVED. "Gini" in this thesis refers
+# NOTE: there is no regime-share Gini. "Gini" in this thesis refers
 # exclusively to the Lorenz-based dynamic-content Gini of bias_shape_metrics.py
-# (clustering-independent, exposé §3.7). Two Ginis = examiner bait.
+# (clustering-independent). A second Gini would be ambiguous.
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -205,11 +207,11 @@ def sparse_regime_table(shares: pd.DataFrame) -> pd.DataFrame:
 
 
 # ═════════════════════════════════════════════════════════════════════════════
-# PER-CHANNEL WASSERSTEIN  (from std_data — Chapter 8 distributions)
+# PER-CHANNEL WASSERSTEIN  (from std_data, Section 4.6 distributions)
 # ═════════════════════════════════════════════════════════════════════════════
 def load_std_channels(std_dir: Path, datasets) -> dict:
     """Read the three ECDF channels per dataset; convert yaw rad/s → °/s so the
-    distances are in the same units Chapter 8 plotted. No physical-validity
+    distances are in the same units Section 4.6 plotted. No physical-validity
     masking is applied to std values beyond NaN-drop, matching ecdf_analysis.py."""
     out = {}
     for ds in datasets:
@@ -268,8 +270,8 @@ def compute_all(assign: pd.DataFrame, std_data: dict):
     per["js_to_pooled"] = js_distance_to_reference(shares, pooled)
     # COMPANION metric (veto-able): pooled is volume-weighted, hence dominated
     # by the largest datasets; js_to_balanced is the same distance against the
-    # one-vote-per-dataset reference. Robustness column only — the locked D1
-    # reference for the body remains POOLED.
+    # one-vote-per-dataset reference. Robustness column only. The reference
+    # fixed for the main results remains POOLED.
     per["js_to_balanced"] = js_distance_to_reference(shares, balanced)
     per["hhi"] = hhi(shares)
     per["hhi_norm"] = hhi_normalized(shares)

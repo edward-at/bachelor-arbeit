@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Per-method exemplar speed traces (Section 8.8 grammar, adapted).
+"""Per-method exemplar speed traces (Section 4.6.9 grammar, adapted).
 
 One figure per group: the EX_N exemplar windows flagged in the frame pass,
 drawn as speed-vs-time traces on a shared time axis [0, 20 s] and a shared
@@ -10,9 +10,6 @@ not a per-band selection), which is the honest adaptation to the selection
 grain. A light grey band shows the method's fan-sample envelope (10th-90th
 speed percentile per time step) behind the exemplars.
 Reads ONLY the fan caches. Outputs: figures/subset_eval/timeseries/…
-(De-duplicated 2026-07-09: the file had been pasted twice, so every
-run rendered the figures once with a stale copy and once with this
-one; only this copy remains.)
 """
 
 import matplotlib

@@ -1,8 +1,8 @@
 """
-kmeans_gmm_correspondence.py  —  Section 4.6.8 figure
+gmm_kmeans_correspondence.py  —  Section 4.7.10 figure
 ────────────────────────────────────────────────────────────────────────────
 The correspondence between the k-means partition and the Gaussian mixture, made
-visible. Section 4.6.8 reports that correspondence as a single adjusted Rand
+visible. Section 4.7.10 reports that correspondence as a single adjusted Rand
 index; this figure shows WHERE the two agree and where they part.
 
 Three panels:
@@ -26,6 +26,7 @@ the window back-reference. No recomputation, no model file.
 ────────────────────────────────────────────────────────────────────────────
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -36,9 +37,10 @@ from sklearn.metrics import adjusted_rand_score
 
 from regime_style import regime_label, regime_color
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "gmm"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "gmm"
 
 BACKREF  = ["dataset", "clip_id", "window_start_s", "window_end_s"]
 N_PLOT   = 30000       # subsample for rendering only (matrix uses all windows)

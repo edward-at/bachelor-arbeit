@@ -1,5 +1,5 @@
 """
-clustering.py  —  Sections 4.6.3–4.6.5, dynamic regime discovery via clustering
+clustering.py  —  Sections 4.7.3–4.7.6, dynamic regime discovery via clustering
 ────────────────────────────────────────────────────────────────────────────
 Recovers the dynamic regimes by k-means on the locked feature vector, split into
 two populations:
@@ -36,6 +36,7 @@ Writes:  dataset/regime_data/cluster_assignments.parquet
 """
 
 import warnings
+import sys
 from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -59,9 +60,10 @@ except Exception:
 # PARAMETERS  (edit here only)
 # ─────────────────────────────────────────────────────────────────────────────
 
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+STD_DATA_DIR = DATA_ROOT / "std_data"
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
 
 WINDOW_S          = 20.0
 CAP               = 5000          # per-dataset ceiling on the FIT population
@@ -98,7 +100,7 @@ def _load(name: str) -> pd.DataFrame | None:
     if not fp.exists():
         print(f"  [WARN] {name}: not found"); return None
     df = pd.read_parquet(fp, columns=["clip_id", "window_start_s", "window_end_s"] + FEATURES)
-    # grid-align filter: identity under the non-overlapping layer (2026-08-29);
+    # grid-align filter: identity under the non-overlapping layer,
     # kept as an alignment invariant, not a selection
     t0 = df.groupby("clip_id")["window_start_s"].transform("min")
     k  = (df["window_start_s"] - t0) / WINDOW_S
@@ -147,7 +149,7 @@ def _order_regimes(centroids_scaled: np.ndarray) -> dict:
 
 def _pin_pca_signs(pca):
     """PCA eigenvectors are defined only up to sign, so a refit on changed data
-    can mirror an axis (a rerun did exactly this to PC2). Anchor each component
+    can mirror an axis. Anchor each component
     to a named feature whose loading is forced positive, making the projection's
     orientation reproducible across reruns: PC1 grows with speed variability,
     PC2 with mean speed, PC3 with acceleration. A sign flip changes only the

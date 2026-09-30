@@ -1,8 +1,8 @@
 """
-trajectory_fans.py   (windowed)
-===============================
-Two cross-dataset "fan" figures for the dynamic-bias chapter, now built from
-NON-OVERLAPPING TIME WINDOWS instead of whole clips:
+trajectory_fan.py   (windowed)
+==============================
+Two cross-dataset "fan" figures (thesis Section 4.6.5), built from
+NON-OVERLAPPING TIME WINDOWS rather than whole clips:
 
     1 clip  ->  sliced into back-to-back WINDOW_S-second windows  ->  1 window = 1 line
 
@@ -14,12 +14,12 @@ Why windows, not whole clips:
 FIGURE 1  X-Y trajectory fan   — origin at LEFT-MIDDLE, fan opens right,
                                   equal aspect, percentile extent, coloured by
                                   absolute total heading change of the window.
-FIGURE 2  Speed-vs-time fan     — x = time within window [0, WINDOW_S], y = speed,
-                                  slope = acceleration, coloured by peak |accel|.
+FIGURE 2  Speed-vs-time fan     — x = time within window [0, WINDOW_S], y = speed
+                                  change from the window start, slope = acceleration,
+                                  coloured by peak |accel|.
 
 Reads FRAME-LEVEL data from inertial_data/<dataset>/clip_*.parquet.
-On each run it prints windows-per-dataset and path-length stats so you can judge
-the WINDOW_S choice empirically (sweep 10/20/30 and compare).
+On each run it prints windows-per-dataset and path-length stats.
 """
 
 import sys
@@ -49,29 +49,30 @@ except Exception:                      # graceful no-op if tqdm isn't installed
 # ═════════════════════════════════════════════════════════════════════════════
 # PATHS
 # ═════════════════════════════════════════════════════════════════════════════
-PROJECT_ROOT  = Path("/Users/edward/Downloads")
-INERTIAL_ROOT = PROJECT_ROOT / "dataset" / "inertial_data"
-FIG_ROOT      = PROJECT_ROOT / "bachelor-arbeit" / "04_exploratory_analysis" / "figures" / "trajectory_fans"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+INERTIAL_ROOT = DATA_ROOT / "inertial_data"
+FIG_ROOT      = REPO_ROOT / "04_exploratory_analysis" / "figures" / "trajectory_fans"
 
 DATASETS = None   # None -> auto-discover EVERY folder under inertial_data/ (all 14, any
                   #         spelling). Or hard-code a list, e.g. ["boreas_rt", "oxford", ...].
 
 # ═════════════════════════════════════════════════════════════════════════════
-# COLUMN NAMES  ── confirm against the [SCHEMA] print, then edit
+# COLUMN NAMES
 # ═════════════════════════════════════════════════════════════════════════════
 SPEED_COL = "speed_kmh"
 YAW_COL   = "yaw_rate"     # rad/s
 ACCEL_COL = "acc_mag"      # acceleration magnitude = sqrt(a_long²+a_lat²); derived from speed if absent
-TIME_COL  = "t_rel_s"      # real relative-seconds column in your clips (uniform 10 Hz grid).
+TIME_COL  = "t_rel_s"      # relative-seconds column of the standardized clips (uniform 10 Hz grid).
                            # Falls back to GRID_HZ only if this column is absent.
 
 GRID_HZ = 10               # uniform grid rate of the standardized clips. ONLY a fallback if
                            # TIME_COL is missing; with t_rel_s present this is never used.
 
 # ═════════════════════════════════════════════════════════════════════════════
-# WINDOWING  (the decision you wanted to make first — sweep WINDOW_S to compare)
+# WINDOWING
 # ═════════════════════════════════════════════════════════════════════════════
-WINDOW_S         = 20.0    # seconds per window. Try 10 / 20 / 30. Recommended: 20.
+WINDOW_S         = 20.0    # seconds per window
 MIN_WINDOW_FRAC  = 0.5     # drop a trailing window shorter than this fraction of WINDOW_S
                            #   (non-overlapping: step == WINDOW_S, so windows never share frames)
 
@@ -83,7 +84,7 @@ N_SAMPLE   = 5000     # how many random windows (= lines) to draw per dataset:
                       #   None                           -> use ALL windows (every line)
                       # Must be an int or None — never a list. All-data is very dense and
                       # slow to render for huge datasets (nvidia 298k clips, waymo 70k).
-SEED       = 0        # change this to draw a DIFFERENT random subset (same N_SAMPLE)
+SEED       = 0        # random seed for the window subset
 N_WORKERS  = 8        # threads for reading parquet in parallel (reading is I/O-bound)
 ALPHA      = 0.16
 LINEWIDTH  = 0.8
@@ -101,8 +102,8 @@ NCOLS    = 5
 PANEL_IN = 3.4
 COLORMAP = "viridis"
 DPI      = 300
-SEPARATE_FILES  = True         # True  = ONE PNG per dataset (avoids tiny panels / label overlap)
-GRID_FILES      = True         # 2026-09-25: ALSO draw the 14-panel comparison grid per view
+SEPARATE_FILES  = True         # True  = ONE PNG per dataset (avoids tiny panels / label overlap); False = grid only
+GRID_FILES      = True         # ALSO draw the 14-panel comparison grid per view
 NCOLS_GRID      = 4            # 14 panels on a 4 x 4 grid, two cells empty
 DISPLAY_NAMES = {
     "4seasons": "4Seasons", "a2d2": "A2D2", "boreas_rt": "Boreas", "durlar": "DurLAR",
@@ -140,7 +141,6 @@ def _finish_grid(fig, axes, n, xlabel, ylabel):
         if ax.get_visible():
             ax.set_ylabel(ylabel)
     fig.subplots_adjust(hspace=0.35, wspace=0.12)
-                               # False = all datasets in one combined grid PNG
 SINGLE_IN_XY    = (8.0, 5.0)   # figure size (inches) for a single-dataset X-Y fan
 SINGLE_IN_SPEED = (8.0, 4.5)   # figure size for a single-dataset speed-change fan
 ASPECT_EQUAL = True   # True  = 1 m in x equals 1 m in y (no distortion). Forward-heavy
@@ -431,7 +431,7 @@ def main():
             recs = random.sample(recs, N_SAMPLE)
         per_ds[ds] = recs
 
-        # path-length + duration stats help you judge the WINDOW_S choice
+        # path-length + duration stats per dataset
         plen = np.array([float(np.hypot(np.diff(r["x"]), np.diff(r["y"])).sum()) for r in recs])
         dth  = np.array([r["heading_change"] for r in recs])
         wdur = np.array([float(r["t"][-1]) for r in recs])

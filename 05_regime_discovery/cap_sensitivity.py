@@ -1,5 +1,5 @@
 """
-cap_sensitivity.py  —  Section 4.6.6 robustness control
+cap_sensitivity.py  —  Section 4.7.7 robustness control
 ────────────────────────────────────────────────────────────────────────────
 Confirms the recovered structure does not depend on the fit ceiling. Re-runs the
 clustering at three caps with k and the seed held fixed, and reports only
@@ -40,7 +40,7 @@ import matplotlib.pyplot as plt
 
 # shared steps — single source of truth
 from clustering import (_discover, _load, _build_fit, _order_regimes, _sil,
-                        FEATURES, N_INIT, SEED, ARTIFACT_DIR, PROJECT_ROOT)
+                        FEATURES, N_INIT, SEED, ARTIFACT_DIR, DATA_ROOT, REPO_ROOT)
 
 warnings.filterwarnings("ignore")
 
@@ -61,7 +61,7 @@ RANK_OK    = 0.90
 RARE_SHARE = 1.0                     # regimes below this % reported separately
 ARI_VMIN   = 0.85                    # heatmap colour floor — the concern level;
                                      # values are annotated, truncation stated in caption
-OUT_DIR    = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "cap_sensitivity"
+OUT_DIR    = REPO_ROOT / "05_regime_discovery" / "figures" / "cap_sensitivity"
 DPI        = 300
 
 
@@ -104,7 +104,7 @@ def _plot_ari(ari: np.ndarray, caps: list[int], out_fp: Path):
     # the same dark blue. Cells are annotated, so the truncation costs nothing
     # and is stated in the caption.
     im = ax.imshow(ari, cmap="Blues", vmin=ARI_VMIN, vmax=1.0)
-    labels = [f"{c:,}" for c in caps]           # exact caps ("2,500", not "2k"; block 5D)
+    labels = [f"{c:,}" for c in caps]           # exact caps ("2,500", not "2k")
     ax.set_xticks(range(len(caps))); ax.set_yticks(range(len(caps)))
     ax.set_xticklabels(labels); ax.set_yticklabels(labels)
     ax.set_xlabel("fit cap (windows per dataset)"); ax.set_ylabel("fit cap (windows per dataset)")
@@ -118,7 +118,7 @@ def _plot_ari(ari: np.ndarray, caps: list[int], out_fp: Path):
     fig.tight_layout()
     out_fp.parent.mkdir(parents=True, exist_ok=True)
     # bbox_inches="tight": the equal-aspect image plus the colorbar leaves the
-    # y label outside the canvas under tight_layout alone (block 5D)
+    # y label outside the canvas under tight_layout alone
     fig.savefig(out_fp, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
 

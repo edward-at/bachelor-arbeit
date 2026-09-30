@@ -1,76 +1,67 @@
 #!/usr/bin/env python3
 """
-run_pipeline.py — ordered re-run of the Chapter 7 + 8 pipeline
-(inertial_exploratory_analysis: standardization, audits, and the full
+run_pipeline.py — ordered re-run of the standardization and exploratory
+pipeline: the stages in 03_standardization (regression test, standardization,
+windowed std layer) and 04_exploratory_analysis (audits and the full
 exploratory-figure set).
 
 The stages below are a DEPENDENCY ORDER, not a preference: every stage reads
 artifacts written by an earlier one, so running them out of order silently
 produces figures built on stale clips, or a coverage audit that describes
-data nobody re-derived. That is the exact failure this runner exists to
-prevent. Stage names follow the thesis's own section numbers so a failure
-message points straight at the methodology text that explains it.
+data nobody re-derived. The runner exists to prevent that. The section
+references below point at the thesis text that describes each stage.
 
     0  standardize     pipeline_regression_test.py   synthetic gate — no real
                                                        data needed, run FIRST
                                                        and cheaply, before an
                                                        hours-long real pass
-                        standardize_inertial_data.py  dataset/parquet_data/<ds>
-                                                       -> dataset/inertial_data/<ds>
-                                                       (§7.2 — the standardized,
+                        standardize_inertial_data.py  DATA_ROOT/parquet_data/<ds>
+                                                       -> DATA_ROOT/inertial_data/<ds>
+                                                       (the standardized,
                                                        43-column, 10 Hz clips)
 
-    1  coverage        coverage.py                    dataset/inertial_data
+    1  coverage        coverage.py                    DATA_ROOT/inertial_data
                         coverage_baseline.py           -> audit_baseline.json
-                                                       (§7.3 signal-availability
-                                                       audit; this is the ONLY
-                                                       check that would have
-                                                       caught the NVIDIA
-                                                       emptied-directory
-                                                       incident — see note below)
+                                                       (Section 4.4.4 signal-
+                                                       availability audit)
 
-    2  compute_std     compute_std.py                 dataset/inertial_data
-                                                       -> dataset/std_data/<ds>.parquet
-                                                       (§7.4 — the windowed
+    2  compute_std     compute_std.py                 DATA_ROOT/inertial_data
+                                                       -> DATA_ROOT/std_data/<ds>.parquet
+                                                       (Section 4.5, the windowed
                                                        variability + feature layer;
                                                        every window-level figure
                                                        below reads only this)
 
-    3  thresholds      regime_classification.py       std_data -> locked tier
+    3  thresholds      regime_classification.py       std_data -> frozen tier
                                                        thresholds (t1,t2,t3) +
-                                                       §8.7 tier stacked bars.
-                                                       ecdf_analysis.py and
+                                                       Section 4.6.8 tier stacked
+                                                       bars. ecdf_analysis.py and
                                                        time_series_analysis.py
-                                                       both import these
-                                                       thresholds, so this must
-                                                       run before either.
+                                                       keep their own copies of
+                                                       these thresholds (not
+                                                       imported).
 
-    4  frame_figs      distributional_analysis.py     §8.1 histograms (84 figs)
-       (order-free)    trajectory_fan.py               §8.4 path fans (28 figs)
-                        phase_potrait.py                §8.5 phase portraits (28)
-                        — all three read ONLY dataset/inertial_data (frame
+    4  frame_figs      distributional_analysis.py     4.6.2 histograms (84 figs)
+       (order-free)    trajectory_fan.py               4.6.5 path fans (28 figs)
+                        phase_potrait.py                4.6.6 phase portraits (28)
+                        — all three read ONLY DATA_ROOT/inertial_data (frame
                         level); none needs std_data or the tier thresholds.
 
-    5  window_figs     ridgeline.py                    §8.2 (3 figures)
-       (order-free)    density_band_analysis.py        §8.3 (14 figures)
-                        boxplot_comparison.py           §8.6 (3 figures)
-                        ecdf_analysis.py                §8.7 ECDF overlays (3) —
-                        NEEDS the locked thresholds from stage 3.
+    5  window_figs     ridgeline.py                    4.6.3 (3 figures)
+       (order-free)    density_band_analysis.py        4.6.4 (14 figures)
+                        boxplot_comparison.py           4.6.7 (3 figures)
+                        ecdf_analysis.py                4.6.8 ECDF overlays (3)
 
-    6  time_series      time_series_analysis.py        §8.8 — needs std_data
+    6  time_series      time_series_analysis.py        4.6.9 — needs std_data
                                                         (window selection) AND
                                                         inertial_data (the
-                                                        traces themselves) AND
-                                                        the stage-3 thresholds.
+                                                        traces themselves).
 
-    7  summary          heatmap_summary.py              §8.9 SYNTHESIS — collapses
+    7  summary          heatmap_summary.py              4.6.10 SYNTHESIS — collapses
                                                         every facet above into one
                                                         scorecard; must run last.
 
-Test.py is a scratch file with no declared inputs/outputs in the thesis text
-and is deliberately not listed as a pipeline step. tum_colors.py and
-regime_classification.py's threshold constants are shared imports, not
-separate runnable stages beyond the one explicit step above.
+tum_colors.py is a shared import, not a runnable stage.
 
 USAGE
     python run_pipeline.py                    # stages 0-7
@@ -82,7 +73,7 @@ USAGE
 
 Fail-fast is the default: a stage that fails leaves every later stage unrun,
 because a downstream artifact built on a failed upstream one is worse than a
-missing one — consistent with "no cosmetic fix to unproven data".
+missing one.
 """
 
 from __future__ import annotations
@@ -98,11 +89,12 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 SCRIPT_DIR = Path(__file__).resolve().parent
 STANDARDIZATION_DIR = SCRIPT_DIR.parent / "03_standardization"
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-PARQUET_ROOT = PROJECT_ROOT / "dataset" / "parquet_data"   # raw pipeline input
-INERTIAL_ROOT = PROJECT_ROOT / "dataset" / "inertial_data"  # standardized clips
-STD_ROOT = PROJECT_ROOT / "dataset" / "std_data"             # windowed layer
-FIG_ROOT = PROJECT_ROOT / "bachelor-arbeit" / "04_exploratory_analysis" / "figures"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+PARQUET_ROOT = DATA_ROOT / "parquet_data"   # raw pipeline input
+INERTIAL_ROOT = DATA_ROOT / "inertial_data"  # standardized clips
+STD_ROOT = DATA_ROOT / "std_data"             # windowed layer
+FIG_ROOT = REPO_ROOT / "04_exploratory_analysis" / "figures"
 AUDIT_BASELINE = SCRIPT_DIR / "audit_baseline.json"
 
 # The 14-dataset working set (folder names as used throughout the codebase).
@@ -131,9 +123,9 @@ def stages() -> list:
       - a Path             -> checked with Path.exists()
       - (dir, glob, min_n) -> checked with len(list(dir.glob(glob))) >= min_n
 
-    LIMITATION (learned 2026-08-29): existence-only checks cannot detect a
-    stage whose producer was deleted — the stale file keeps passing. Pair
-    every Path artifact with a script that rewrites it unconditionally.
+    LIMITATION: existence-only checks cannot detect a stage whose producer
+    no longer writes the file, because a stale file keeps passing. Every Path
+    artifact is therefore paired with a script that rewrites it unconditionally.
     """
     return [
         ("standardize", [
@@ -143,11 +135,9 @@ def stages() -> list:
 
         ("coverage", [
             ("coverage.py", ["coverage.py"]),
-            # coverage.py stopped writing audit_baseline.json at some point and
-            # the existence-only artifact check below could not notice (the
-            # stale v4_10hz file kept satisfying it). coverage_baseline.py is
-            # the restored producer and rewrites the file unconditionally, so
-            # the existence check is honest again.
+            # coverage_baseline.py rewrites audit_baseline.json unconditionally,
+            # so the existence-only artifact check below cannot be satisfied by
+            # a stale file.
             ("coverage_baseline.py", ["coverage_baseline.py"]),
         ], [AUDIT_BASELINE]),
 
@@ -217,8 +207,8 @@ def verify(specs: list, dry: bool) -> bool:
 
     Plain Path specs are checked with .exists(); (dir, glob, min_n) specs are
     checked by counting matches — this catches an EMPTIED directory that
-    still exists, which a bare .exists() check would miss (the exact shape
-    of the NVIDIA inertial_data incident: the folder was present but empty).
+    still exists, which a bare .exists() check would miss (a dataset folder
+    that is present but empty).
     """
     if dry or not specs:
         return True

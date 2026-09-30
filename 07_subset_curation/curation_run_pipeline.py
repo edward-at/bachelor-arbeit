@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
-"""curation_run_pipeline.py — Chapter 13 end to end, in the protocol order.
+"""curation_run_pipeline.py — the curation stage end to end, in the protocol order.
 
-One command reproduces the chapter from the frozen inputs: audit ->
-diagnostics -> build -> evaluate -> gates -> feasibility -> replicate ->
-reveal -> render. Every stage keeps its own guards (exact-N canaries,
+One command reproduces the curation results (thesis 4.11, 4.12) from the
+frozen inputs: audit -> diagnostics -> build -> evaluate -> gates ->
+feasibility -> replicate -> reveal -> render -> dossier -> pca. Every stage keeps its own guards (exact-N canaries,
 reserve assertion, replication-before-reveal), so the runner adds ordering
 and bookkeeping, never permission.
 
 Two semantics worth stating once:
-  * Re-running gates and reveal is RE-APPLICATION of frozen, dated rules —
-    deterministic reprints, not re-decisions. The D4 declaration and the
-    seal-opening remain the events recorded in the register on 2026-08-20.
-  * A full re-run after upstream refreshes (e.g. the Chapter 9 refit) is
-    the chapter's reproduction proof: if any frozen number drifted, the
-    re-anchored canaries in curation_eval.py abort loudly.
+  * Re-running gates and reveal is RE-APPLICATION of frozen rules that were
+    declared before any curation subset was evaluated: deterministic
+    reprints, not re-decisions. The original gate declaration and the
+    seal-opening remain the recorded events.
+  * A full re-run after upstream refreshes (e.g. a refit of the regime
+    discovery, thesis 4.7) is the reproduction proof: if any frozen number
+    drifted, the re-anchored canaries in curation_eval.py abort loudly.
 
-Stage list (curation_common and curation_show_eval are a module and an
-interactive tool, not stages):
+Stage list (curation_common is a shared module, not a stage):
 
   audit        curation_stale_audit.py        read-only freshness report
   diagnostics  curation_event_audit.py        reserve + evasive counts
   build        curation_build.py              C01/C02/C03, both tiers
   eval         curation_eval.py               harness + C-rows + canaries
-  gates        curation_gates.py              D4 applied mechanically
+  gates        curation_gates.py              selection rule applied mechanically
   feasibility  curation_feasibility.py        pooling-justification figure
   replicate    curation_replicate.py          R=20 winner replication
   reveal       curation_reveal.py             sealed shelf + ex-confounded

@@ -3,11 +3,11 @@
 
 Three panels (one per sigma channel, units differ so scales never mix):
 methods x regimes heatmap of (subset within-regime mean minus frame
-within-regime mean) in physical units, diverging colormap centred at zero
-(explicit-diverging exception), values printed. Answers: did selection drag
+within-regime mean) in physical units, Blues colormap on limits symmetric
+about zero (-max|shift| to +max|shift|), values printed. Answers: did selection drag
 a regime's average kinematics away from the corpus — e.g. k-center pulling
 regime means upward — even where the regime SHARES are fixed by quota?
-Reads the shift_* metrics of harness v12.1.2. Output:
+Reads the shift_* metrics of the eval harness cache. Output:
 figures/subset_eval/subset_mean_shift.png
 """
 

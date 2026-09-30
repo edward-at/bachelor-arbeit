@@ -1,5 +1,5 @@
 """
-bias_balance_metrics.py  —  Chapter 10 per-dataset scalar metrics
+bias_balance_metrics.py  —  Section 4.8 per-dataset scalar metrics
 ════════════════════════════════════════════════════════════════════════════
 Three horizontal-bar panels, datasets on a shared y-axis ordered by low-dynamic
 share:
@@ -9,9 +9,10 @@ share:
 Bars coloured by the fixed per-dataset colour for cross-figure consistency.
 
 Reads : ARTIFACT_DIR/bias_per_dataset.parquet
-Output: figures/bias_quant/bias_balance_metrics.png
+Output: 06_bias_quantification/figures/bias_balance_metrics.png
 ════════════════════════════════════════════════════════════════════════════
 """
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -21,11 +22,12 @@ import matplotlib.pyplot as plt
 from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_ACCENT, TUM_EXT
 from bias_quant import CONFOUNDED_ACCEL
 
-# ── canonical constants block ────────────────────────────────────────────────
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-# Chapter 10 code + figures live under bachelor-arbeit/06_bias_quantification/
-OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "06_bias_quantification" / "figures"
+# ── paths and constants ──────────────────────────────────────────────────────
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
+# bias-quantification code + figures live under 06_bias_quantification/
+OUT_DIR      = REPO_ROOT / "06_bias_quantification" / "figures"
 
 DISPLAY_NAMES = {
     "boreas_rt": "Boreas", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
@@ -75,7 +77,7 @@ def plot_balance(per, profiles, out_dir):
         ax.set_axisbelow(True)
         if xlim is not None:
             ax.set_xlim(*xlim)
-    # descriptive pooled comparator on the directional panel (§4.7.3 wording)
+    # descriptive pooled comparator on the directional panel
     pooled_low = float(profiles.loc["pooled", "low_dynamic_share"])
     axes[0].axvline(pooled_low, color=TUM_SECONDARY["gray"], linewidth=1.4,
                     label="pooled corpus")

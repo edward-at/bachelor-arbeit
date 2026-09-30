@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""curation_build.py — construct the Chapter 13 curation subsets (13.1).
+"""curation_build.py — construct the curation subsets (thesis 4.11).
 
-Builds the 2x2 slate's three new cells (D21) by IMPORTING the frozen
-Chapter 11 machinery from run_sampling.py — loaders, dedup, largest-
+Builds the 2x2 slate's three new cells by IMPORTING the frozen
+sampling machinery (thesis 4.9) from run_sampling.py — loaders, dedup, largest-
 remainder allocator, SRS engine, writer, seed keying — and composing it.
 run_sampling.py itself is never edited; its module globals are patched at
 run time (METHOD_FILES for the C names, OVERRIDE_N / ACTIVE_OUT_DIR for
 the tier), which is the same one-constant tier mechanism its own main uses.
 
   C01  equal regime quotas -> guarded 0.6 g reserve force-included and
-       debited (D22) -> per-regime top-source cap at 0.50, cap-not-
-       equalise, proportional draw for everyone else (D23) -> seeded SRS
+       debited -> per-regime top-source cap at 0.50, cap-not-
+       equalise, proportional draw for everyone else -> seeded SRS
        within each (regime, source) cell.
   C02  C01 without the reserve (source-lever ablation).
   C03  C01 without the cap   (event-lever ablation; regime-level SRS).
 
-Construction-determined by definition (class O, D24 map): C01/C02/C03
+Construction-determined by definition (class O in the tautology map): C01/C02/C03
 regime shares; C01/C03 event retention; C01/C02 top-source cap. The
 harness measures everything else; nothing here reads a gate metric.
 
@@ -41,7 +41,7 @@ rs.METHOD_FILES.update(C_FILES)          # writer now knows the C names
 
 
 # ---------------------------------------------------------------------------
-# allocator: cap, do not equalise (D23)
+# allocator: cap, do not equalise
 # ---------------------------------------------------------------------------
 def cap_allocate(residual_supply: pd.Series, forced: pd.Series, quota: int,
                  cap_frac: float, rng) -> tuple[pd.Series, dict]:
@@ -50,7 +50,7 @@ def cap_allocate(residual_supply: pd.Series, forced: pd.Series, quota: int,
     Draw is allocated proportionally to residual supply (cap-not-equalise);
     any source whose TOTAL (forced + draw) exceeds cap_frac * quota is
     shaved down to the cap and the excess re-spread proportionally over
-    sources with headroom. Forced windows are never shaved (D22): a breach
+    sources with headroom. Forced windows are never shaved: a breach
     caused by forced counts alone is disclosed, not resolved.
     """
     ds = residual_supply.index

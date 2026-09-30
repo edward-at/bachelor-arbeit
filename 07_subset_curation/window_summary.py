@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 """
-window_summary.py — one-time frame-layer pass (run BEFORE run_sampling if you
-want M07/M08; everything else works without it).
+window_summary.py — one-time frame-layer pass (run BEFORE run_sampling when
+M07/M08 are needed, everything else works without it).
 
-v2 fixes after the first real run:
-  * clip resolver now normalizes numeric ids, so `clip_id = 7` (int) or
+Robustness details:
+  * the clip resolver normalizes numeric ids, so `clip_id = 7` (int) or
     "clip_7" matches a file named clip_0007.parquet regardless of zero
-    padding — this recovers the exactly-999 misses seen on nvidia, waymo,
-    and kitscenes.
-  * an EMPTY partial no longer counts as "done": the resume logic re-runs
-    any dataset whose partial has zero rows (the old behavior permanently
-    skipped the twelve failed datasets).
-  * empty partials are excluded from the final concat (kills the pandas
+    padding (relevant for nvidia, waymo, and kitscenes).
+  * an EMPTY partial does not count as "done": the resume logic re-runs
+    any dataset whose partial has zero rows.
+  * empty partials are excluded from the final concat (avoids the pandas
     FutureWarning) and a per-dataset coverage report prints at the end.
 
 For every window in std_data, reads the window's frames from inertial_data
@@ -37,6 +35,7 @@ import os
 import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -52,10 +51,11 @@ except ImportError:
 # =========================================================================
 # Canonical constants
 # =========================================================================
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-INERTIAL_DIR = PROJECT_ROOT / "dataset" / "inertial_data"
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-SUBSET_DIR = PROJECT_ROOT / "dataset" / "subset_data"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+INERTIAL_DIR = DATA_ROOT / "inertial_data"
+STD_DATA_DIR = DATA_ROOT / "std_data"
+SUBSET_DIR = DATA_ROOT / "subset_data"
 PARTIAL_DIR = SUBSET_DIR / "_summaries_partial"
 OUT_PATH = SUBSET_DIR / "window_summaries.parquet"
 
@@ -202,8 +202,7 @@ def process_dataset(ds: str) -> None:
         if part_keys and part_keys == std_keys:
             # keys matching is NOT freshness: a standardization re-run with an
             # unchanged window grid reproduces identical keys over new values,
-            # and reusing the partial would silently keep the old summaries
-            # (the exact shape of the 1,115-vs-1,088 confusion).
+            # and reusing the partial would silently keep the old summaries.
             src_mtime = (STD_DATA_DIR / f"{ds}.parquet").stat().st_mtime
             ds_dir_m = INERTIAL_DIR / ds
             if ds_dir_m.exists():
@@ -290,7 +289,7 @@ def main():
 
     # Coverage verification vs std_data. Rows are one-per-std-window by
     # construction (empty windows persist as NaN rows), so the contract is
-    # exact equality; the old >=95% advisory let a stale tail sit under it.
+    # exact equality. A looser threshold would let a stale tail pass.
     log("coverage verification (summarized windows / std windows):")
     got = full.groupby("dataset").size()
     bad = []

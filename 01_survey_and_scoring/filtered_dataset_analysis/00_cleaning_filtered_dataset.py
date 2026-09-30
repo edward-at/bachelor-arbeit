@@ -36,7 +36,7 @@ df['lidar_beam'] = df['lidar_beam'].replace({'nan': '0'})
 
 # ── Clean: imu_grade_top — highest grade per dataset ─────────────────────────
 # Hierarchy: Navigation (4) > Tactical (3) > Industrial (2) > Consumer (1)
-# Scores noted for future use: Navigation=1.0, Tactical=0.75, Industrial=0.5, Consumer=0.25
+# Scores applied in 14_qs_score.py and 16_dss_score.py: Navigation=1.0, Tactical=0.75, Industrial=0.5, Consumer=0.25
 GRADE_RANK = {'Navigation': 4, 'Tactical': 3, 'Industrial': 2, 'Consumer': 1}
 
 def highest_grade(val):

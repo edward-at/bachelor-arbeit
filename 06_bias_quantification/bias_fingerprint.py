@@ -1,42 +1,42 @@
 """
-bias_fingerprint.py  —  Chapter-10 synthesis figure: the bias fingerprint.
+bias_fingerprint.py  —  bias-quantification synthesis figure (Section 4.8):
+the bias fingerprint.
 
-One heatmap, every Chapter-10 scalar bias metric:
+One heatmap, every scalar bias metric of Section 4.8:
 
   Rows    : the 14 datasets, ordered by the RQ1 headline metric
-            (low_dynamic_share, descending). DC6: there is deliberately NO
-            composite bias score and no index spine — a weighted composite
-            invites "why these weights" attacks and hides the multi-axis
-            structure. The headline metric IS the ordering.
+            (low_dynamic_share, descending). There is deliberately NO
+            composite bias score and no index spine. A weighted composite
+            would need a justification for its weights and hides the
+            multi-axis structure. The headline metric IS the ordering.
   Columns : Headline | Diversity | Divergence | Distributional W1 |
             Boundary | Volume.
   Colour  : per-column min-max normalised intensity, Blues colormap, oriented
             so darker = stronger bias expression on that axis (Hill numbers
             are inverted: FEWER effective regimes = more concentrated = more
             biased). Real values printed in every cell — read the numbers,
-            not just the shade (same contract as the Chapter-8 scorecard).
+            not just the shade (same convention as the summary heatmap of
+            Section 4.6.10).
 
-BOUNDARY COLUMN (added): the mean GMM posterior entropy of Section 10.9,
-read from bias_gmm_entropy.parquet. It is included precisely because it is
-the LEAST redundant column in the figure — Section 10.9 established that the
-boundary-occupancy ordering is only weakly related to the headline ranking,
-which is what makes it an independent bias axis rather than calmness
-restated. Omitting it would have left the chapter's most independent
-measurement out of its own multi-axis summary, and would have made the
-agreement matrix below less informative than it should be. Higher entropy =
-more boundary-seated = darker, so the column is NOT inverted.
+BOUNDARY COLUMN: the mean GMM posterior entropy (Section 4.8, results 5.5),
+read from bias_gmm_entropy.parquet. It is the LEAST redundant column in the
+figure: the boundary-occupancy ordering is only weakly related to the
+headline ranking, which makes it an independent bias axis rather than
+calmness restated. Including it also makes the agreement matrix below more
+informative. Higher entropy = more boundary-seated = darker, so the column
+is NOT inverted.
 
-DC14 addition — metric-agreement table: Spearman rank correlations between
-all fingerprint columns are computed, printed and stored
-(bias_metric_agreement.parquet). This QUANTIFIES the "columns are correlated
-by construction" disclosure and pre-answers the viva question "aren't these
-metrics really one metric?" — appendix material, no figure.
+Metric-agreement table: Spearman rank correlations between all fingerprint
+columns are computed, printed and stored (bias_metric_agreement.parquet).
+This QUANTIFIES the "columns are correlated by construction" disclosure and
+shows how far the metrics measure distinct axes. Appendix material, no
+figure.
 
-Honest caveats (carry into the methodology):
+Caveats:
   * Columns are correlated by construction; the repeating light/dark stripe
     across a row is a finding, not redundancy to hide.
   * n = 14: Spearman values are noisy; report as descriptive, appendix-only.
-  * D1/D2 are transforms of Tier-1 entropy_norm/hhi (unified family); JS is
+  * Hill D_1/D_2 are transforms of Tier-1 entropy_norm/hhi (unified family); JS is
     the Tier-1 js_to_pooled value itself. The fingerprint REPRESENTS the
     chapter's metrics; it does not mint new ones.
   * Vol % is corpus COMPOSITION context, not a per-dataset defect — a small
@@ -44,7 +44,7 @@ Honest caveats (carry into the methodology):
   * W1 values come from the Tier-1 artifact (w_std_* columns) when available,
     otherwise recomputed from std_data via the identical procedure
     (announced loudly at runtime).
-  * The boundary column inherits the Section 10.9 disclosures: it measures
+  * The boundary column inherits the caveats of bias_gmm_entropy.py: it measures
     ambiguity in the MIXTURE's geometry, and part of a dataset's value is
     inherited from which regions of the space it occupies at all.
 
@@ -52,7 +52,7 @@ Reads : cluster_assignments.parquet (+ bias_per_dataset.parquet or std_data)
         bias_gmm_entropy.parquet    (boundary column; column dropped if absent)
 Writes: ARTIFACT_DIR/bias_fingerprint.parquet
         ARTIFACT_DIR/bias_metric_agreement.parquet
-Output: figures/bias_fingerprint.png
+Output: 06_bias_quantification/figures/bias_fingerprint.png
 
 Strict matplotlib: pure defaults, dpi=300. The only deliberate deviation is a
 single small font size for in-cell text and column-group labels — the same
@@ -95,7 +95,7 @@ def build():
     tab["vol_share_pct"] = tab["vol_share"] * 100.0
 
     cols = list(COLUMNS)
-    # ---- boundary column: Section 10.9 artifact, dropped if not yet built ----
+    # ---- boundary column: bias_gmm_entropy artifact, dropped if not yet built ----
     if GMM_ENTROPY.exists():
         ent = pd.read_parquet(GMM_ENTROPY).set_index("dataset")["mean_entropy"]
         tab["mean_entropy"] = ent.reindex(tab.index).to_numpy(dtype=float)
@@ -109,7 +109,7 @@ def build():
         print(f"[fingerprint] {GMM_ENTROPY.name} not found -> boundary column "
               f"DROPPED; run bias_gmm_entropy.py to include it")
 
-    tab = tab.sort_values("low_dynamic_share", ascending=False)   # DC6 row order
+    tab = tab.sort_values("low_dynamic_share", ascending=False)   # row order by headline metric
     raw = tab[[c["key"] for c in cols]].to_numpy(dtype=float)
     return tab, raw, cols
 
@@ -133,7 +133,7 @@ def normalise(raw, cols):
 
 
 def metric_agreement(raw, cols):
-    """DC14: Spearman rank-correlation matrix across the fingerprint columns.
+    """Spearman rank-correlation matrix across the fingerprint columns.
     Descriptive appendix QA (n = 14, noisy) — quantifies the correlated-
     columns disclosure."""
     rho, _ = spearmanr(raw, axis=0, nan_policy="omit")

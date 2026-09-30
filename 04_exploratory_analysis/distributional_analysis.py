@@ -1,20 +1,16 @@
 """
-distributional_analysis.py  (v2 — adapted to the 10 Hz common-grid pipeline)
+distributional_analysis.py  (10 Hz common-grid pipeline)
 ────────────────────────────────────────────────────────────────────────────
-Per-dataset signal histograms (thesis Section 4.5.1 / 8.1).
+Per-dataset signal histograms (thesis Section 4.6.2).
 
-─── CHANGES vs v1 ──────────────────────────────────────────────────────────
-  1. The 0.1 s temporal-downsampling windowing (_window_df) is REMOVED.
-     It existed to eliminate frame-rate bias across 10–200 Hz datasets;
-     the v3 standardization already resamples every dataset onto a common
-     uniform 10 Hz grid, so the windowing degenerated to an expensive no-op
-     (one frame per 0.1 s window, groupby over tens of millions of rows).
-     Histograms are now per-frame on the 10 Hz grid — same information,
-     none of the compute.
-  2. Streaming mode is leaner: bounds-filtering happens per batch and only
-     filtered float32 arrays are kept, instead of concatenating full frames.
-  3. DATASET_COLORS completed with durlar (blue1) and zod (red) — previously
-     both silently fell back to the same blue.
+─── DESIGN NOTES ───────────────────────────────────────────────────────────
+  1. Histograms are per-frame on the 10 Hz grid. The standardization already
+     resamples every dataset onto a common uniform 10 Hz grid, so no further
+     temporal downsampling is needed to remove frame-rate bias across the
+     10–200 Hz source datasets.
+  2. Streaming mode: bounds-filtering happens per batch and only filtered
+     float32 arrays are kept, instead of concatenating full frames.
+  3. DATASET_COLORS covers all 14 datasets.
 ────────────────────────────────────────────────────────────────────────────
 """
 
@@ -27,6 +23,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
 
 warnings.filterwarnings("ignore")
 
@@ -46,9 +45,7 @@ def _find_project_root() -> Path:
         script_dir,
         Path.cwd().resolve(),
         script_dir.parent,
-        Path("/Users/edward/Downloads/bachelor-arbeit/04_exploratory_analysis"),
-        Path.home() / "Downloads" / "bachelor-arbeit" / "04_exploratory_analysis",
-        Path.home() / "Downloads" / "dataset",
+        DATA_ROOT,
     ]
     for root in candidates:
         if (root / "inertial_data").is_dir():
@@ -168,7 +165,7 @@ FIG_H     = 6.0
 X_PAD_FRAC      = 0.10
 YLIN_CAP_FACTOR = 1.20
 
-# 2026-09-25: comparison grids, one per signal, 14 panels on a shared display window per signal
+# Comparison grids, one per signal, 14 panels on a shared display window per signal
 # (a display window, not a validity mask; chosen to hold every dataset's p05 to p95 with margin).
 # Frames outside the window are excluded from the bars and their share is persisted per panel.
 GRID_WINDOWS = {
@@ -183,7 +180,7 @@ GRID_COLS    = 4
 GRID_SHARED_Y = True   # True: one y scale per signal grid (peak heights comparable); False: per-panel y scales
 GRID_PANEL_W = 3.0
 GRID_PANEL_H = 2.1
-GRID_HZ         = 10        # sampling rate of v3 standardized clips
+GRID_HZ         = 10        # sampling rate of the standardized clips
 
 BATCH_SIZE = 5_000          # clip files concatenated per streaming batch
 
@@ -448,7 +445,7 @@ def _process_dataset(args: tuple) -> dict | None:
             "unit":   sig["unit"],
             "n":      len(vals),
             "mean":   float(np.mean(vals64)) if len(vals) > 0 else float("nan"),
-            # the same statistics plot_signal annotates on the panel (added 2026-09-24)
+            # the same statistics plot_signal annotates on the panel
             "std":    float(np.std(vals64)) if len(vals) > 0 else float("nan"),
             "p05":    float(np.percentile(vals64, 5)) if len(vals) > 0 else float("nan"),
             "p95":    float(np.percentile(vals64, 95)) if len(vals) > 0 else float("nan"),
@@ -547,7 +544,7 @@ def main():
 
     root          = _find_project_root()
     inertial_root = root / "inertial_data"
-    fig_root      = (Path.home() / "Downloads" / "bachelor-arbeit"
+    fig_root      = (REPO_ROOT
                      / "04_exploratory_analysis" / "figures" / "distribution")
     fig_root.mkdir(parents=True, exist_ok=True)
 
@@ -576,7 +573,7 @@ def main():
     args = [(ds_dir, ds_dir.name, fig_root, i) for i, ds_dir in enumerate(datasets)]
 
     summary_rows = []
-    all_results  = []   # every worker result, kept for the statistics CSV (added 2026-09-24)
+    all_results  = []   # every worker result, kept for the statistics CSV
     with concurrent.futures.ProcessPoolExecutor(max_workers=n_workers) as pool:
         futures = {pool.submit(_process_dataset, a): a[1] for a in args}
         for fut in concurrent.futures.as_completed(futures):
@@ -610,7 +607,7 @@ def main():
 
     # Persist the per-panel statistics (one row per dataset and signal) so that the thesis reads
     # mu, sigma, p05, p95, the valid and total frame counts, and the masked share from an
-    # artifact and never off the 84 PNGs (added 2026-09-24).
+    # artifact and never off the 84 PNGs.
     stat_rows = []
     for result in all_results:
         for r in result["signals"]:
@@ -624,7 +621,7 @@ def main():
     pd.DataFrame(stat_rows).sort_values(["dataset", "signal"]).to_csv(stats_path, index=False)
     print(f"\nSaved -> {stats_path}")
 
-    # 2026-09-25: comparison grids (one per signal) on the shared display windows, plus the
+    # Comparison grids (one per signal) on the shared display windows, plus the
     # per-panel share of valid frames outside the window, so every grid panel is disclosed.
     grid_rows = []
     for result in all_results:

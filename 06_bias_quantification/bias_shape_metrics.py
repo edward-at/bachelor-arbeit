@@ -1,9 +1,8 @@
 """
-bias_shape_metrics.py  —  dynamic-content concentration (Chapter 10, §4.7).
+bias_shape_metrics.py  —  dynamic-content concentration (thesis Section 4.8).
 
-DC10 RESOLVED: BUILD. This is the exposé-§3.7 Lorenz/Gini instrument whose
-name bias_quant.py's D4 note reserved — the "dynamic-content Gini". It is
-clustering-INDEPENDENT: it never touches the regime labels, so it
+This is the Lorenz/Gini instrument whose name the note in bias_quant.py
+reserves, the "dynamic-content Gini". It is clustering-INDEPENDENT: it never touches the regime labels, so it
 cross-validates the regime-based story from a second, model-free angle.
 
 The question: how unequally is dynamic content distributed across a
@@ -14,19 +13,19 @@ corpus — most windows are dead calm and a few carry all the action.
 Instruments:
   * Per-dataset Lorenz curve of window-level std_speed_kmh (the HEADLINE
     channel: speed fidelity is plausible for all 14 datasets, so this Gini
-    is fidelity-clean everywhere — DC12).
+    is fidelity-clean everywhere).
   * Dynamic-content Gini per dataset and for the pooled corpus, computed on
-    all three DC5 channels (acc and yaw stored in the artifact; the
+    all three W1 channels (acc and yaw stored in the artifact; the
     acc-channel Gini of confounded datasets reflects fidelity, not
     behaviour, same as the W1 reading).
 
-NAMING RULE (updated): TWO qualified Ginis now exist in Chapter 10 —
-"dynamic-content Gini" (this script) and "volume-share Gini"
+Naming: TWO qualified Ginis exist in Section 4.8, the
+"dynamic-content Gini" (this script) and the "volume-share Gini"
 (bias_volume.py). The unqualified word "Gini" is never used.
 
-Honest caveats:
-  * Population = all std_data windows (non-overlapping since 2026-08-29), the Chapter-8 ECDF
-    population — consistent with the W1 metric, disclosed as such.
+Caveats:
+  * Population = all non-overlapping std_data windows, the ECDF population
+    of Section 4.6.8, consistent with the W1 metric.
   * A high Gini is not "bad": real driving IS long-tailed. The metric
     quantifies HOW long-tailed each corpus is, which is exactly what uniform
     sampling then inherits (the RQ1 mechanism, stated on the continuous
@@ -36,7 +35,7 @@ Honest caveats:
 
 Reads : STD_DATA_DIR/<ds>.parquet   (via the shared threaded loader)
 Writes: ARTIFACT_DIR/bias_shape.parquet
-Output: figures/dynamic_lorenz.png
+Output: 06_bias_quantification/figures/dynamic_lorenz.png
 
 Strict matplotlib: pure defaults, dpi=300, TUM colours, asterisked labels.
 """
@@ -51,7 +50,7 @@ from bias_tier2_common import (
 )
 
 OUT_DIR = FIG_ROOT
-HEADLINE_CH = "std_speed_kmh"      # DC12: fidelity-clean for all 14 datasets
+HEADLINE_CH = "std_speed_kmh"      # fidelity-clean for all 14 datasets
 CURVE_POINTS = 512                  # rendering downsample; Gini uses full data
 
 
@@ -145,7 +144,7 @@ def main():
     print(shown[gini_cols + [f"n_windows_{HEADLINE_CH}"]]
           .round(4).sort_values(f"gini_{HEADLINE_CH}", ascending=False).to_string())
 
-    # one ready-to-quote sentence on the headline channel, pooled corpus
+    # one summary sentence on the headline channel, pooled corpus
     pooled_v = np.sort(np.concatenate([data[d][HEADLINE_CH] for d in datasets]))
     cum = np.cumsum(pooled_v) / pooled_v.sum()
     top20_mass = 1.0 - float(np.interp(0.8, np.arange(pooled_v.size) / pooled_v.size, cum))

@@ -1,18 +1,15 @@
 """
-ecdf_analysis.py  (v2)
+ecdf_analysis.py
 ────────────────────────────────────────────────────────────────────────────
-ECDF overlays for the 3 windowed signals (speed, accel-magnitude, yaw rate).
-One figure per signal, one curve per dataset on a shared axis.
-Three vertical threshold lines partition each plot into 4 dynamic regime bands.
+ECDF overlays for the 3 windowed signals (speed, accel-magnitude, yaw rate),
+thesis Section 4.6.8. One figure per signal, one curve per dataset on a shared
+axis. Three vertical threshold lines partition each plot into 4 dynamic
+regime bands.
 
-─── CHANGES vs v1 ──────────────────────────────────────────────────────────
-  1. BUGFIX: plotting referenced an undefined TUM_COLORS dict → NameError on
-     the first curve. Now uses DATASET_COLORS (with fallback).
-  2. DATASET_COLORS completed: durlar (blue1) and zod (red) were missing and
-     would have collapsed onto the same fallback color in a 14-curve figure.
-  3. NOTE: THRESHOLDS are frozen round conventions (D-5, 2026-08-29). After
-     the 10 Hz / 3 Hz-band-limited re-run, re-check them against the new
-     distributions before locking figures (see regime_classification.py).
+  • Curves use DATASET_COLORS (with fallback), one distinct color for each of
+    the 14 datasets.
+  • THRESHOLDS are frozen round conventions, not calibrated quantities
+    (see regime_classification.py).
 
 Output: figures/ecdf/ecdf_<signal_name>.png  (dpi=300)
 Input:  std_data/<dataset>.parquet
@@ -22,6 +19,7 @@ Input:  std_data/<dataset>.parquet
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import sys
 from pathlib import Path
 
 
@@ -29,14 +27,13 @@ from pathlib import Path
 # PATHS
 # ─────────────────────────────────────────────────────────────────────────────
 
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "04_exploratory_analysis" / "figures" / "ecdf"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+STD_DATA_DIR = DATA_ROOT / "std_data"
+OUT_DIR      = REPO_ROOT / "04_exploratory_analysis" / "figures" / "ecdf"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # DATASETS — fixed display order; NOT auto-synced to the heatmap rank-sum order.
-# NOTE: re-derive this order from the new summary heatmap after the v3 re-run;
-# the ranking was computed on pre-v3 data and may have changed.
 # ─────────────────────────────────────────────────────────────────────────────
 
 DATASETS = [
@@ -96,14 +93,15 @@ SIGNALS = [
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# REGIME THRESHOLDS — shared with regime_classification.py
+# REGIME THRESHOLDS — a local copy of the values in regime_classification.py
+# (not imported; the copies are kept identical by hand)
 # (t1, t2, t3): three boundaries defining four regimes
-# FROZEN 2026-08-29 (D-5): a stated round convention, not a calibrated quantity; lineage disclosed in thesis 4.5, limitation in 6.6.
+# Frozen: a stated round convention, not a calibrated quantity. Lineage disclosed in Section 4.5.6, limitation in Section 6.6.
 # ─────────────────────────────────────────────────────────────────────────────
 
 THRESHOLDS = {
     "std_speed_kmh": (1.0,  5.0,  15.0),
-    "std_acc_mag":   (0.2,  0.5,   1.5),   # frozen convention (D-5) — keep in sync with regime_classification.py
+    "std_acc_mag":   (0.2,  0.5,   1.5),   # frozen convention; keep in sync with regime_classification.py
     "std_yaw_rate":  (1.0,  5.0,  15.0),
 }
 

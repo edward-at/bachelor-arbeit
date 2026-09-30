@@ -1,16 +1,16 @@
 """
-compute_std.py  (v4 — per-window variability stds + feature means on the 10 Hz grid)
+compute_std.py  (per-window variability stds and feature means on the 10 Hz grid)
 ────────────────────────────────────────────────────────────────────────────
-Reads inertial_data/<dataset>/clip_XXXX.parquet (10 Hz uniform grid, v3
-standardization) and computes, in a SINGLE per-window pass, BOTH:
-  • within-window standard deviations  — the variability signature (Chapter 8)
-  • within-window feature means         — the regime feature vector (Chapter 9)
+Reads inertial_data/<dataset>/clip_XXXX.parquet (10 Hz uniform grid from the
+standardization stage) and computes, in a SINGLE per-window pass, BOTH:
+  • within-window standard deviations: the variability signature (Section 4.6)
+  • within-window feature means: the regime feature vector (Section 4.7)
 
 Output schema:
   clip_id, window_idx, window_start_s, window_end_s, n_frames,
-  # variability channels (Chapter 8):
+  # variability channels (Section 4.6):
   std_speed_kmh, std_acc_mag, std_yaw_rate,
-  # feature-mean channels (Chapter 9):
+  # feature-mean channels (Section 4.7):
   mean_speed_kmh, mean_acc_pos, mean_acc_neg,
   mean_abs_a_lat, mean_abs_yaw_rate, mean_abs_jerk
 
@@ -19,39 +19,30 @@ Output schema:
   are never re-derived here. The longitudinal accel/decel split is taken as the
   positive and negative parts of a_long.
 
-─── CHANGES vs v1 ──────────────────────────────────────────────────────────
-  1. MIN_VALID_FRAC rule: a signal's std is NaN unless at least
+─── DESIGN NOTES ───────────────────────────────────────────────────────────
+  1. MIN_VALID_FRAC rule: a signal's statistic is NaN unless at least
      MIN_VALID_FRAC of the window's expected frames are non-NaN for that
-     signal. Needed because the v3 standardization intentionally injects
-     NaN (gap masking, edge masking) — a "std" computed from 3 surviving
-     frames of a 200-frame window is noise, not a measurement.
-  2. Dead batch-mode code removed (it referenced an undefined BATCH_SIZE —
-     a latent NameError if LARGE_DATASET_THRESHOLD was ever lowered).
-     At 10 Hz all datasets fit normal mode comfortably.
-  3. GRID_HZ parameter documents the expected input rate.
-
-─── CHANGES vs v2 ──────────────────────────────────────────────────────────
-  4. APPLY_BOUNDS: physical-validity masking (same bounds as the
+     signal. Needed because the standardization intentionally injects
+     NaN (gap masking, edge masking). A "std" computed from 3 surviving
+     frames of a 200-frame window is noise, not a measurement. The rule
+     governs EVERY per-window statistic, std OR mean.
+  2. GRID_HZ documents the expected input rate. At 10 Hz all datasets are
+     processed in a single in-memory pass per dataset.
+  3. APPLY_BOUNDS: physical-validity masking (same bounds as the
      visualization layer) applied per signal before windowing. Residual
-     impossible values (e.g. one 5,000 km/h frame) no longer inflate window
-     stds; the MIN_VALID rule then governs windows that lose too many frames.
-
-─── CHANGES vs v3 ──────────────────────────────────────────────────────────
-  5. FEATURE MEANS: the same per-window pass now ALSO emits six mean_*
-     channels that form the per-window feature vector consumed by the regime
-     clustering of Chapter 9. Windowing: 20 s windows advanced 20 s
-     (non-overlapping since 2026-08-29, D-2); every existing Chapter 8
-     consumer of std_data is unaffected.
-  6. The variability channels collapse acceleration to a single magnitude
-     (std_acc_mag); the feature channels instead RE-SEPARATE longitudinal
+     impossible values (e.g. one 5,000 km/h frame) do not inflate window
+     stds. The MIN_VALID rule then governs windows that lose too many frames.
+     The component bounds a_long, a_lat in [-15, 15] and the implied magnitude
+     bound jerk_mag in [0, 42.43] (= sqrt(30^2 + 30^2)) are also masked
+     before any statistic is taken.
+  4. FEATURE MEANS: the same per-window pass emits six mean_* channels that
+     form the per-window feature vector consumed by the regime clustering of
+     Section 4.7. Windowing: 20 s windows advanced 20 s (non-overlapping).
+  5. The variability channels collapse acceleration to a single magnitude
+     (std_acc_mag). The feature channels instead RE-SEPARATE longitudinal
      acceleration (mean_acc_pos), longitudinal deceleration (mean_acc_neg)
      and lateral acceleration (mean_abs_a_lat), because the clustering needs
      the directional decomposition that a single magnitude erases.
-  7. acc_mag and jerk_mag are read PRECOMPUTED (never re-derived). The
-     component bounds a_long, a_lat in [-15, 15] and the implied magnitude
-     bound jerk_mag in [0, 42.43] (= sqrt(30^2 + 30^2)) are now also masked
-     before any statistic is taken.
-  8. The MIN_VALID rule governs EVERY per-window statistic — std OR mean.
 ────────────────────────────────────────────────────────────────────────────
 """
 
@@ -65,6 +56,9 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+
 warnings.filterwarnings("ignore")
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -72,8 +66,8 @@ warnings.filterwarnings("ignore")
 # ─────────────────────────────────────────────────────────────────────────────
 
 WINDOW_S       = 20.0   # window size in seconds
-STEP_S         = 20.0   # step size in seconds (== WINDOW_S: non-overlapping, D-2 2026-08-29)
-GRID_HZ        = 10     # sampling rate of v3 standardized clips (uniform)
+STEP_S         = 20.0   # step size in seconds (== WINDOW_S: non-overlapping)
+GRID_HZ        = 10     # sampling rate of the standardized clips (uniform)
 MIN_VALID_FRAC = 0.5    # per signal: min fraction of expected frames that
                         # must be non-NaN, else the statistic = NaN for that signal
 MIN_VALID_ABS  = 2      # absolute floor (a statistic needs >= 2 points regardless)
@@ -93,7 +87,7 @@ BOUNDS = {
     "speed_kmh": (0.0,   200.0),
     "acc_mag":   (0.0,    21.3),   # = sqrt(15^2 + 15^2): magnitude implied by the ±15 per-axis bound
     "yaw_rate":  (-1.57,   1.57),  # rad/s, as stored
-    # ── feature-channel sources (v4) ──
+    # ── feature-channel sources ──
     "a_long":    (-15.0,  15.0),   # per-axis longitudinal acceleration bound
     "a_lat":     (-15.0,  15.0),   # per-axis lateral acceleration bound
     "jerk_mag":  (0.0, JERK_MAG_BOUND),
@@ -103,20 +97,20 @@ BOUNDS = {
 # PATHS
 # ─────────────────────────────────────────────────────────────────────────────
 
-INERTIAL_ROOT = Path("/Users/edward/Downloads/dataset/inertial_data")
-STD_ROOT      = Path("/Users/edward/Downloads/dataset/std_data")
+INERTIAL_ROOT = DATA_ROOT / "inertial_data"
+STD_ROOT      = DATA_ROOT / "std_data"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SIGNAL / OUTPUT COLUMNS
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ── variability channels (std) — unchanged from v3 ──
+# ── variability channels (std) ──
 # acc_mag is read directly from the standardized clips (computed there as
-# sqrt(a_long^2 + a_lat^2), already gap/edge-masked) — not recomputed here.
+# sqrt(a_long^2 + a_lat^2), already gap/edge-masked), not recomputed here.
 SIGNAL_COLS = ["speed_kmh", "acc_mag", "yaw_rate"]
 STD_COLS    = ["std_speed_kmh", "std_acc_mag", "std_yaw_rate"]
 
-# ── feature-mean channels (Chapter 9) ──
+# ── feature-mean channels (Section 4.7) ──
 # Output mean columns, plus the additional standardized-clip signals they are
 # built from. speed_kmh and yaw_rate are already read for the std channels;
 # acc_mag and jerk_mag are precomputed upstream and read directly.
@@ -167,9 +161,9 @@ def _read_clip(fp: Path) -> pd.DataFrame | None:
 def _window_stds(w_df: pd.DataFrame, duration_s: float) -> dict:
     """
     Per-signal std with the MIN_VALID_FRAC rule.
-    Expected frames for this window = duration_s × GRID_HZ (uniform v3 grid).
+    Expected frames for this window = duration_s × GRID_HZ (uniform grid).
     A signal whose non-NaN count falls below max(MIN_VALID_ABS,
-    MIN_VALID_FRAC × expected) gets NaN — gap/edge-masked windows must not
+    MIN_VALID_FRAC × expected) gets NaN. Gap/edge-masked windows must not
     produce stds from a handful of surviving frames.
     """
     n_expected = max(1.0, duration_s * GRID_HZ)
@@ -187,7 +181,7 @@ def _window_means(w_df: pd.DataFrame, duration_s: float) -> dict:
     """
     Per-signal within-window MEAN with the SAME MIN_VALID_FRAC rule used for the
     stds. These six channels form the per-window feature vector consumed by the
-    regime clustering of Chapter 9. A mean built from a handful of surviving
+    regime clustering of Section 4.7. A mean built from a handful of surviving
     frames is as unreliable as a std, so the identical validity gate applies.
     Longitudinal acceleration is split into its positive (accel) and negative
     (decel) parts so that the two are not cancelled by averaging over the window.
@@ -235,7 +229,7 @@ def _compute_windows_for_clip(fp: Path) -> list[dict]:
     """
     Extract all windows from a single clip and compute std AND mean per signal.
 
-    Windowing rules (unchanged):
+    Windowing rules:
     - t_max >= WINDOW_S : sliding window with STEP_S step
     - t_max <  WINDOW_S : entire clip = single window (window_idx=0)
     """

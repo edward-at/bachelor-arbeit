@@ -1,44 +1,32 @@
 """
-boxplot_comparison.py  (v3)
-========================
-Section 4.5.3 — Cross-Dataset Variability Boxplots
-
-v3 CHANGES (layout only — no statistic changed):
-  1. Legend moved OUT of the data area to a single row below the x-axis, so it
-     can never cover a box, a violin, or a tail annotation.
-  2. Tail annotations ("▲ max ≈ X") moved to a strip ABOVE the plot frame and
-     packed greedily into up to ANNOT_MAX_ROWS rows using an estimated text
-     width, so neighbouring labels never overlap. The title pad grows with the
-     number of rows actually used.
-  3. Annotation text shortened: the median is dropped from the clipped-box
-     form because y_top >= 1.5 × max(median) guarantees every median is
-     inside the axes. The mean is added ONLY when the mean dot itself would be
-     clipped, so nothing disappears silently.
-
-v2 CHANGES:
-  1. Violin KDE is trimmed to where density actually exists (was drawn over
-     the full physical-bound grid, producing a zero-density hairline spanning
-     the whole axis for every dataset).
-  2. Per-figure y-limit from a robust statistic (max of per-dataset p99,
-     never below the tallest whisker). Datasets whose tail exceeds the limit
-     get an explicit "▲ max ≈ X" annotation — tails are disclosed, not hidden.
-  3. DATASET_COLORS completed (durlar, zod were falling back to the same blue).
-  4. Optional LOG_SCALE toggle for a supplementary view.
+boxplot_comparison.py
+=====================
+Section 4.6.7: Cross-Dataset Variability Boxplots
 
 Reads pre-computed per-window std data from std_data/<dataset>.parquet and
 produces 3 publication-quality PNG figures (one per signal) comparing
 within-window signal variability across all 14 datasets.
 
 Plot design per figure:
-  - Half-violin (right side, KDE clipped at physical bounds) in dataset color
+  - Half-violin (right side, KDE clipped at physical bounds) in dataset color.
+    The KDE is trimmed to where density actually exists (DENSITY_FLOOR).
   - Standard boxplot overlaid (IQR box, whiskers 1.5×IQR, no fliers)
   - Median line (dataset color, thicker)
   - Mean dot (white fill, black edge)
   - Datasets sorted by median ascending (order differs per figure)
   - X-tick labels: "KITTI\n(n=8,204 windows)"
+  - Per-figure y-limit from a robust statistic (consensus of per-dataset p99,
+    never below the tallest whisker). Datasets whose tail exceeds the limit
+    get an explicit "▲ max ≈ X" annotation, so tails are disclosed, not hidden.
+  - Tail annotations sit in a strip ABOVE the plot frame, packed greedily into
+    up to ANNOT_MAX_ROWS rows using an estimated text width. The median is not
+    annotated because y_top >= 1.5 × max(median) keeps every median inside the
+    axes. The mean is added ONLY when the mean dot itself would be clipped.
+  - Legend in a single row below the x-axis, outside the data area.
+  - Optional LOG_SCALE toggle for a supplementary view.
 
 Usage:
-  python cross_dataset_boxplot.py
+  python boxplot_comparison.py
 
 Toggle FILTER_STATIONARY = True to exclude near-stationary windows.
 """
@@ -51,16 +39,15 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from scipy.stats import gaussian_kde
 
+import sys
+sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+
 # ---------------------------------------------------------------------------
-# PATHS  (edit if your folder layout differs)
+# PATHS
 # ---------------------------------------------------------------------------
-STD_DATA_DIR = pathlib.Path(
-    "/Users/edward/Downloads/dataset/std_data"
-)
-FIG_DIR = pathlib.Path(
-    "/Users/edward/Downloads/bachelor-arbeit/"
-    "04_exploratory_analysis/figures/boxplot"
-)
+STD_DATA_DIR = DATA_ROOT / "std_data"
+FIG_DIR = REPO_ROOT / "04_exploratory_analysis" / "figures" / "boxplot"
 
 # ---------------------------------------------------------------------------
 # FILTER TOGGLE
@@ -159,7 +146,7 @@ SIGNALS = [
 ]
 
 # ---------------------------------------------------------------------------
-# VISUAL PARAMETERS  (adjust after seeing first output)
+# VISUAL PARAMETERS
 # ---------------------------------------------------------------------------
 FIGSIZE        = (16, 7)
 DPI            = 300
@@ -173,7 +160,7 @@ MEDIAN_LW      = 2.2
 WHISKER_LW     = 1.4
 KDE_POINTS     = 400     # resolution of KDE curve
 
-# Y-axis limit policy (v2):
+# Y-axis limit policy:
 #   y_top = HEADROOM × max over datasets of percentile(vals, Y_TOP_PCTL),
 #   raised to the tallest whisker if needed. Data above y_top is annotated.
 Y_TOP_PCTL     = 99.0
@@ -183,7 +170,7 @@ HEADROOM       = 1.08
 DENSITY_FLOOR  = 0.005   # violin drawn only where density > floor × max
 LOG_SCALE      = False   # True → symlog supplementary view (suffix _log)
 
-# Layout of legend and tail annotations (v3):
+# Layout of legend and tail annotations:
 LEGEND_Y_OFFSET   = -0.10  # axes fraction; legend hangs below the x-tick labels
 ANNOT_FONTSIZE    = 7.5    # documented small-font exception (packed annotations)
 ANNOT_OFFSET_PT   = 3.0    # gap between the top frame line and annotation row 0
@@ -229,8 +216,8 @@ def _draw_half_violin(ax, x_center: float, values: np.ndarray,
     if len(vals) < 10:
         return
 
-    # v2: KDE grid spans the DATA range (not the full physical-bound range) —
-    # evaluating up to clip_hi drew a zero-density hairline across the axis.
+    # KDE grid spans the DATA range (not the full physical-bound range).
+    # Evaluating up to clip_hi would draw a zero-density hairline across the axis.
     lo = max(clip_lo, float(vals.min()))
     hi = min(clip_hi, float(np.percentile(vals, 99.5)))
     if hi <= lo:
@@ -249,7 +236,7 @@ def _draw_half_violin(ax, x_center: float, values: np.ndarray,
     if max_density == 0:
         return
 
-    # v2: draw only where density is meaningfully non-zero
+    # draw only where density is meaningfully non-zero
     support = np.where(density > DENSITY_FLOOR * max_density)[0]
     if len(support) == 0:
         return
@@ -401,7 +388,7 @@ def plot_signal(sig: dict, data: dict[str, pd.DataFrame],
     ax.set_xticklabels(x_labels, fontsize=9)
     ax.set_xlim(0.3, len(order) + VIOLIN_WIDTH + 0.3)
 
-    # ── v2: robust y-limit + disclosure of clipped tails ─────────────────────
+    # ── robust y-limit + disclosure of clipped tails ─────────────────────────
     def _upper_whisker(vals):
         q1, q3 = np.percentile(vals, [25, 75])
         fence  = q3 + 1.5 * (q3 - q1)
@@ -428,7 +415,7 @@ def plot_signal(sig: dict, data: dict[str, pd.DataFrame],
     else:
         ax.set_ylim(0, y_top)
 
-        # ── v3: tail annotations in a strip ABOVE the frame ─────────────────
+        # ── tail annotations in a strip ABOVE the frame ─────────────────────
         # Each label sits at its dataset's x, just above the top frame line
         # (axes-fraction y = 1.0), so it can never be covered by data. Labels
         # are packed greedily into rows: a label goes on the lowest row whose
@@ -495,7 +482,7 @@ def plot_signal(sig: dict, data: dict[str, pd.DataFrame],
         plt.Line2D([0], [0], color="grey", linewidth=WHISKER_LW,
                    label="Whiskers (1.5 × IQR)"),
     ]
-    # v3: one row BELOW the x-tick labels — outside the data area, so it can
+    # One row BELOW the x-tick labels, outside the data area, so it can
     # never cover a box, a violin, or a tail annotation.
     ax.legend(handles=legend_elements, loc="upper center",
               bbox_to_anchor=(0.5, LEGEND_Y_OFFSET), ncol=len(legend_elements),

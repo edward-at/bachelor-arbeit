@@ -2,21 +2,19 @@
 regime_style.py
 ────────────────────────────────────────────────────────────────────────────
 SINGLE SOURCE OF TRUTH for the five multivariate k-means REGIMES recovered in
-Chapter 9 (RQ2). Import label/colour helpers from here; never hard-code regime
-names or colours anywhere else (this is what fixes the stale "Calm Driving"
-strings still sitting in pca_scatter_labeled.py / pca_scatter_3D.py /
-regime_profile_heatmap.py).
+Section 4.7 (RQ2). Import label/colour helpers from here; never hard-code regime
+names or colours anywhere else.
 
 TERMINOLOGY: "regime" = the 5 clustering categories (RQ2). Do NOT confuse with
-the 4 fixed-threshold "variability tiers" of Section 8.7 (those live with the
-TIER_* constants in the thesis-plot canonical block).
+the 4 fixed-threshold "variability tiers" of Section 4.5.6 (those live with the
+TIER_* constants in the exploratory-analysis scripts).
 
 Regime order is FIXED by clustering.py::_order_regimes — ascending mean of the
 four z-scored change features (speed excluded). So regime 0 is the calmest and
 regime 4 the most dynamically intense. The two LOWEST-intensity regimes are
 0 (Calm/Stationary) and 1 (Highway Cruising): both are low on the change
 features (Highway is fast but kinematically quiet), which is why they form the
-"low-dynamic" group used by the RQ1 directional metric in Chapter 10.
+"low-dynamic" group used by the RQ1 directional metric in Section 4.8.
 ────────────────────────────────────────────────────────────────────────────
 """
 

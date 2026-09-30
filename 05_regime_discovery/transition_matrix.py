@@ -1,5 +1,5 @@
 """
-transition_matrix.py  —  Section 4.6.9 figure
+transition_matrix.py  —  Section 4.7.11 figure
 Reads hmm_transitions.parquet → the regime-to-regime transition-probability
 matrix as a Blues heatmap with per-cell annotations; the diagonal is the
 self-transition (persistence). Rows = from regime, columns = to regime. The
@@ -7,6 +7,7 @@ in-cell font and white-on-dark text are the documented heatmap latitude. Thin
 reader.
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -14,9 +15,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from regime_style import regime_label
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "hmm"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "hmm"
 DPI             = 300
 ANNOT_FS        = 9        # documented heatmap font latitude
 
@@ -43,7 +45,7 @@ def main():
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     out = OUT_DIR / "transition_matrix.png"
     # bbox_inches="tight": the equal-aspect image beside the colorbar leaves the
-    # y label outside the canvas under tight_layout alone (block 5D)
+    # y label outside the canvas under tight_layout alone
     fig.savefig(out, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
     print(f"  → {out}")

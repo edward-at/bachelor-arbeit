@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-run_sampling.py — Chapter 11: sampling method construction.
+run_sampling.py — sampling method construction (thesis 4.9).
 
 Generates eleven curated window-ID subsets (M01–M11) from the frozen window layer
 (cluster_assignments + std_data [+ window_summaries cache]) under one shared
-protocol (Section 11.0): frame overlap guard (auto-verified), CONFOUNDED_ACCEL
+protocol: frame overlap guard (auto-verified), CONFOUNDED_ACCEL
 guard, matched-N sizing, fixed seeds, largest-remainder integer allocation.
 
 Outputs (all under SUBSET_DIR):
@@ -22,7 +22,7 @@ Usage:
 
 Methods M07/M08 need the window_summaries.parquet cache
 (built once by window_summary.py); they are skipped with a warning
-if the cache is missing. See METHODOLOGY.md for definitions and citations.
+if the cache is missing. Definitions and citations are in thesis Section 4.9.
 """
 
 from __future__ import annotations
@@ -45,10 +45,11 @@ except ImportError:  # degrade to no-op per pipeline convention
 # =========================================================================
 # Canonical constants
 # =========================================================================
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-SUBSET_DIR = PROJECT_ROOT / "dataset" / "subset_data"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+STD_DATA_DIR = DATA_ROOT / "std_data"
+SUBSET_DIR = DATA_ROOT / "subset_data"
 
 # Primary input: the frozen window layer. If the file name differs, either fix
 # this constant or let the fallback glob find it (it picks the parquet in
@@ -61,9 +62,9 @@ ACTIVE_OUT_DIR = SUBSET_DIR
 
 GLOBAL_SEED = 42
 
-# ---- Protocol decisions (Section 11.0) — DECISION CONSTANTS ----------------
-# Chapter 10 preamble: the assignment grid is ALREADY non-overlapping
-# (402,421 windows). "auto" verifies this at run time from the median
+# ---- Protocol decisions: DECISION CONSTANTS --------------------------------
+# The assignment grid is ALREADY non-overlapping (thesis 4.8).
+# "auto" verifies this at run time from the median
 # within-clip start spacing and applies stride-2 thinning ONLY if an
 # overlapping (10 s step) grid is detected. "on" forces thinning;
 # "off" takes the frame as given.
@@ -71,12 +72,12 @@ DEDUP_MODE = "auto"         # "auto" | "on" | "off"
 DEDUP_STRIDE = 2
 DEDUP_PHASE = 0             # keep windows with (idx - clip_min_idx) % 2 == 0
 WINDOW_S = 20.0
-# Fidelity guard set (Section 11.2): imported from the Chapter 10 compute
-# stage so the two chapters cannot diverge. Local fallback engages only if
+# Fidelity guard set (thesis 4.9.2): imported from the bias-quantification
+# compute stage (thesis 4.8) so the two stages cannot diverge. Local fallback engages only if
 # the import path is unavailable; the resolved source is logged and echoed
 # in the manifest.
 try:
-    sys.path.insert(0, str(PROJECT_ROOT / "bachelor-arbeit" / "06_bias_quantification"))
+    sys.path.insert(0, str(REPO_ROOT / "06_bias_quantification"))
     from bias_quant import CONFOUNDED_ACCEL
     CONFOUNDED_SRC = "bias_quant (imported)"
 except Exception:
@@ -91,8 +92,6 @@ EVENT_SHARE = 0.5           # M07 target share of trigger-event windows
 DECEL_TRIGGER_G = 0.6       # M07/M08 hard-decel threshold in g
                             #   0.6 g: 100-Car lineage (Dingus et al. 2006)
                             #   0.75 g: Perez et al. 2017
-                            #   VERIFY numeric values in the primary PDFs
-                            #   before thesis prose.
 HIGH_YAW_DEG_S = 30.0       # M08 predicate: max |yaw rate| threshold (deg/s)
 CRUISE_SPEED_KMH = 100.0    # M08 predicate: sustained high speed
 STOPGO_STD_MIN = 5.0        # M08 predicate: std_speed >= t2 tier threshold
@@ -282,7 +281,7 @@ def load_pool(inspect_only: bool = False):
     if "std_yaw_rate" in pool.columns:
         pool["std_yaw_rate_degs"] = pool["std_yaw_rate"] * RAD2DEG
 
-    # --- dynamic score: reuse if present, else Ch.10 formula fallback -------
+    # --- dynamic score: reuse if present, else thesis 4.8 formula fallback -
     score_col = resolve_col(pool.columns, SCORE_COL_CANDIDATES, "score",
                             required=False)
     if score_col:
@@ -345,10 +344,10 @@ def load_pool(inspect_only: bool = False):
 
 
 def apply_dedup(pool: pd.DataFrame) -> pd.DataFrame:
-    """Frame verification + overlap contingency (Section 11.1).
+    """Frame verification + overlap contingency (thesis 4.9.1).
 
     The assignment grid is expected to be non-overlapping already
-    (Chapter 10 preamble: 402,421 non-overlapping windows). This guard
+    (thesis 4.8). This guard
     measures the median within-clip start spacing: ~WINDOW_S means the frame
     is taken as given; ~STEP_S means an overlapping grid was detected and
     stride-2 systematic thinning (Madow & Madow 1944) engages.
@@ -402,8 +401,7 @@ def allocate(weights, n: int, caps) -> np.ndarray:
     """Largest-remainder integer allocation with per-stratum caps.
 
     Practical stand-in for Wright's exact priority algorithm (Wright 2012,
-    2017, 2020) — at these stratum sizes the results coincide; see
-    METHODOLOGY.md.
+    2017, 2020). At these stratum sizes the results coincide (thesis 4.9.4).
     """
     w = np.asarray(weights, dtype=float).copy()
     caps = np.asarray(caps, dtype=int)
@@ -803,16 +801,16 @@ def m11_neyman(pool, N, rng, supply):
     """M11 — Neyman variance-optimal allocation (Neyman 1934), GUARDED.
 
     Quota_r proportional to S_r x SD_r of the declared variable (the composite
-    dynamic score of Section 11.4), integerised by the shared largest-remainder
+    dynamic score of thesis 4.9.4), integerised by the shared largest-remainder
     engine and filled by SRS within regime — the same machinery as M02-M04,
     differing in the weight vector alone.
 
     Contrast case, not a balancing design: Neyman optimises the precision of
     an estimated mean, spending budget where a regime's windows are most
-    scattered; representation is indifferent to dispersion. Read in Chapter 12
-    in that role, as M01 is read as the uncurated null.
+    scattered; representation is indifferent to dispersion. Read in the evaluation
+    (thesis 4.10) in that role, as M01 is read as the uncurated null.
 
-    Guard (Section 11.2, widened rule): this is the first design whose
+    Guard (thesis 4.9.2, widened rule): this is the first design whose
     ALLOCATION rather than selection consumes an acceleration-derived
     quantity — the confounded datasets would inflate the within-regime
     dispersion and thereby the quotas. Supply, dispersion, AND the draw all

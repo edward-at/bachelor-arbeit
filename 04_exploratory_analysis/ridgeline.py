@@ -1,7 +1,7 @@
 """
-extra_plot_a2_ridgeline.py
+ridgeline.py
 ────────────────────────────────────────────────────────────────────────────
-A2 — Per-window variability ridgelines. THREE separate figures, one per signal
+Per-window variability ridgelines (thesis Section 4.6.3). THREE separate figures, one per signal
 (speed, accel-magnitude, yaw rate). Each figure overlays all datasets as
 ridgeline rows, ordered by that signal's own median (calmest at the bottom).
 Supports RQ1: the SHAPE of dynamic skew across datasets.
@@ -11,6 +11,7 @@ rendering single-threaded (not thread-safe). Pure default style; dpi=300;
 tum_colors; all tunables top-level.
 """
 
+import sys
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -28,9 +29,10 @@ from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_EXT
 # PATHS  (data and code live in separate folders)
 # ─────────────────────────────────────────────────────────────────────────────
 
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "04_exploratory_analysis" / "figures" / "ridgeline"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+STD_DATA_DIR = DATA_ROOT / "std_data"
+OUT_DIR      = REPO_ROOT / "04_exploratory_analysis" / "figures" / "ridgeline"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PARAMETERS  (all tunables here — never hardcoded inside functions)

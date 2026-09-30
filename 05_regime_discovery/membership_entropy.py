@@ -1,5 +1,5 @@
 """
-membership_entropy.py  —  Section 4.6.8 figure
+membership_entropy.py  —  Section 4.7.10 figure
 Reads gmm_assignments.parquet → the windows on the PC1/PC2 plane coloured by GMM
 membership entropy, so the boundary windows where regimes interpenetrate (high
 entropy) stand out from windows that belong unambiguously to one regime.
@@ -7,20 +7,21 @@ entropy) stand out from windows that belong unambiguously to one regime.
 Visibility: most windows have LOW entropy (light), so the few high-entropy points
 get buried. They are therefore sorted to draw LAST (on top), and alpha/size are
 raised, so the overlap regions are visible without abandoning the Blues
-convention. (If still too subtle, swap cmap="Blues" → "viridis" on one line — a
-deliberate deviation from the Blues default for contrast.)
+convention.
 Thin reader.
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "gmm"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "gmm"
 
 N_PLOT   = 30000
 SEED     = 42

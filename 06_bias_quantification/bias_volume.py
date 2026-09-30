@@ -1,5 +1,5 @@
 """
-bias_volume.py  —  Tier-2 volume-bias instrument (Chapter 10, §4.7).
+bias_volume.py  —  Tier-2 volume-bias instrument (thesis Section 4.8).
 
 The Tier-1 volume finding (volume_gap_js: the pooled reference is whatever
 NVIDIA and Waymo say it is) gets its own axis here:
@@ -11,12 +11,11 @@ NVIDIA and Waymo say it is) gets its own axis here:
     corpus behaves like ~D_2 datasets out of 14" — the single strongest
     quantitative motivation for the RQ3 curated subset.
 
-NAMING RULE (updated with DC10 resolved): TWO qualified Ginis exist in
-Chapter 10 — this "volume-share Gini" and the "dynamic-content Gini" of
-bias_shape_metrics.py (exposé §3.7). The unqualified word "Gini" is never
-used. Two unqualified Ginis = examiner bait.
+Naming: TWO qualified Ginis exist in Section 4.8, this "volume-share Gini"
+and the "dynamic-content Gini" of bias_shape_metrics.py. The unqualified
+word "Gini" is never used, so the two cannot be confused.
 
-Honest caveats:
+Caveats:
   * A Gini over n = 14 units is a coarse descriptor. It is used descriptively
     for THIS corpus, not as an estimator of anything beyond it.
   * Volume concentration is corpus-level composition, not a per-dataset
@@ -25,7 +24,7 @@ Honest caveats:
 
 Reads : ARTIFACT_DIR/cluster_assignments.parquet   (canonical)
 Writes: ARTIFACT_DIR/bias_volume.parquet
-Output: figures/lorenz_volume.png
+Output: 06_bias_quantification/figures/lorenz_volume.png
 
 Strict matplotlib: pure defaults, dpi=300, TUM colours, asterisked labels.
 """
@@ -76,7 +75,7 @@ def fig_lorenz(tab, scalars):
             label="corpus Lorenz curve")
 
     # one point per dataset at its cumulative position, largest drawn last.
-    # zorder=3: scatter defaults BELOW plot, which hid the markers under the curve.
+    # zorder=3: scatter defaults BELOW plot, which would hide the markers under the curve.
     for i, ds in enumerate(tab.index):
         ax.scatter(cum_x[i + 1], cum_y[i + 1], color=color(ds),
                    edgecolor="black", linewidth=0.5, zorder=3, label=label(ds))
@@ -85,7 +84,7 @@ def fig_lorenz(tab, scalars):
     ax.set_ylim(-AXIS_PAD, 1.0 + AXIS_PAD)
     ax.set_xlabel("Cumulative fraction of datasets (smallest first)")
     ax.set_ylabel("Cumulative fraction of 20 s windows")
-    # two-line title: the one-line version clipped at the figure edge
+    # two-line title: a one-line version does not fit the figure width
     ax.set_title("Corpus volume concentration\n"
                  f"volume-share Gini = {scalars['volume_gini']:.2f}, "
                  f"effective datasets $D_2$ \u2248 {scalars['eff_datasets_d2']:.1f} "

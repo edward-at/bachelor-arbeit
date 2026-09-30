@@ -1,10 +1,10 @@
 """
-bias_gmm_entropy.py  —  Tier-3 boundary-bias instrument (Chapter 10, §4.7).
+bias_gmm_entropy.py  —  Tier-3 boundary-bias instrument (thesis Section 4.8).
 
 THE question k-means cannot answer: does a dataset occupy the clean CORES of
 the behavioural regimes, or does it pile into the OVERLAP ZONES between them?
 K-means assigns every window to exactly one regime with no notion of
-ambiguity; the Chapter-9 GMM stored, per window, the posterior entropy over
+ambiguity; the GMM of Section 4.7.10 stored, per window, the posterior entropy over
 its five components and the maximum posterior. This script aggregates those
 into a per-dataset boundary-bias profile:
 
@@ -13,21 +13,20 @@ into a per-dataset boundary-bias profile:
      dataset lives in unambiguous regime cores.
   2. Ambiguous-window share: fraction of windows with max_posterior < 0.8
      (COMPANION; tau = 0.8 is a disclosed convention, with 0.5 / 0.9
-     sensitivity printed so the choice is auditable, DC11).
+     sensitivity printed so the choice is auditable).
 
-Honest caveats (write these into the methodology):
+Caveats:
   * Boundary bias is defined in the GMM's geometry. The GMM<->k-means
-    correspondence is partial (ARI = 0.30, Chapter 9) — this measures
+    correspondence is partial (ARI = 0.316, Section 5.4). This measures
     ambiguity in the mixture model's view of feature space, not distance to
     the k-means partition. Disclosed, not hidden.
   * Composition confound: part of a dataset's mean entropy is inherited from
     WHICH regions it occupies (some components are intrinsically fuzzier).
     The per-component pooled entropy breakdown is printed so this is visible.
-  * ENTROPY UNITS: Chapter 9 (gmm.py) stores the membership entropy ALREADY
-    NORMALISED by ln(k) — the stored column is on [0, 1], not in nats. The
+  * ENTROPY UNITS: gmm.py stores the membership entropy ALREADY
+    NORMALISED by ln(k), so the stored column is on [0, 1], not in nats. The
     guard below checks against that ceiling of 1.0, and no further division
-    is applied here. (A previous version assumed nats and divided a second
-    time, which silently scaled the derived column by 1/ln 5.)
+    is applied here. Dividing again would scale the column by 1/ln 5.
   * Accel-confounded datasets carry the asterisk: the GMM features include
     acceleration-derived dimensions, so their boundary profile inherits the
     fidelity artifact.
@@ -36,7 +35,7 @@ Reads : ARTIFACT_DIR/gmm_assignments.parquet
         (dataset, clip_id, window_start_s, window_end_s, gmm_regime,
          max_posterior, entropy, pc1, pc2)
 Writes: ARTIFACT_DIR/bias_gmm_entropy.parquet
-Output: figures/gmm_entropy.png
+Output: 06_bias_quantification/figures/gmm_entropy.png
 
 Strict matplotlib: pure defaults, dpi=300, TUM colours, asterisked labels.
 """
@@ -53,10 +52,10 @@ from bias_tier2_common import (
 OUT_DIR = FIG_ROOT
 GMM_ASSIGN = ARTIFACT_DIR / "gmm_assignments.parquet"
 
-TAU_PRIMARY = 0.8            # DC11: ambiguity threshold (companion metric)
+TAU_PRIMARY = 0.8            # ambiguity threshold (companion metric)
 TAU_SENSITIVITY = (0.5, 0.8, 0.9)
 N_COMPONENTS = 5
-# Chapter 9 divides by ln(k) before persisting, so the stored entropy is
+# gmm.py divides by ln(k) before persisting, so the stored entropy is
 # already on [0, 1]; the ceiling to check against is 1.0, not ln 5.
 MAX_ENTROPY = 1.0
 
@@ -76,7 +75,7 @@ def build_table():
               f"Re-run gmm.py against the current clustering before quoting "
               f"any number below.")
 
-    # entropy-units guard (DC11): the stored column must already be normalised
+    # entropy-units guard: the stored column must already be normalised
     obs_max = float(df["entropy"].max())
     units_ok = obs_max <= MAX_ENTROPY * 1.001
     if not units_ok:

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""F4 — dynamic-score ridgeline per method (budget tier).
+"""Dynamic-score ridgeline per method (budget tier).
 
 Mirrors ridgeline.py's grammar: overlapping filled KDE rows (ROW_OVERLAP
 1.45), white ridge edges, black median ticks, x capped at a high percentile,
 x-only grid. Deviations, stated: rows keep the fixed slate order (Frame at
-the top) instead of a median sort — see subset_stacked_bar.py for the D4
-grounds — and the variable is the composite dynamic score, the Tier-1
+the top) instead of a median sort — see subset_stacked_bar.py for the
+grounds — and the variable is the composite dynamic score, the main
 comparison axis, not a single sigma channel. Colours = design families.
 Reads ONLY the eval cache. Output: figures/subset_eval/subset_ridgeline.png
 """

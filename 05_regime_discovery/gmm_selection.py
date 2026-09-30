@@ -1,27 +1,29 @@
 """
-gmm_selection.py  —  Section 4.6.8 figure
+gmm_selection.py  —  Section 4.7.10 figure
 Reads gmm_selection.parquet → BIC and AIC across the component-count sweep.
 
 HONEST FRAMING: BIC/AIC are generative criteria; on a continuous feature space
 they keep preferring more components (the curve is still descending at the range
 edge — over-clustering of a continuum, NOT evidence for that many regimes). The
 regime count is therefore set by the SEPARATION criteria (silhouette, with
-Davies–Bouldin and Calinski–Harabasz in §4.6.7), marked here as the selected k.
+Davies–Bouldin and Calinski–Harabasz in §4.7.8), marked here as the selected k.
 The BIC curve is shown to demonstrate that the generative criterion does not
 bottom out within the tested range, which is reported as such — it does not
 corroborate the count, and the figure must not imply the range-edge minimum is
 the answer. Thin reader.
 """
 
+import sys
 from pathlib import Path
 
 import pandas as pd
 import matplotlib.pyplot as plt
 from tum_colors import TUM_ACCENT, TUM_EXT, TUM_SECONDARY
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "gmm"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "gmm"
 DPI             = 300
 
 

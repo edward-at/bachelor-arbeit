@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Per-method phase portraits (Section 8.5 grammar, methods as units).
+"""Per-method phase portraits (Section 4.6.6 grammar, methods as units).
 
 Two figures per group (speed x longitudinal acceleration, speed x yaw rate)
 from the cached 2D histograms of subset_frame_pass.py: fraction-normalised,

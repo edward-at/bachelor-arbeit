@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """general_info.py — every thesis-relevant number, from artifacts, in one file.
 
-Place in bachelor-arbeit/ and run from there:
+Reads every artifact under DATA_ROOT and writes general_info.txt, a
+plain-text dump of the numbers reported in the thesis. Run from any folder:
 
-    python general_info.py
+    python 08_reporting/general_info.py
 
-Prints to stdout AND writes general_info.txt next to itself. Upload the .txt
-to the Claude Project as the numeric ground truth for all writing chats.
+Prints to stdout AND writes general_info.txt next to itself.
 
 RULES THIS SCRIPT OBEYS
   * Read-only. It recomputes nothing statistical; it reads artifacts the
@@ -32,10 +32,11 @@ import numpy as np
 import pandas as pd
 
 # ---------------------------------------------------------------------------
-PROJECT_ROOT = Path(os.environ.get("GENERAL_INFO_ROOT",
-                                   "/Users/edward/Downloads"))
-BA           = PROJECT_ROOT / "bachelor-arbeit"
-DATA         = PROJECT_ROOT / "dataset"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+PROJECT_ROOT = DATA_ROOT.parent
+BA           = REPO_ROOT
+DATA         = DATA_ROOT
 STD_DIR      = DATA / "std_data"
 REGIME_DIR   = DATA / "regime_data"
 SUBSET_DIR   = DATA / "subset_data"

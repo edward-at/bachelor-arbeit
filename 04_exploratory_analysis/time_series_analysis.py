@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+
 warnings.filterwarnings("ignore")
 
 import os as _os
@@ -39,9 +42,9 @@ FIG_H = 4.5                                # short: 1 row
 # PATHS
 # ─────────────────────────────────────────────────────────────────────────────
 
-INERTIAL_ROOT = Path("/Users/edward/Downloads/dataset/inertial_data")
-STD_ROOT      = Path("/Users/edward/Downloads/dataset/std_data")
-FIG_ROOT      = Path("/Users/edward/Downloads/bachelor-arbeit/04_exploratory_analysis/figures/time_series")
+INERTIAL_ROOT = DATA_ROOT / "inertial_data"
+STD_ROOT      = DATA_ROOT / "std_data"
+FIG_ROOT      = REPO_ROOT / "04_exploratory_analysis" / "figures" / "time_series"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SIGNAL DEFINITIONS
@@ -57,19 +60,19 @@ SIGNALS = [
 ]
 
 # ─────────────────────────────────────────────────────────────────────────────
-# REGIME BANDS — 4 categories on ABSOLUTE σ thresholds, shared with
-# regime_classification.py and ecdf_analysis.py (replaces per-dataset thirds).
+# REGIME BANDS — 4 categories on ABSOLUTE σ thresholds, the same values as in
+# regime_classification.py and ecdf_analysis.py.
 #   Near-Stationary : σ < t1
 #   Low-Dynamic     : t1 ≤ σ < t2
 #   Medium-Dynamic  : t2 ≤ σ < t3
 #   High-Dynamic    : σ ≥ t3
-# NOTE: these now live in THREE files (here, regime_classification.py,
-#       ecdf_analysis.py) — keep them in sync, or centralise later.
+# NOTE: each of the THREE files (here, regime_classification.py,
+#       ecdf_analysis.py) keeps its own copy (not imported); keep them in sync.
 # ─────────────────────────────────────────────────────────────────────────────
 
 THRESHOLDS = {
     "std_speed_kmh": (1.0,  5.0,  15.0),
-    "std_acc_mag":   (0.2,  0.5,   1.5),   # PLACEHOLDER (never calibrated) — set from the acc_mag ECDF
+    "std_acc_mag":   (0.2,  0.5,   1.5),   # frozen round convention, see regime_classification.py
     "std_yaw_rate":  (1.0,  5.0,  15.0),
 }
 REGIME_LABELS = ["Near-Stationary", "Low-Dynamic", "Medium-Dynamic", "High-Dynamic"]
@@ -173,7 +176,7 @@ def _passes_continuity(ds_name, sig_col, clip_id, win_start, win_end, cache):
 def _pick_rep(band, target_idx, std_col, sig_col, ds_name, cache):
     """Walk outward in σ-rank from target_idx until a window passes the continuity
     gate. Returns a rep dict (with cached frames) or None. Duplicates across
-    percentiles are allowed when a band is tiny (option C)."""
+    percentiles are allowed when a band is tiny."""
     n = len(band)
     if n == 0:
         return None
@@ -261,7 +264,7 @@ def _band_range_str(std_col, band_idx, unit) -> str:
 
 def _plot_signal(dataset_name, sig, selection, out_path):
     """1 row × 4 columns, one column per regime band. Each subplot draws up to
-    N_REPS representative windows. Title shows the fixed regime σ-range (option A).
+    N_REPS representative windows. Title shows the fixed regime σ-range.
     Signal values outside clip_lo/clip_hi are masked as NaN (visualization only)."""
     col   = sig["col"]
     lo    = sig["clip_lo"]

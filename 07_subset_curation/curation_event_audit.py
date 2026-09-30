@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
-"""curation_event_audit.py — pre-selection diagnostics for Chapter 13 (13.1).
+"""curation_event_audit.py — pre-selection diagnostics for the curation stage (thesis 4.11).
 
 Purely diagnostic: reads the frozen selection frame, writes nothing, selects
-nothing, and touches no gate metric, so running it before the D4 gates are
+nothing, and touches no gate metric, so running it before the gates are
 applied is clean. Two questions, both console tables:
 
   A. Where do the guarded 0.6 g reserve windows come from?
      Per-dataset and per-regime composition of the event reserve that C01
-     and C03 will force-include (D22). The count is asserted against the
-     superseded Section 11.3 canaries (1,124 pre-restoration, 1,115 pre-v4_4; the
-     realised count on the current frame is printed and becomes the frozen
-     constant for the build).
+     and C03 will force-include. The realised count on the current frame
+     is printed and becomes the frozen constant for the build.
 
-  B. What supply does the D24 evasive conjunction have?
+  B. What supply does the evasive conjunction have?
      peak|yaw| >= lat_g * g / mean_speed, swept over EVASIVE_SWEEP_G, with
      overlap against the hard-decel reserve and per-dataset composition at
      the primary candidate. The naive M08-intersection (30 deg/s AND
-     100 km/h) is counted too, to document on the record that physics
+     100 km/h) is counted too, to document that physics
      empties it.
 
 Usage:  python curation_event_audit.py

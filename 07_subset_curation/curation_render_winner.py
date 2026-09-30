@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""curation_render_winner.py — figures for the declared winner ONLY (13.2/13.3).
+"""curation_render_winner.py — figures for the declared winner ONLY.
 
-Refuses to run until curation_common.WINNER is set by the dated register
-entry that curation_gates.py prints (D25: numbers first, one method plotted).
-Chapter 12 figure code is driven by patching, never edited; everything
-lands in figures/curation/ so no Chapter 12 figure is overwritten.
+Refuses to run until curation_common.WINNER is set to the value that
+curation_gates.py prints (numbers first, one method plotted). The evaluation
+figure code (thesis 4.10) is driven by patching, never edited. Everything
+lands in figures/curation/ so no evaluation figure is overwritten.
 
 Default run:
   * finalist ECDF overlays via the frozen subset_ecdf_finalist module,
@@ -14,8 +14,8 @@ Default run:
   * native winner source-composition bars (vs frame, cap line, asterisks)
 
 --frame-pass   re-runs subset_frame_pass with the mask widened by the winner
-               (the one extra frame-layer read Section 12.1 budgeted for)
---dossier      then drives the Ch.8-grain dossier modules (histogram grids,
+               (the one extra frame-layer read thesis 4.10 budgeted for)
+--dossier      then drives the exploratory-grain (thesis 4.6) dossier modules (histogram grids,
                phase portraits, fans, exemplars) into figures/curation/
 
 Usage:  python curation_render_winner.py [--frame-pass] [--dossier]

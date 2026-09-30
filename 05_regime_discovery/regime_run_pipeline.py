@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-run_regime_pipeline.py — ordered re-run of the Chapter 9 (thesis 4.6) pipeline.
+regime_run_pipeline.py: ordered re-run of the regime-discovery pipeline (Section 4.7).
 
 The stages below are a DEPENDENCY ORDER, not a preference: every stage reads
 parquet artifacts written by an earlier one, so running them out of order
@@ -29,12 +29,14 @@ That is the exact failure this runner exists to prevent.
                   walks the frame layer and takes by far the longest.
 
     3  figures    every thin figure reader (order within the stage is free;
-                  each reads only the caches written above)
+                  each reads only the caches written above). Two listed figure
+                  scripts are not in this folder and are skipped:
+                  regime_heatmap_sweep.py (a display-only exploration kept in
+                  archive/) and covariance_overlay.py.
 
 NOT RUN, by design:
     tum_colors.py    palette module — imported, never executed
     regime_style.py  regime label/colour single source of truth — imported
-    Test.py          scratch/verification file
 
 Label consistency note: the figures take regime names from regime_style.py at
 render time, so changing a label there and re-running stage 3 alone is enough —
@@ -42,12 +44,12 @@ no recompute needed. Any figure that hardcodes its own label list will silently
 disagree; keep them importing regime_label/regime_color.
 
 USAGE
-    python run_regime_pipeline.py                  # all stages
-    python run_regime_pipeline.py --dry-run        # print the plan, run nothing
-    python run_regime_pipeline.py --from models    # resume at a stage
-    python run_regime_pipeline.py --only figures   # one stage (after a label edit)
-    python run_regime_pipeline.py --skip models    # drop a stage
-    python run_regime_pipeline.py --keep-going     # do not stop at first failure
+    python regime_run_pipeline.py                  # all stages
+    python regime_run_pipeline.py --dry-run        # print the plan, run nothing
+    python regime_run_pipeline.py --from models    # resume at a stage
+    python regime_run_pipeline.py --only figures   # one stage (after a label edit)
+    python regime_run_pipeline.py --skip models    # drop a stage
+    python regime_run_pipeline.py --keep-going     # do not stop at first failure
 
 Fail-fast is the default: a stage that fails leaves every later stage unrun,
 because a downstream artifact built on a failed upstream one is worse than a
@@ -66,16 +68,17 @@ from pathlib import Path
 # canonical constants
 # ---------------------------------------------------------------------------
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-FIGURE_DIR = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+STD_DATA_DIR = DATA_ROOT / "std_data"
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
+FIGURE_DIR = REPO_ROOT / "05_regime_discovery" / "figures"
 
 # Modules that are imported, never executed, plus scratch files.
 NEVER_RUN = ["tum_colors.py", "regime_style.py", "Test.py"]
 
 # Figure scripts grouped by the cache they read. A missing FIGURE script is a
-# skip (some are optional/renamed); a missing COMPUTE script is a failure.
+# skip (some are optional); a missing COMPUTE script is a failure.
 FIGURES_MODEL_SELECTION = [
     "k_select_curve.py",              # kselect_curves
 ]
@@ -97,8 +100,8 @@ FIGURES_VALIDITY = [
 FIGURES_GMM = [
     "gmm_selection.py",               # gmm_selection
     "membership_entropy.py",          # gmm_assignments
-    "covariance_overlay.py",          # gmm_components_2d + gmm_assignments
-    "covariance_contours.py",         # later name of the same figure
+    "covariance_overlay.py",          # not present, skipped
+    "covariance_contours.py",         # gmm_components_2d + gmm_assignments
     "gmm_kmeans_correspondence.py",
 ]
 FIGURES_HMM = [

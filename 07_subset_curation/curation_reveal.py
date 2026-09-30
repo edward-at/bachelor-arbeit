@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """curation_reveal.py — the sealed shelf and the ex-confounded slice
-(13.3, step 2). RUN ONLY AFTER curation_replicate.py.
+(step 2 of replication and reveal). RUN ONLY AFTER curation_replicate.py.
 
-Two things have been computed since Chapter 12 and never read:
+Two things have been computed since the evaluation stage (thesis 4.10) and
+never read:
 
-  1. SEALED SHELF (D5, resolved in Section 12.1): the Wasserstein
+  1. SEALED SHELF (defined in thesis 4.10): the Wasserstein
      distances of the maximum-speed and peak-acceleration-magnitude
      summaries. Mechanically chosen: they are the only kinematic
      summaries consumed by NO method's selection criterion, which is what
@@ -13,7 +14,7 @@ Two things have been computed since Chapter 12 and never read:
      guarded frame, the prepared answer to "does the result survive
      dropping A2D2*, 4Seasons* and DurLAR*?".
 
-PRE-REGISTERED EXPECTATION, recorded before the reveal (D29, 2026-08-20):
+PRE-REGISTERED EXPECTATION, recorded before the reveal:
 C01 optimises no extreme — its levers are equal quotas, a source cap and
 an event census — so no mechanism predicts it should win or lose the
 shelf. The prior is NEUTRAL. A large deviation in either direction is

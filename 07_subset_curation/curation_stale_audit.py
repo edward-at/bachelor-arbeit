@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""curation_stale_audit.py v2 — per-chapter anchors, no false alarms.
+"""curation_stale_audit.py — per-stage freshness anchors for every figure.
 
-v1 compared every figure against cluster_assignments.parquet. That anchor
-is wrong for two groups and v1 therefore over-reported:
-  * Chapter 8 reads the std_data / summary layers, never the regime
-    assignments — its correct anchor is the newest std_data parquet.
+The default anchor is cluster_assignments.parquet. Two groups need a
+different one:
+  * The exploratory analysis (thesis 4.6) reads the std_data / summary
+    layers, never the regime assignments. Its anchor is the newest std_data
+    parquet.
   * The dataset-survey figures (camera counts, DSS scores, maps, ...)
     depend on no kinematic layer at all — frame-independent, exempt.
 
@@ -21,12 +22,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from curation_common import PROJECT_ROOT, EVAL_DIR
+from curation_common import DATA_ROOT, REPO_ROOT, EVAL_DIR
 
-FRAME = PROJECT_ROOT / "dataset" / "regime_data" / "cluster_assignments.parquet"
-STD_DIR = PROJECT_ROOT / "dataset" / "std_data"
-SUMMARIES = PROJECT_ROOT / "dataset" / "subset_data" / "window_summaries.parquet"
-FIG_ROOT = PROJECT_ROOT / "bachelor-arbeit"
+FRAME = DATA_ROOT / "regime_data" / "cluster_assignments.parquet"
+STD_DIR = DATA_ROOT / "std_data"
+SUMMARIES = DATA_ROOT / "subset_data" / "window_summaries.parquet"
+FIG_ROOT = REPO_ROOT
 
 # order matters: first hit wins
 CHAPTER_HINTS = [
@@ -66,7 +67,7 @@ def fmt(t: float) -> str:
 def main() -> None:
     anchors = {
         "frame": stamp(FRAME),
-        "std": newest(STD_DIR, "*.parquet"),   # Ch.8 reads std_data only; the summaries anchor false-staled 181 exploratory figures
+        "std": newest(STD_DIR, "*.parquet"),   # the exploratory figures read std_data only, so a summaries anchor would mark them stale falsely
     }
     print(f"anchor 'frame' (cluster_assignments): {fmt(anchors['frame'])}")
     print(f"anchor 'std'   (newest std_data): {fmt(anchors['std'])}")

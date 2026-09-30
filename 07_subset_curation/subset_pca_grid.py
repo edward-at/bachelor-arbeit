@@ -1,28 +1,27 @@
 #!/usr/bin/env python3
 """PCA occupancy grid — every method on the frozen PC basis, one panel each.
 
-Per-method dossier form (D18). TWO figures are produced from one data pass:
+Per-method dossier form. TWO figures are produced from one data pass:
 
   subset_pca_grid.png         points in the thesis single-series blue
   subset_pca_grid_regime.png  the same points coloured by the frozen
-                              Chapter-9 regime, canonical regime_style palette
+                              Section 4.7 regime, canonical regime_style palette
 
 Each panel shows the frame's occupied region of the frozen PC1-PC2 plane (grey
 2D histogram from the seeded frame sample) with the method's own sampled
 windows overlaid, and the cached pc_coverage_share annotated. The basis and the
-labels are Chapter 9's, read not refit (the fit-and-assign firewall applied on
+labels are Section 4.7's, read not refit (the fit-and-assign firewall applied on
 the evaluation side); pc1, pc2 and regime come row-paired from the same index
 draw in the distribution cache.
 
 Marker size, stated: matplotlib's `s` is an AREA in points squared, so matching
-the dot-to-panel ratio of the single-panel Chapter-9 scatter means scaling by
-the SQUARE of the width ratio, not the width ratio. The two Chapter-9 constants
-below are the only estimates in this file; correct them there and every panel
-follows.
+the dot-to-panel ratio of the single-panel Section 4.7 scatter means scaling
+by the SQUARE of the width ratio, not the width ratio. The two scatter constants
+below are measured from pca_scatter_labeled.py and every panel follows them.
 
 Axis crop, stated: both axes are cropped to the central CROP_PCT per cent of
 the FRAME on each axis, the same convention and the same grounds as the
-Chapter-9 scatters (legibility only, never a change of population). The crop is
+Section 4.7 scatters (legibility only, never a change of population). The crop is
 taken on the frame so every panel shares one window and the panels stay
 directly comparable; the number of method points falling outside it is counted
 and printed, so nothing is hidden. Lower CROP_PCT to zoom further.
@@ -55,9 +54,9 @@ FIG_W, FIG_H = 16.0, 7.4
 BG_BINS = 120
 
 # ---- marker size, derived rather than guessed -----------------------------
-# Measured from pca_scatter_labeled.py (figsize=(6.8, 6.0), s=4) — no longer
-# estimates; change ONLY here if the Chapter-9 scatter changes.
-CH9_FIG_W_IN = 6.8      # width of the Chapter-9 scatter figure, inches
+# Measured from pca_scatter_labeled.py (figsize=(6.8, 6.0), s=4). Change ONLY
+# here if the Section 4.7 scatter changes.
+CH9_FIG_W_IN = 6.8      # width of the Section 4.7 scatter figure, inches
 CH9_POINT_S = 4.0       # its scatter `s` (area, points squared)
 
 _PANEL_W_IN = FIG_W / NCOLS                       # ~2.67 in per panel here
@@ -65,7 +64,7 @@ _AREA_SCALE = (_PANEL_W_IN / CH9_FIG_W_IN) ** 2   # AREA scales as width^2
 POINT_S = CH9_POINT_S * _AREA_SCALE
 POINT_ALPHA = 0.45      # smaller dots overlap less, so alpha can rise
 
-CROP_PCT = 99.95        # central % of the FRAME kept on each axis (Chapter 9
+CROP_PCT = 99.95        # central % of the FRAME kept on each axis (Section 4.7
                         # convention). 99 = wider, 95 = tighter zoom.
 CROP_PAD = 0.03         # fraction of the cropped span added as margin
 

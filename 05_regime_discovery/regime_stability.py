@@ -1,5 +1,5 @@
 """
-regime_stability.py  —  Section 4.6.7 figure
+regime_stability.py  —  Sections 4.7.8–4.7.9 figure
 Reads bootstrap_jaccard.parquet → per-regime mean bootstrap-Jaccard, coloured by
 regime, with Hennig's reference lines (≥0.75 stable, ≥0.85 highly stable). Legend
 placed lower-right so it does not sit on top of the (near-full-height) bars.
@@ -8,6 +8,7 @@ The mean value is annotated above each bar: the scores sit close together near
 the top of the scale, where bar height alone does not separate them. Thin reader.
 """
 
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -15,9 +16,10 @@ import matplotlib.pyplot as plt
 from tum_colors import TUM_SECONDARY
 from regime_style import regime_label, regime_color
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "validity"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "validity"
 DPI             = 300
 
 J_STABLE, J_HIGH = 0.75, 0.85

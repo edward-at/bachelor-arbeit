@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""subset_eval_common.py — shared constants and loaders for the 12.1 figures.
+"""subset_eval_common.py — shared constants and loaders for the Section 4.10 figures.
 
 Every figure script imports from here, so method order, labels, colours and
 cache paths have exactly ONE definition. All figures read ONLY the eval cache
@@ -20,6 +20,7 @@ figure; flip METHOD_COLORS to {m: MAIN_BLUE} for a uniform view.
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -38,21 +39,21 @@ except ImportError:
     LOW_DYNAMIC_REGIMES = None
 
 # ---------------------------------------------------------------------------
-# paths (THESIS_ROOT env override exists only for sandbox testing)
-# figures moved: regime_discovery -> subset_curation (Edward, 2026-07-08)
+# paths (DATA_ROOT and REPO_ROOT come from thesis_paths.py)
 # ---------------------------------------------------------------------------
-PROJECT_ROOT = Path(os.environ.get("THESIS_ROOT", "/Users/edward/Downloads"))
-EVAL_DIR = PROJECT_ROOT / "dataset" / "subset_data" / "eval"
-FIG_ROOT = PROJECT_ROOT / "bachelor-arbeit" / "07_subset_curation" / "figures"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+EVAL_DIR = DATA_ROOT / "subset_data" / "eval"
+FIG_ROOT = REPO_ROOT / "07_subset_curation" / "figures"
 OUT_DIR = FIG_ROOT / "subset_eval"
 DPI = 300
 
-# Budget-tier size = one rarest-regime supply (Section 11.3). Recomputed on
+# Budget-tier size = one rarest-regime supply (Section 4.9.3). Recomputed on
 # the current 402,421-window frame, where the rarest regime is regime 4.
 # CHANGE HERE ONLY: the tier directory name is derived from it downstream.
 TIER = "budget"                      # headline population
 from canonical import C
-BUDGET_N = C.budget_n                # derived from the artifacts (was 71_390)
+BUDGET_N = C.budget_n                # derived from the artifacts
 
 MAIN_BLUE = TUM_SECONDARY["blue2"]  # the thesis single-series colour
 
@@ -70,7 +71,7 @@ METHOD_SHORT = {
 ROW_LABELS = {"R0_frame": "Frame", "R1_guarded": "Guarded frame",
               **{m: f"{m} {METHOD_SHORT[m]}" for m in METHODS}}
 
-# design-family colour (Section 11.5-11.9 families)
+# design-family colour (Section 4.9.5-4.9.9 families)
 METHOD_COLORS = {
     "M01": TUM_SECONDARY["gray"],      # replicas
     "M02": TUM_SECONDARY["gray"],
@@ -82,7 +83,7 @@ METHOD_COLORS = {
     "M08": TUM_ACCENT["orange"],
     "M09": TUM_SECONDARY["light_gray"],          # coverage / geometric
     "M10": TUM_SECONDARY["light_gray"],
-    "M11": TUM_EXT["purple"],          # variance-optimal (Section 11.10)
+    "M11": TUM_EXT["purple"],          # variance-optimal (Section 4.9.10)
 }
 FAMILY_LEGEND = [("Replica", TUM_SECONDARY["gray"]),
                  ("Allocation", TUM_ACCENT["blue"]),

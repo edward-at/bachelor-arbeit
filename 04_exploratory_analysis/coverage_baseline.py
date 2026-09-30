@@ -1,25 +1,14 @@
 #!/usr/bin/env python3
 """coverage_baseline.py — regenerate audit_baseline.json from the standardized clips.
 
-WHY THIS EXISTS
----------------
-`run_pipeline.py` documents the coverage stage as producing audit_baseline.json
-and lists it as that stage's artifact, but coverage.py contains no JSON write:
-it emits three PNGs only. The artifact spec is a plain Path checked with
-.exists(), so the stale file satisfies the check and the stage reports OK while
-producing nothing. The producer was removed at some point and the spec was never
-updated to notice.
+Scans every standardized clip in inertial_data/ and writes one summary record
+per dataset to audit_baseline.json: clip and frame counts, per-signal maxima,
+the number of frames above the physical-validity gates, mean speed, the channel
+sources and the pipeline version stored in the clip metadata. This is the
+artifact of the coverage stage in run_pipeline.py and feeds the availability
+audit (Section 4.4.4).
 
-The consequence: audit_baseline.json is pinned at
-v4_10hz_common_grid_validity_gated while the clips are v4_4, so it still shows
-Boreas at 110 clips, DurLAR at 4, Oxford at 70 with a 200 km/h maximum, and
-4Seasons as EXCLUDED_MEASUREMENT_LIMITED — all pre-cleaning. Section 7.3 of the
-thesis quotes those numbers.
-
-This script restores the producer. The schema matches the existing file exactly
-so nothing downstream needs changing.
-
-FIELD DEFINITIONS (inferred from the v4 file and the documented gates)
+FIELD DEFINITIONS
   clips          number of standardized clip files
   frames         total rows across them
   max_kmh        max speed_kmh
@@ -57,16 +46,17 @@ import pyarrow.parquet as pq
 from tqdm import tqdm
 
 # ---------------------------------------------------------------------------
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-INERTIAL_DIR = PROJECT_ROOT / "dataset" / "inertial_data"
-OUT_PATH = (PROJECT_ROOT / "bachelor-arbeit" / "04_exploratory_analysis"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+INERTIAL_DIR = DATA_ROOT / "inertial_data"
+OUT_PATH = (REPO_ROOT / "04_exploratory_analysis"
             / "audit_baseline.json")
 
 DATASETS = ["4seasons", "a2d2", "boreas_rt", "durlar", "ford", "hdd",
             "kitscenes", "kitti", "kitti360", "nuscene", "nvidia", "oxford",
             "waymo", "zod"]
 
-# Published bounds (Section 8.1). Kept here as the reporting thresholds only;
+# Published bounds (Section 4.3.4 / 4.3.6). Kept here as the reporting thresholds only;
 # enforcement lives in standardize_inertial_data.py.
 SPEED_GATE_KMH = 200.0
 SPEED_WATCH_KMH = 108.0

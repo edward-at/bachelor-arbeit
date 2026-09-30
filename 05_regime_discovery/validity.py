@@ -1,8 +1,8 @@
 """
-validity.py  —  Section 4.6.7, internal validity indices and cluster stability
+validity.py  —  Sections 4.7.8–4.7.9, internal validity indices and cluster stability
 ────────────────────────────────────────────────────────────────────────────
-Hardens the k-means partition of Section 4.6.4 with evidence beyond the
-silhouette and the global ARIs of Section 4.6.6, all on the same FIT population
+Hardens the k-means partition of Section 4.7.5 with evidence beyond the
+silhouette and the global ARIs of Section 4.7.7, all on the same FIT population
 in the same full standardised feature space:
 
   • Internal indices over the k-sweep — the gap statistic (departure of the

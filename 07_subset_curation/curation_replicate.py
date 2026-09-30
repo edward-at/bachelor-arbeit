@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""curation_replicate.py — seed replication of the winner (13.3, step 1).
+"""curation_replicate.py — seed replication of the winner (step 1 of replication and reveal).
 
-Resolves the limitation Section 12.5 carries openly: every method was
-realised by a single seeded draw, so the D4 tie-break value (C01's
+Resolves the limitation stated in the evaluation (thesis 4.10): every method
+was realised by a single seeded draw, so the tie-break value (C01's
 max within-regime shift) had no error bar. This script rebuilds
 the winner R times under a declared replicate seed family and evaluates
 each draw through the HARNESS'S OWN compute_row — the identical
 instrument, not a reimplementation — so replicated values are directly
 comparable to the recorded single-draw numbers.
 
-Declared before running (D28, 2026-08-20):
+Declared before any curation subset was evaluated:
   replicate seed family = (GLOBAL_SEED, REPLICATE_SEED_BASE + r),
   REPLICATE_SEED_BASE = 1200, r = 0..R-1, R = 20 by default.
   The original draw (42, 12) is NOT one of the replicates; it is plotted
@@ -20,9 +20,9 @@ Declared before running (D28, 2026-08-20):
 
 The reserve is a census (inclusion probability 1), so it is identical in
 every replicate by construction. Replication therefore varies only the
-fill, which is exactly the D22 disclosure: the reported spread understates
-total variance, and this script prints that sentence with the numbers so it
-cannot be forgotten in the write-up.
+fill, which is the disclosure attached to the event reserve: the reported
+spread understates total variance, and this script prints that statement
+with the numbers.
 
 Nothing sealed is read. No artifact is overwritten: replicate subsets are
 built in memory and discarded, and the summary is written beside the eval
@@ -47,17 +47,16 @@ import curation_build as cb
 from curation_common import (BUDGET_N, GATES, TIE_BREAK, N_EVENT_RESERVE,
                              WINNER, C_SEED_INDEX)
 
-REPLICATE_SEED_BASE = 1200          # D28 declared family
+REPLICATE_SEED_BASE = 1200          # declared replicate seed family
 DEFAULT_R = 20
 
 
 def harness_context():
     """Reproduce the harness's own setup so compute_row is byte-identical.
 
-    v2: reuses curation_eval.patch() first — the initial run failed on the
-    stale frame_n canary because build_master() was called without the
-    re-anchoring the eval driver applies. Same patch, same values, same
-    loud old->new log.
+    Reuses curation_eval.patch() first, because build_master() needs the
+    same canary re-anchoring the eval driver applies. Same patch, same
+    values, same loud old->new log.
     """
     import curation_eval as ce
     ce.patch()

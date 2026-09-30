@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""F2 — per-method regime profiles (small-multiple grid, budget tier).
+"""Per-method regime profiles (small-multiple grid, budget tier).
 
 Mirrors bias_regime_grid.py verbatim: one panel per method, five regime bars
 in the canonical regime colours, black bar edges, a thin grey line at the
 uniform share (1/N = 20 %), shared y-axis with a dynamic ceiling, regime key
 in the suptitle. The Frame profile is the leading panel. Panels follow the
-fixed slate order (see subset_stacked_bar.py for the D4 grounds).
+fixed slate order (see subset_stacked_bar.py for the grounds).
 Reads ONLY the eval cache. Output: figures/subset_eval/subset_regime_grid.png
 """
 

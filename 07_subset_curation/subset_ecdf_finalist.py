@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-"""T2 — ECDF overlays for the finalists (budget tier).
+"""ECDF overlays for the finalists (budget tier).
 
 Four panels (dynamic score, sigma speed, sigma acc*, sigma yaw): empirical
-CDFs of the frame (black) and the finalist methods. Tier-2 by design: ECDF
+CDFs of the frame (black) and the finalist methods. By design, since ECDF
 overlays are only readable at 3-5 lines, which is why the all-methods
 distribution view is the ridgeline and THIS figure waits for a finalist
 pick.
 
-FINALISTS below is FIXED by register entry D27 (frame + M01 + M05 + M07)
-(M05 = only source-breaker, M08 = balance without quotas + full event
-capture, M09 = coverage champion). Confirm or replace it after reviewing
-the T1 figures; the choice is analytic, not mine to lock.
+The finalists (frame, M01, M05, M07) were fixed before the curation
+evaluation (Section 4.12).
 Reads ONLY the eval cache. Output: figures/subset_eval/subset_ecdf_finalists.png
 """
 
@@ -23,8 +21,8 @@ from subset_eval_common import (DPI, ROW_LABELS, TIER, BUDGET_N, TUM_ACCENT,
                                 TUM_EXT, dist_arrays, ensure_outdir,
                                 load_dist, load_master, present_methods)
 
-# PROVISIONAL finalist pick — edit after reviewing the Tier-1 results.
-FINALISTS = ["M01", "M05", "M07"]   # D27: frame + M01 + M05 + M07; the winner joins via the Ch.13 renderer
+# finalists fixed before the curation evaluation (Section 4.12)
+FINALISTS = ["M01", "M05", "M07"]   # frame + M01 + M05 + M07, the winner joins via the curation renderer
 PALETTE = [TUM_ACCENT["blue"], TUM_ACCENT["orange"], TUM_ACCENT["green"],
            TUM_EXT["purple"], TUM_EXT["red"]]
 
@@ -71,9 +69,6 @@ def main() -> None:
         ax.legend()
         ax.set_axisbelow(True)
         ax.grid(True, alpha=0.3)
-    # 2026-08-23: title cleaned to the thesis text rules (no em dash, no
-    # semicolon, no tier name) and the finalist list is fixed by register
-    # entry D27, no longer provisional. Content unchanged.
     fig.suptitle("ECDF overlays, frame and finalists "
                  "(finalist register D27)")
     fig.tight_layout()

@@ -8,7 +8,7 @@ colour ONCE, here, and every figure follows.
 
 Index = regime number, ordered 0 = calmest .. k-1 = most dynamic (the same
 deterministic intensity ordering clustering.py applies). Names are BEHAVIOURAL,
-never tier-levels (low/medium/high), which are reserved for Section 4.5.
+never tier-levels (low/medium/high), which are reserved for the variability tiers.
 
 NOTE on regime 0 ("Calm / Stationary"): in the 20 s k-means layer this regime's
 centroid is low-speed calm driving (~12 km/h); in the 2 s HMM the same aligned

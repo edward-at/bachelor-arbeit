@@ -1,15 +1,16 @@
 """
-pca_scatter_preclustering.py  —  Section 4.6.3 figure
+pca_scatter_preclustering.py  —  Sections 4.7.3–4.7.4 figure
 ────────────────────────────────────────────────────────────────────────────
 The windows in the 2-D PCA plane BEFORE any labels are imposed — the structure
 the clustering must recover. The view is cropped to the central 98 % of windows
-so the dense region is legible (sparse outliers beyond are omitted — state this
-in the caption). A fixed-seed subsample is drawn for rendering only.
+so the dense region is legible (sparse outliers beyond are
+omitted). A fixed-seed subsample is drawn for rendering only.
 
 Thin reader of dataset/regime_data/cluster_assignments.parquet — no model file.
 ────────────────────────────────────────────────────────────────────────────
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -17,9 +18,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tum_colors import TUM_SECONDARY
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "pca"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "pca"
 
 N_PLOT   = 30000       # subsample for rendering only (clustering uses all windows)
 SEED     = 42

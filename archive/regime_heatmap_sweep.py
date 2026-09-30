@@ -1,12 +1,13 @@
 """
-explore_k_profiles.py  —  THROWAWAY exploration, not part of the pipeline.
+regime_heatmap_sweep.py: display-only exploration, not part of the pipeline.
 
 Shows what the regime profile heatmap looks like at every k in the sweep, so the
 qualitative story behind the index curves is visible: which behaviour splits off
 from which as k grows.
 
-WRITES NOTHING. No parquet, no PNG — the figure is only displayed. Delete this
-file afterwards; it is not a Section 4.6 artefact and nothing downstream reads it.
+WRITES NOTHING. No parquet, no PNG: the figure is only displayed, and nothing
+downstream reads it. It imports clustering, so to run it add 05_regime_discovery
+to PYTHONPATH.
 
 Reuses the production fit population, scaler and regime ordering from
 clustering.py so the profiles are directly comparable to the k=5 production run.
@@ -18,7 +19,7 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 import matplotlib
-matplotlib.use("TkAgg")          # interactive window; comment out if it errors
+matplotlib.use("TkAgg")          # interactive backend
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans

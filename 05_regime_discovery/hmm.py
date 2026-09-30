@@ -1,5 +1,5 @@
 """
-hmm.py  —  Section 4.6.9, temporal regime structure (hidden Markov model)
+hmm.py  —  Section 4.7.11, temporal regime structure (hidden Markov model)
 ────────────────────────────────────────────────────────────────────────────
 Adds the time axis the static analyses discard, across ALL 14 datasets.
 
@@ -36,7 +36,7 @@ alignment can be checked directly.
 BOUNDARY: the transition structure here is the POOLED corpus's — how regimes
 succeed one another in driving in general. The SAME construction per dataset, and
 the comparison of one dataset's transitions against another's, is the bias
-measurement of Section 4.7, not this section.
+measurement of Section 4.8, not this section.
 
 Requires hmmlearn. k is read from the saved k-sweep curve.
 
@@ -46,9 +46,9 @@ Reads:   dataset/regime_data/kselect_curves.parquet
 Writes:  dataset/regime_data/hmm_transitions.parquet
          dataset/regime_data/hmm_durations.parquet
          dataset/regime_data/hmm_states.parquet   (decoded example timelines)
-         dataset/regime_data/hmm_sequences.parquet   (per dataset: clips used, sub-windows; block 5D)
-         dataset/regime_data/hmm_alignment.parquet   (emission means vs k-means centroids, physical; block 5D)
-         dataset/regime_data/hmm_run_summary.parquet (sequences, sub-windows, EM convergence; block 5D)
+         dataset/regime_data/hmm_sequences.parquet   (per dataset: clips used, sub-windows)
+         dataset/regime_data/hmm_alignment.parquet   (emission means vs k-means centroids, physical)
+         dataset/regime_data/hmm_run_summary.parquet (sequences, sub-windows, EM convergence)
 ────────────────────────────────────────────────────────────────────────────
 """
 
@@ -66,7 +66,7 @@ from hmmlearn.hmm import GaussianHMM
 
 # shared steps — single source of truth
 from clustering import (_discover, _load, _build_fit, _order_regimes,
-                        FEATURES, N_INIT, SEED, CAP, ARTIFACT_DIR, PROJECT_ROOT)
+                        FEATURES, N_INIT, SEED, CAP, ARTIFACT_DIR, DATA_ROOT, REPO_ROOT)
 
 warnings.filterwarnings("ignore")
 
@@ -80,20 +80,18 @@ except Exception:
 # PARAMETERS
 # ─────────────────────────────────────────────────────────────────────────────
 
-INERTIAL_DIR           = PROJECT_ROOT / "dataset" / "inertial_data"
+INERTIAL_DIR           = DATA_ROOT / "inertial_data"
 HMM_WIN_S              = 2.0      # sub-window width (s) — finer than the 20 s analysis window
 HMM_STEP_S             = 1.0      # sub-window step (s) — 50 % overlap, within-clip only
 GRID_HZ                = 10.0     # frame grid
 MIN_VALID_FRAC         = 0.5      # drop a sub-window with fewer valid frames than this
 CAP_SUBWIN_PER_DATASET = 30000    # per-dataset sub-window budget (dataset balance)
 READ_CHUNK             = 512      # clips read per parallel batch
-HMM_N_ITER             = 50       # EM iterations (raise toward 200 for the final run if not converged)
-HMM_COV_TYPE           = "diag"   # emission covariance. The crash was a SINGULAR covariance on
-                                  # hard-zero features (mean_acc_pos/neg are exactly 0 in steady
-                                  # sub-windows); HMM_MIN_COVAR floors it and fixes that for 'full'.
-                                  # FALLBACK: if a regime comes back unpopulated (0 runs, or two
-                                  # states aligning to one regime in the alignment check), switch to
-                                  # 'diag' — fewer parameters, more stable, slightly less expressive.
+HMM_N_ITER             = 50       # EM iterations
+HMM_COV_TYPE           = "diag"   # emission covariance. Diagonal: fewer parameters and more stable
+                                  # than 'full', at slightly less expressiveness. mean_acc_pos/neg
+                                  # are exactly 0 in steady sub-windows, so HMM_MIN_COVAR floors the
+                                  # variances to keep them non-singular.
 HMM_MIN_COVAR          = 1e-2     # covariance floor (standardised space) — prevents singular/NaN covariances
 N_TIMELINE             = 3        # longest collected clips decoded for the timeline figure
 
@@ -161,8 +159,8 @@ def _subwindow_features(df: pd.DataFrame):
               "std_speed_kmh":     np.nanstd(spw),
               "mean_acc_pos":      float(pos.mean()) if pos.size else 0.0,
               # magnitude of the negative part, on the polarity of the window layer's
-              # mean_acc_neg (block 5D fix: the signed conditional mean carried the
-              # opposite sign and swapped the Braking / Accelerating alignment)
+              # mean_acc_neg (the signed conditional mean would carry the opposite
+              # sign and swap the Braking / Accelerating alignment)
               "mean_acc_neg":      float(-neg.mean()) if neg.size else 0.0,
               "mean_abs_yaw_rate": np.nanmean(np.abs(yrw))}
         row = [fd[f] for f in FEATURES]
@@ -243,7 +241,7 @@ def main():
     print(f"\n  Building {HMM_WIN_S:.0f}s sub-window sequences (all 14 datasets):")
     print(f"    {'dataset':<12}{'clips used':>12}{'sub-windows':>14}")
     X_list, starts_list, seq_meta = [], [], []
-    seq_rows = []                                   # per-dataset collection (block 5D)
+    seq_rows = []                                   # per-dataset collection
     for ds in tqdm(pop, desc="frame layer"):
         seqs, total = _collect_dataset(ds)
         used = 0
@@ -282,7 +280,7 @@ def main():
     print(f"    {'regime':>7}{'k-means centroid':>18}{'HMM emission':>15}")
     for st, rg in sorted(state2reg.items(), key=lambda kv: kv[1]):
         print(f"    {rg:>7}{kcent_phys[rg, si]:>18.1f}{means_phys[st, si]:>15.1f}")
-    align_rows = []                                 # all five features, physical units (block 5D)
+    align_rows = []                                 # all five features, physical units
     for st, rg in sorted(state2reg.items(), key=lambda kv: kv[1]):
         row = {"regime": int(rg), "state": int(st)}
         for fi, f in enumerate(FEATURES):
@@ -348,9 +346,8 @@ def main():
     pd.DataFrame(dur_rows).to_parquet(ARTIFACT_DIR / "hmm_durations.parquet", index=False)
     tl.to_parquet(ARTIFACT_DIR / "hmm_states.parquet", index=False)
 
-    # ── persisted for Chapter 5 (appended 2026-09-26, block 5D): the collection per
-    #    dataset, the alignment check, and the run summary the console printed.
-    #    No existing output changes.
+    # ── persisted for Chapter 5: the collection per dataset, the alignment check,
+    #    and the run summary the console printed.
     pd.DataFrame(seq_rows).to_parquet(ARTIFACT_DIR / "hmm_sequences.parquet", index=False)
     pd.DataFrame(align_rows).to_parquet(ARTIFACT_DIR / "hmm_alignment.parquet", index=False)
     hist = list(getattr(hmm.monitor_, "history", []))

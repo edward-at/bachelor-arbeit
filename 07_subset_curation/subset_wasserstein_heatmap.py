@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""F5 — per-channel W1 distance to the frame (two figures, budget tier).
+"""Per-channel W1 distance to the frame as horizontal bars (two figures, budget tier).
 
 Mirrors bias_wasserstein.py: horizontal-bar panels, one per channel, separate
 axes because units differ (never a shared colour scale), black bar edges,
 x-grid, suptitle carrying the asterisk note. Two figures: the IN-MODEL sigma
 channels (the score's ingredients — construction-influenced for the
 score/geometry designs) and the HELD-OUT summary channels no allocation
-touches. max_speed and peak_acc_mag* are absent by design: sealed shelf (D5).
+touches. max_speed and peak_acc_mag* are absent by design: sealed shelf.
 Rows keep the fixed slate order with the guarded frame as a context bar
-below a separator (guard cost, D14). Bars in design-family colours.
+below a separator (guard cost). Bars in design-family colours.
 Outputs: figures/subset_eval/subset_wasserstein_inmodel.png, _heldout.png
 """
 
@@ -30,7 +30,7 @@ FIGS = [
     ]),
     ("heldout", "held-out summary channels", [
         ("w1_mean_speed",   "Mean speed\n1-Wasserstein (km/h)"),
-        ("w1_peak_decel",   "Peak deceleration\n1-Wasserstein (g) *"),  # block 5F: the harness computes this W1 on decel_g (Section 4.10.6)
+        ("w1_peak_decel",   "Peak deceleration\n1-Wasserstein (g) *"),  # the harness computes this W1 on decel_g (Section 4.10.6)
         ("w1_peak_abs_yaw", "Peak |yaw|\n1-Wasserstein (\u00b0/s)"),
     ]),
 ]

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""curation_winner_dossier.py — the winner's comparative dossier (13.3).
+"""curation_winner_dossier.py — the winner's comparative dossier.
 
-Six figures, every one the same visual argument: the winner in the
-curation colour over the frame as a light-gray ghost, so the reader sees
-in one glance where C01 sits relative to the biased corpus without any
-method or dataset being reprinted (duplication rule of Section 13.2).
+Seven figures. The distribution figures make the same visual argument: the
+winner in the curation colour over the frame as a light-gray ghost, so the
+reader sees in one glance where C01 sits relative to the biased corpus
+without any method or dataset being reprinted (duplication rule of the
+curation protocol).
 The vs-methods evidence is carried by the finalist ECDF overlay, which
 already exists. Everything here reads the frozen caches and recomputes
 nothing.
@@ -14,7 +15,10 @@ nothing.
   curation_winner_trajectory_fan.png   XY fans, frame | C01
   curation_winner_speed_fan.png        20 s speed-change fans, frame | C01
   curation_winner_phase_portraits.png  speed x a_long and speed x yaw
-  curation_winner_w1_nullband.png      held-out W1 vs the K=100 SRS band
+  curation_winner_fidelity.png         per-regime |shift of mean sigma(speed)|
+                                       vs the 0.5 km/h limit, R = 20 spread
+  curation_winner_w1_departure.png     held-out W1 to the frame vs the K=100
+                                       SRS band
 
 Requires the frame caches to include the winner group (run
 curation_render_winner.py --frame-pass once if the assert fires).
@@ -37,10 +41,10 @@ GHOST = cc.GHOST
 BLUE = cc.CURATION_COLOR
 DT = 0.1
 
-# Fan styling mirrored verbatim from trajectory_fan.py (Chapter 8 grammar):
+# Fan styling mirrored verbatim from trajectory_fan.py (thesis 4.6.5):
 # viridis coloured by the window's dynamics, 2-98 percentile normalisation,
 # curvature-sorted draw order, robust P99 framing. All 5,000 cached fan
-# windows per group are drawn, as in Chapter 8.
+# windows per group are drawn, as in the exploratory fans.
 FAN_ALPHA = 0.16
 FAN_LW = 0.8
 FAN_CMAP = "viridis"
@@ -130,7 +134,7 @@ def _norm(values):
 
 
 def load_fan_records(win: str) -> dict:
-    """Per group: one record per cached fan window, Chapter 8 fields."""
+    """Per group: one record per cached fan window, exploratory fan fields."""
     idx = pd.read_parquet(cc.EVAL_DIR / "fan_index.parquet")
     frames = pd.read_parquet(cc.EVAL_DIR / "fan_frames.parquet")
     meta = json.load(open(cc.EVAL_DIR / "frame_pass_meta.json"))
@@ -260,8 +264,7 @@ def fig_portraits(win: str, outdir) -> None:
             raise SystemExit(f"[dossier] {g} missing from portraits — run "
                              f"curation_render_winner.py --frame-pass")
     # frame pass stores speed edges in m/s and yaw edges ALREADY in deg/s
-    # (subset_frame_pass.py line 290); the first render mislabelled speed
-    # and double-converted yaw to a +-3000 axis. Fixed here.
+    # (subset_frame_pass.py), so only speed is converted here.
     se = z["speed_edges"] * 3.6                       # m/s -> km/h
     ae, ye = z["along_edges"], z["yaw_edges"]         # native units
     panels = [("Ha", ae, "a_long (m/s^2)"),
@@ -273,7 +276,7 @@ def fig_portraits(win: str, outdir) -> None:
             h = H[methods.index(g)]
             ax = axes[r, c]
             im = ax.imshow(np.log10(h.T + 1), origin="lower",
-                           aspect="auto", cmap="viridis",  # Ch.8 grammar
+                           aspect="auto", cmap="viridis",  # exploratory-figure grammar
                            extent=[se[0], se[-1], edges[0], edges[-1]])
             ax.set_title(("Frame" if g == "R0_frame" else g)
                          if r == 0 else "")
@@ -294,7 +297,7 @@ def fig_fidelity(win: str, outdir) -> None:
     """THE held-out no-damage evidence: per-regime |shift of mean
     sigma(speed)| against the 0.5 km/h P5 limit, with the R = 20
     replication spread. This, not the W1-to-frame distances, is the
-    quantity the D4 tie-break is defined on."""
+    quantity the tie-break is defined on."""
     d = cc.load_long()
     d = d[(d["tier"] == "budget") & (d["variant"] == "main")
           & (~d["sealed"]) & (d["method"] == win)]

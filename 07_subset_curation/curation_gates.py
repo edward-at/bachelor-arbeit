@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""curation_gates.py — apply the D4 rule mechanically and declare the winner
-(13.2). Tables only, no figures (D25): the rule decides on numbers, plots
-never vote.
+"""curation_gates.py — apply the selection rule mechanically and declare the winner.
+
+Tables only, no figures (numbers-first rule): the rule decides on numbers,
+plots never vote.
 
 Sequence, printed in reading order:
-  1. The D4 rule text with thresholds and grounds (the dated declaration).
+  1. The selection rule text with thresholds and grounds (declared before
+     any curation subset was evaluated).
   2. The 2x2 ablation table (M03 / C02 / C03 / C01) on every gate metric,
      the tie-break, and the diagnostics — each cell tagged with its
      tautology class so construction-determined values cannot be read as
      findings, and each metric shown with the K=100 SRS null band.
   3. Gate pass/fail for the full slate (M01..M11 + C01..C03).
   4. Tie handling: survivors within the tie tolerance on the tie-break
-     metric are declared tied (both replicate in 13.3); otherwise the
+     metric are declared tied (both are replicated); otherwise the
      minimiser wins. Tolerance = half-width of the central-95% SRS null
      band for the tie-break metric, TIE_FALLBACK_TOL if the band is absent
      (disclosed).
-  5. The winner declaration line to paste into the register and into
+  5. The winner declaration line, whose values are recorded in
      curation_common.py (WINNER / FINALISTS).
 
 Nothing sealed is read: only main-variant unsealed rows are touched.

@@ -1,8 +1,7 @@
 """
-covariance_contours.py  —  Section 4.6.8 figure (companion to covariance_overlay)
+covariance_contours.py  —  Section 4.7.10 figure
 ────────────────────────────────────────────────────────────────────────────
-Where covariance_overlay.py draws a single 1σ ring per component, this figure
-shows the density fall-off: each component is drawn at several probability-mass
+Shows the density fall-off of the GMM components: each component is drawn at several probability-mass
 levels, so the reader sees how far a component actually reaches rather than one
 arbitrary cut.
 
@@ -13,9 +12,8 @@ mass p lies at Mahalanobis radius r = sqrt(-2 ln(1 - p)):
       p = 0.25 -> r = 0.759        p = 0.90 -> r = 2.146
       p = 0.50 -> r = 1.177
 
-Note that the 1σ ring (r = 1) of the companion figure encloses only 39 % of the
-mass in two dimensions — the components reach substantially further than that
-figure suggests, which is precisely what this one is for.
+Note that a 1σ ring (r = 1) encloses only 39 % of the mass in two dimensions,
+so the components reach substantially further than a single 1σ outline suggests.
 
 RENDERING. All components share one panel and every level is drawn as an
 outline. Line weight and opacity are graded by level — inner contours heavier
@@ -32,6 +30,7 @@ gmm_assignments.parquet (background windows). No recomputation.
 ────────────────────────────────────────────────────────────────────────────
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -42,18 +41,19 @@ from matplotlib.lines import Line2D
 from tum_colors import TUM_SECONDARY
 from regime_style import regime_label, regime_color
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "gmm"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "gmm"
 
 LEVELS    = [0.10, 0.25, 0.50, 0.75, 0.90]   # probability mass enclosed
 LW_INNER  = 2.2       # linewidth of the innermost contour
 LW_OUTER  = 0.7       # linewidth of the outermost contour
 A_INNER   = 1.00      # opacity of the innermost contour
 A_OUTER   = 0.45      # opacity of the outermost contour
-N_PLOT    = 30000     # background subsample, rendering only (matches the overlay figure)
-PT_SIZE   = 4         # background marker size — same as covariance_overlay.py
-PT_ALPHA  = 0.30      # background opacity   — same as covariance_overlay.py
+N_PLOT    = 30000     # background subsample, rendering only
+PT_SIZE   = 4         # background marker size
+PT_ALPHA  = 0.30      # background opacity
 SEED      = 42
 CROP_PCT  = (1, 99)
 DPI       = 300

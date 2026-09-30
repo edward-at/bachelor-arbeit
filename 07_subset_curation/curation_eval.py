@@ -1,29 +1,27 @@
 #!/usr/bin/env python3
-"""curation_eval.py — re-run the Chapter 12 harness with the C-rows (13.2).
+"""curation_eval.py — re-run the evaluation harness (thesis 4.10) with the C-rows.
 
-v2 (2026-08-20): adds CANARY RE-ANCHORING after the first run failed on
-frame_n 402,421 != 402,975. The harness's EXPECTED block still carries the
-pre-restoration frozen record; the frame legitimately changed when the
-NVIDIA inertial data was restored. --force is the WRONG fix (it downgrades
-every hard canary, including the join-integrity guards). Instead this
-driver recomputes the reference values through the SELECTION-STAGE
-machinery (run_sampling.py, the authoritative side per Section 12.1) and
-patches EXPECTED, so the harness still independently re-derives each
-number and the cross-stage verification stays alive — just anchored to
-the current frame.
+CANARY RE-ANCHORING: the frame legitimately changed when the NVIDIA inertial
+data was restored, so a frozen EXPECTED record from before the restoration
+no longer matches it. --force is not a fix (it downgrades every hard canary,
+including the join-integrity guards). Instead this driver recomputes the
+reference values through the SELECTION-STAGE machinery (run_sampling.py, the
+authoritative side per thesis 4.10) and patches EXPECTED, so the harness
+still independently re-derives each number and the cross-stage verification
+stays alive, anchored to the current frame.
 
-The Chapter 12 file itself is never edited; every change is a module-
-global patch at import time, logged old -> new.
+The harness file itself is never edited. Every change is a module-global
+patch at import time, logged old -> new.
 
 Patches:
   * TIER_DIRS["budget"] -> tier_n{BUDGET_N}
   * METHOD_NAMES gains C01..C03
-  * NOTE 2026-08-29: the harness EXPECTED block now derives from canonical.py,
-    so the re-anchoring below patches derived values with independently derived
-    values. Retained as a cross-check, no longer a fix.
   * discover_methods() also matches C??_*.parquet
   * EXPECTED re-anchored: frame_n, guarded_n, trigger_guarded (unit
-    anchor), regime_supplies, predicate_union, budget_n, capability_n
+    anchor), regime_supplies, predicate_union, budget_n, capability_n.
+    The harness EXPECTED block itself derives from canonical.py, so the
+    re-anchoring compares derived values with independently derived
+    values and is retained as a cross-check.
 
 Usage:
   python curation_eval.py                    # both tiers, K=100 envelope
@@ -75,10 +73,10 @@ def patch() -> None:
     # tier directory
     h.TIER_DIRS["budget"] = h.SUBSET_DIR / f"tier_n{BUDGET_N}"
 
-    # names for logging + tautology rows — backfill the M-slate too, because
-    # a local harness copy that predates M11 KeyErrors at the log line even
-    # though the metrics compute fine (observed 2026-08-20). setdefault
-    # never overrides existing entries.
+    # names for logging + tautology rows. Backfill the M-slate too, because
+    # a harness copy that predates M11 raises KeyError at the log line even
+    # though the metrics compute fine. setdefault never overrides existing
+    # entries.
     from subset_eval_common import METHOD_SHORT as _M_SHORT
     for mid, short in _M_SHORT.items():
         h.METHOD_NAMES.setdefault(mid, short)

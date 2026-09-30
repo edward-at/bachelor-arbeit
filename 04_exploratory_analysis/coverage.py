@@ -1,6 +1,6 @@
 """
-Script: coverage_heatmaps.py
-=============================
+Script: coverage.py
+===================
 Bachelor Thesis: "Identifying Dynamic Biases in Large-Scale Public Datasets
 via Distributional Analysis"
 
@@ -28,8 +28,8 @@ Output: figures/coverage/signal_coverage.png
                                                    nonzero_pct, boundary_pct)
 
 Usage:
-    python coverage_heatmaps.py
-    python coverage_heatmaps.py /path/to/inertial_exploratory_analysis
+    python coverage.py
+    python coverage.py DATA_ROOT      (any folder that contains inertial_data/)
 """
 
 import sys
@@ -43,6 +43,9 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import numpy as np
 import pandas as pd
+
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
 
 warnings.filterwarnings("ignore")
 
@@ -74,7 +77,7 @@ BOUNDS = {
     "yaw_rate":   (-1.57,   1.57),   # rad/s
 }
 
-# Folder key -> thesis display name (Section 4.2.3 short names, used in every row label)
+# Folder key -> thesis display name (thesis short names, used in every row label)
 DISPLAY_NAMES = {
     "4seasons": "4Seasons", "a2d2": "A2D2", "boreas_rt": "Boreas", "durlar": "DurLAR",
     "ford": "Ford", "hdd": "HDD", "kitscenes": "KITScenes", "kitti": "KITTI",
@@ -106,9 +109,7 @@ def _find_project_root() -> Path:
         script_dir,
         Path.cwd().resolve(),
         script_dir.parent,
-        Path("/Users/edward/Downloads/bachelor-arbeit/04_exploratory_analysis"),
-        Path.home() / "Downloads" / "bachelor-arbeit" / "04_exploratory_analysis",
-        Path.home() / "Downloads" / "dataset",
+        DATA_ROOT,
     ]
     for root in candidates:
         if (root / "inertial_data").is_dir():
@@ -232,7 +233,7 @@ def _plot_heatmap(matrix: np.ndarray,
             rgba      = plt.get_cmap(cmap)(norm(val))
             luminance = 0.299 * rgba[0] + 0.587 * rgba[1] + 0.114 * rgba[2]
             txt_color = "white" if luminance < 0.5 else "black"
-            # documented exception (thesis-plot skill): one small in-cell annotation size
+            # documented exception: one small in-cell annotation size
             ax.text(j, i, f"{val:.1f}%",
                     ha="center", va="center",
                     fontsize=8, color=txt_color)
@@ -266,7 +267,7 @@ def main():
 
     root          = _find_project_root()
     inertial_root = root / "inertial_data"
-    fig_root      = (Path.home() / "Downloads" / "bachelor-arbeit"
+    fig_root      = (REPO_ROOT
                      / "04_exploratory_analysis" / "figures" / "coverage")
     fig_root.mkdir(parents=True, exist_ok=True)
 

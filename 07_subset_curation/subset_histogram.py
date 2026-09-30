@@ -2,7 +2,7 @@
 """Per-method frame-level signal histograms (distributional_analysis grammar).
 
 72 single figures (Frame + M01..M11, six signals each) reproducing Section
-8.1's grammar exactly — density bars, y-cap with overflow markers when one
+4.6.2's grammar exactly — density bars, y-cap with overflow markers when one
 bar dwarfs the rest, zero line for signed signals, dashed mean line, the
 mu/sigma/p05/p95/valid-vs-total stats box — plus six comparative grids (one
 per signal, all methods, frame ghost). One documented deviation: the x-axis

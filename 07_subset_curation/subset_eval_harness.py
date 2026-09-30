@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
 """
-subset_eval_harness.py — Chapter 12.1 evaluation harness.
+subset_eval_harness.py: Section 4.10 evaluation harness.
 
 Purpose
 -------
-Re-points the Chapter 10 instruments at METHODS instead of datasets. Reads the
-frozen Chapter 11 artifacts (window-ID subsets M01..M10 at two tiers), joins the
-fixed data layers, computes every 12.1 metric once, and writes a versioned cache
-that all Tier-1/Tier-2 figures read. No selection is re-run, nothing is re-fitted,
-no figure computes anything itself (compute-once, Section 9.6 discipline).
+Re-points the Section 4.8 instruments at METHODS instead of datasets. Reads the
+frozen Section 4.9 artifacts (window-ID subsets M01..M11 at two tiers), joins the
+fixed data layers, computes every Section 4.10 metric once, and writes a versioned
+cache that all figures read. No selection is re-run, nothing is re-fitted, no
+figure computes anything itself (compute-once discipline).
+
+curation_eval.py runs this harness with the curation rows added. A standalone
+run of this file writes the caches without C01-C03.
 
 Inputs (all read-only, all frozen before this script exists)
 -----------------------------------------------------------
   dataset/regime_data/cluster_assignments.parquet   frame: 402,421 windows,
                                                     regime labels 0..4, frozen PCs
-  dataset/subset_data/window_summaries.parquet      six per-window summaries (S11.4)
+  dataset/subset_data/window_summaries.parquet      six per-window summaries (Section 4.9.4)
   dataset/std_data/<dataset>.parquet                std_speed_kmh / std_acc_mag /
                                                     std_yaw_rate (rad/s) per window
-  dataset/subset_data/M01..M10_*.parquet            capability tier subsets
-  dataset/subset_data/tier_n71215/M01..M10_*.parquet budget tier subsets (headline)
+  dataset/subset_data/M01..M11_*.parquet            capability tier subsets
+  dataset/subset_data/tier_n71390/M01..M11_*.parquet budget tier subsets (headline,
+                                                    size = rarest regime supply)
   manifest.json in each tier dir                    decision constants + counts
 
 Outputs (dataset/subset_data/eval/)
@@ -26,25 +30,25 @@ Outputs (dataset/subset_data/eval/)
   metrics_long.parquet          every metric, long format:
                                 (tier, method, variant, metric, value, sealed)
   master_table_<tier>.csv       displayed metrics only, wide, R0/R1 context rows
-  srs_envelope_budget.parquet   K SRS replicate draws (null band, OD-4 / D16)
+  srs_envelope_budget.parquet   K SRS replicate draws (null band)
   tautology_map.csv             per (metric, method) class: T / P / O / N
   run_meta.json                 resolved schema, unit decisions, canaries, seeds
 
-Decisions applied (Chapter 11/12 D-ledger, dated 2026-07-08)
-------------------------------------------------------------
-  D14  population = the 402,421 non-overlapping frame; references R0 (frame),
+Decisions applied (fixed before evaluation)
+-------------------------------------------
+  Population = the 402,421 non-overlapping frame; references R0 (frame),
        R1 (guarded frame, one guard-cost row), R2 (uniform regime target);
-       Ch12 Wasserstein values are NOT comparable to the S10.6 per-dataset
-       values (those used the overlapping variability layer) — disclosed.
-  D15  instrument set: I1 regime/JS/H/D2, I2 per-channel W1 (in-model | held-out),
+       Section 4.10 Wasserstein values are NOT comparable to the Section 4.8
+       per-dataset values (those used the overlapping variability layer) — disclosed.
+  Instrument set: I1 regime/JS/H/D2, I2 per-channel W1 (in-model | held-out),
        I3 dynamic content, I4 source composition (+ worst-regime top supplier),
        I5 event & predicate retention, I6 PC / cell coverage. PSI excluded,
        Hill D1 excluded, GMM entropy optional via GMM_ENTROPY_PATH (sealed).
-  D16  SRS null envelope K=100, seeds 1000+k, budget tier.
-  D17  landscape scatter axes = low_dyn_share x top_source_share (figure stage).
-  D5   sealed shelf = { w1_max_speed, w1_peak_acc_mag } (+ mean_gmm_entropy if
+  SRS null envelope K=100, seeds 1000+k, budget tier.
+  Bias axes = low_dyn_share x top_source_share (figure stage).
+  Sealed shelf = { w1_max_speed, w1_peak_acc_mag } (+ mean_gmm_entropy if
        the hook is armed). The ex-confounded variant of EVERY metric is cached
-       sealed for the 12.4 confounded-source slice. Sealed values are written,
+       sealed for the confounded-source slice. Sealed values are written,
        never printed without --reveal.
 
 Canaries (hard unless --force)
@@ -59,17 +63,17 @@ Usage
   python subset_eval_harness.py                 # both tiers, envelope on budget
   python subset_eval_harness.py --inspect       # print input schemas and exit
   python subset_eval_harness.py --tiers budget  # one tier only
-  python subset_eval_harness.py --reveal        # also print sealed metrics (12.4)
+  python subset_eval_harness.py --reveal        # also print sealed metrics
   python subset_eval_harness.py --force         # downgrade hard canaries to warnings
   python subset_eval_harness.py --canaries-only # steps 1-3 only: persist the import-time
                                                 # canaries to eval/harness_canaries.json and
-                                                # stop; the cache is not touched (block 5F,
-                                                # 2026-09-26: the reproduced predicate union
-                                                # and the unit-hypothesis counts were console
-                                                # output only)
+                                                # stop; the cache is not touched (the
+                                                # reproduced predicate union and the
+                                                # unit-hypothesis counts are otherwise
+                                                # console output only)
 
-No matplotlib here — this is the compute stage. Figures are separate scripts
-that read the cache (Tier-1 batch follows this file).
+No matplotlib here, this is the compute stage. Figures are separate scripts
+that read the cache.
 """
 
 from __future__ import annotations
@@ -97,10 +101,11 @@ except ImportError:  # tqdm degrades to a no-op per convention
 # CONSTANTS — every tunable lives here
 # ============================================================================
 
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-REGIME_DIR   = PROJECT_ROOT / "dataset" / "regime_data"
-SUBSET_DIR   = PROJECT_ROOT / "dataset" / "subset_data"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+STD_DATA_DIR = DATA_ROOT / "std_data"
+REGIME_DIR   = DATA_ROOT / "regime_data"
+SUBSET_DIR   = DATA_ROOT / "subset_data"
 EVAL_DIR     = SUBSET_DIR / "eval"
 
 ASSIGNMENTS_PARQUET = REGIME_DIR / "cluster_assignments.parquet"
@@ -115,21 +120,21 @@ TIER_DIRS = {
 TIER_ORDER = ["budget", "capability"]
 
 from subset_eval_common import METHOD_SHORT as METHOD_NAMES
-# single definition (subset_eval_common) — the local copy stopped at M10 and
-# silently dropped M11 Neyman whenever this file ran standalone
+# single definition (subset_eval_common), so a standalone run also covers
+# M11 Neyman
 REF_ROWS = ["R0_frame", "R1_guarded"]           # context rows in every table
 
-from subset_eval_common import CONFOUNDED as CONFOUNDED_ACCEL   # asterisk sources (S10.2); mirror of bias_quant
+from subset_eval_common import CONFOUNDED as CONFOUNDED_ACCEL   # asterisk sources (Sections 4.4.5 and 4.8.2), mirror of bias_quant
 
 # Regime conventions. LOW_DYN_REGIME feeds low_dyn_share and the landscape
-# scatter x-axis (D17). Confirm against regime_style.py before captioning:
-# computation is by ID, so a label swap costs nothing downstream.
+# x-axis. Labels follow regime_style.py. Computation is by ID, so a label
+# swap costs nothing downstream.
 N_REGIMES = 5
-LOW_DYN_REGIME = 0          # Calm/Stationary per the frozen Chapter 9 labelling
+LOW_DYN_REGIME = 0          # Calm/Stationary per the frozen Section 4.7 labelling
 
-# Predicate constants — transcribed from S11.8 (M07/M08 definitions).
+# Predicate constants — transcribed from Section 4.9.8 (M07/M08 definitions).
 G_MS2 = 9.80665
-HARD_DECEL_G     = 0.6      # peak deceleration trigger (VERIFY-5 pending vs PDFs)
+HARD_DECEL_G     = 0.6      # peak deceleration trigger (100-Car lineage, Dingus et al. 2006)
 HIGH_YAW_DEG     = 30.0     # peak |yaw| >= 30 deg/s
 HIGH_SPEED_KMH   = 100.0    # mean speed >= 100 km/h
 STOPGO_STD_KMH   = 5.0      # sigma(speed) >= 5 ...
@@ -139,7 +144,7 @@ STAT_STD_KMH     = 1.0      # ... AND sigma < 1
 TOP_SCORE_Q      = 0.99     # score >= p99 of the GUARDED frame (frozen threshold)
 
 # W1 channel map: metric name -> master column. First three = in-model group,
-# next three = displayed held-out group, last two = SEALED shelf (D5).
+# next three = displayed held-out group, last two = SEALED shelf.
 W1_CHANNELS = {
     "w1_std_speed":    "std_speed_kmh",    # km/h
     "w1_std_acc":      "std_acc_mag",      # m/s^2  (*)
@@ -152,11 +157,11 @@ W1_CHANNELS = {
 }
 SEALED_METRICS = {"w1_max_speed", "w1_peak_acc_mag", "mean_gmm_entropy"}
 
-# Optional S3 hook: per-window frozen-GMM responsibility entropies (Chapter 10
-# closing batch). Set to the parquet path to arm; leave None to skip.
+# Optional hook: per-window frozen-GMM responsibility entropies (Section
+# 4.8). Set to the parquet path to arm; leave None to skip.
 GMM_ENTROPY_PATH: Path | None = None
 
-# SRS null envelope (D16).
+# SRS null envelope.
 K_ENVELOPE = 100
 ENVELOPE_SEED_BASE = 1000
 ENVELOPE_TIERS = {"budget"}
@@ -164,7 +169,7 @@ ENVELOPE_TIERS = {"budget"}
 # PC occupancy grid (I6): edges frozen on the R0 frame, declared resolution.
 PC_GRID_BINS = 60
 
-# Distribution cache for the boxplot/ridgeline figures (F3/F4): a seeded
+# Distribution cache for the boxplot/ridgeline figures: a seeded
 # per-method sample of the raw per-window values, budget tier only.
 DIST_TIERS = {"budget"}
 DIST_SAMPLE = 25_000
@@ -467,7 +472,7 @@ def build_master() -> tuple[pd.DataFrame, dict]:
         fail("bridged alternate keys not unique — window_idx/window_start_s "
              "disagree between std_data and the assignment grid")
 
-    # -- summaries join on ITS key (must be 100% coverage per S11.4) ---------
+    # -- summaries join on ITS key (must be 100% coverage per Section 4.9.4) ---------
     s = pd.DataFrame({
         "jkey": make_key(summ, m_s, s_strategy).values,
         "mean_speed":   summ[m_s["mean_speed"]].astype(float).values,
@@ -488,7 +493,7 @@ def build_master() -> tuple[pd.DataFrame, dict]:
         fail(f"summaries join incomplete: {miss} frame windows unmatched, "
              f"e.g. {sample}")
 
-    # -- optional S3 hook: frozen-GMM per-window entropy ----------------------
+    # -- optional hook: frozen-GMM per-window entropy ----------------------
     if GMM_ENTROPY_PATH is not None:
         gdf = pd.read_parquet(GMM_ENTROPY_PATH)
         gk = resolve_columns(gdf, CAND_KEYS, "gmm_entropy")
@@ -543,7 +548,7 @@ def calibrate_units(master: pd.DataFrame, meta: dict) -> None:
     else:
         decisions["speed"] = f"p99 {p99_ms:.1f} -> km/h"
 
-    # peak_decel: unit hypothesis chosen by the frozen 1,088 anchor (S11.3).
+    # peak_decel: unit hypothesis chosen by the frozen 1,088 anchor (Section 4.9.3).
     guard = ~master["dataset"].isin(CONFOUNDED_ACCEL)
     d_abs = master["peak_decel"].abs()
     c_g = int(((d_abs >= HARD_DECEL_G) & guard).sum())
@@ -573,7 +578,7 @@ def calibrate_units(master: pd.DataFrame, meta: dict) -> None:
         warn("regime supply multiset differs from the frozen record — "
              "verify LOW_DYN_REGIME / labels against regime_style.py")
 
-    # non-overlap spacing verification (mirror of S11.1), if starts available
+    # non-overlap spacing verification (mirror of Section 4.9.1), if starts available
     if "win_start" in master.columns:
         sp = (master.sort_values(["dataset", "clip", "win_start"])
                     .groupby(["dataset", "clip"])["win_start"].diff().dropna())
@@ -593,7 +598,7 @@ def add_score_and_predicates(master: pd.DataFrame, meta: dict,
                              manifests: dict) -> None:
     log("[3/6] Dynamic score and predicate masks")
     # score = sum_ch std_ch / pooled_mean(std_ch), pooled means on the FULL
-    # frame, native units (S11.4 single-source rule; yaw ratio is unit-free).
+    # frame, native units (Section 4.9.4 single-source rule; yaw ratio is unit-free).
     pooled = {
         "std_speed_kmh": float(master["std_speed_kmh"].mean()),
         "std_acc_mag":   float(master["std_acc_mag"].mean()),
@@ -657,8 +662,8 @@ def add_score_and_predicates(master: pd.DataFrame, meta: dict,
         f"(record: ~0.89 for Highway Cruising)")
     per_reg_name = (master.groupby("regime")["dataset"]
                           .apply(lambda s: s.value_counts(normalize=True).index[0]))
-    # persisted canaries (block 5F): everything this step prints and the
-    # prose of Section 5.7 reads, written as one JSON beside the cache so
+    # persisted canaries: everything this step prints and Section 5.7
+    # reports, written as one JSON beside the cache so
     # that no number of the harness exists only in a console line.
     meta["canaries"] = {
         "frame_n": int(len(master)),
@@ -817,7 +822,7 @@ def compute_row(sub: pd.DataFrame, ctx: BaseCtx, with_gmm: bool) -> dict:
 
 
 # ============================================================================
-# tautology map (D15/D16): T = construction-determined, P = influenced,
+# tautology map: T = construction-determined, P = influenced,
 # O = held-out, N = null anchor. Group defaults + metric-level overrides.
 # ============================================================================
 
@@ -895,7 +900,7 @@ def run_tier(tier: str, master: pd.DataFrame, meta: dict,
         fail(f"no M??_*.parquet subsets found in {tier_dir}")
     log(f"  methods found: {sorted(method_paths.keys())}")
 
-    # frozen PC-grid edges: min/max of the R0 frame (D15/I6, declared)
+    # frozen PC-grid edges: min/max of the R0 frame (I6, declared)
     e1 = np.linspace(master["pc1"].min(), master["pc1"].max(), PC_GRID_BINS + 1)
     e2 = np.linspace(master["pc2"].min(), master["pc2"].max(), PC_GRID_BINS + 1)
     edges = (e1, e2)
@@ -934,7 +939,7 @@ def run_tier(tier: str, master: pd.DataFrame, meta: dict,
                               "variant": variant, "metric": metric,
                               "value": value, "sealed": sealed})
 
-    # reference rows: R0 (frame vs itself) and R1 (guard-cost, S11.2 / D14)
+    # reference rows: R0 (frame vs itself) and R1 (guard-cost, Section 4.9.2)
     emit("R0_frame", "main", compute_row(master, ctx_main, with_gmm))
     emit("R1_guarded", "main", compute_row(guarded_df, ctx_main, with_gmm))
     dist_sample("R0_frame", master, 0)
@@ -975,7 +980,7 @@ def run_tier(tier: str, master: pd.DataFrame, meta: dict,
              compute_row(sub[sub["is_guarded"]], ctx_exc, with_gmm))
         dist_sample(mid, sub, 10 + int(mid[1:]))
 
-    # SRS null envelope (D16): K draws at this tier's M01 size
+    # SRS null envelope: K draws at this tier's M01 size
     if k_envelope > 0 and tier in ENVELOPE_TIERS:
         n_target = int(next(v for r in long_rows
                             if r["method"] == "M01" and r["variant"] == "main"

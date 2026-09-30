@@ -1,5 +1,5 @@
 """
-reseed_stability.py  —  Section 4.6.6 reseeding control
+reseed_stability.py  —  Section 4.7.7 reseeding control
 ────────────────────────────────────────────────────────────────────────────
 Figure + persisted distribution for the reproducibility-under-reseeding check:
 k-means is refitted N_RESEEDS times on the FIXED fit population, changing only
@@ -46,9 +46,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 import matplotlib.pyplot as plt
 
-# shared steps — single source of truth (same imports the other §4.6.6 scripts use)
+# shared steps — single source of truth (same imports the other §4.7.7 scripts use)
 from clustering import (_discover, _load, _build_fit,
-                        FEATURES, N_INIT, SEED, CAP, ARTIFACT_DIR, PROJECT_ROOT)
+                        FEATURES, N_INIT, SEED, CAP, ARTIFACT_DIR, DATA_ROOT, REPO_ROOT)
 from tum_colors import TUM_PRIMARY, TUM_SECONDARY
 
 warnings.filterwarnings("ignore")
@@ -66,7 +66,7 @@ except Exception:
 N_RESEEDS   = 20          # reseeds SEED+1 .. SEED+N_RESEEDS
                           # (first five = the seeds of clustering.py's printed check)
 REUSE_SAVED = True        # replot from the saved parquet if it exists (no refitting)
-OUT_DIR     = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "cap_sensitivity"
+OUT_DIR     = REPO_ROOT / "05_regime_discovery" / "figures" / "cap_sensitivity"
 DPI         = 300
 
 

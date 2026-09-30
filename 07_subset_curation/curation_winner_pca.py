@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""curation_winner_pca.py, the winner's occupancy of the frozen PC plane (13.3).
+"""curation_winner_pca.py, the winner's occupancy of the frozen PC plane.
 
 Every other figure of the winner family reports marginals. A subset can
 match six marginal distributions and still sit in a different region of
@@ -10,12 +10,13 @@ pass, both drawn from the same seeded sample of the winner's windows:
          frame's sample as a light-gray background, which answers where
          the subset sits
   right  the identical points coloured by their frozen regime label under
-         the canonical Chapter 9 palette, which answers how the regimes
+         the canonical regime palette, which answers how the regimes
          are arranged inside that occupancy
 
-The basis is Chapter 9's and is never re-fitted, and the labels are the
-frozen k = 5 labels of Section 9.5. Conventions inherited verbatim: the
-central-99.95-per-cent frame crop of Section 12.3 on both axes, with the
+The basis is that of the regime discovery (thesis 4.7) and is never
+re-fitted, and the labels are the frozen k = 5 labels (thesis 4.7.6).
+Conventions inherited verbatim: the central-99.95-per-cent frame crop of
+the evaluation figures (thesis 4.10) on both axes, with the
 number of winner points falling outside it counted and printed, and the
 seeded interleaved draw order so no regime overdraws another.
 
@@ -42,7 +43,7 @@ from regime_style import regime_color, regime_label
 TIER = "budget"
 SAMPLE_N = 12_000        # points per group, seeded
 DRAW_SEED = 42
-CROP_PCT = 99.95         # Section 12.3 convention
+CROP_PCT = 99.95         # evaluation-figure convention (thesis 4.10)
 CROP_PAD = 0.03
 POINT_S = 3
 FRAME_ALPHA = 0.20
@@ -61,7 +62,7 @@ def main() -> None:
     if not win:
         raise SystemExit("[pca] curation_common.WINNER is unset")
 
-    cls = pd.read_parquet(cc.PROJECT_ROOT / "dataset" / "regime_data"
+    cls = pd.read_parquet(cc.DATA_ROOT / "regime_data"
                           / "cluster_assignments.parquet")
     need = ["pc1", "pc2", "regime"]
     missing = [c for c in need if c not in cls.columns]
@@ -70,7 +71,7 @@ def main() -> None:
 
     keys = [c for c in ["dataset", "clip_id", "window_start_s"]
             if c in cls.columns]
-    sub = pd.read_parquet(cc.PROJECT_ROOT / "dataset" / "subset_data"
+    sub = pd.read_parquet(cc.DATA_ROOT / "subset_data"
                           / f"tier_n{cc.BUDGET_N}" / cc.C_FILES[win])
     use = [k for k in keys if k in sub.columns]
     joined = sub[use].merge(cls[use + need], on=use, how="left")
@@ -101,7 +102,7 @@ def main() -> None:
     for col, ax in enumerate(axes):
         ax.scatter(fs["pc1"], fs["pc2"], s=POINT_S, c=cc.GHOST,
                    alpha=FRAME_ALPHA, edgecolor="none")
-        order = rng.permutation(len(ws))          # interleave, Section 12.3
+        order = rng.permutation(len(ws))          # interleave, as in thesis 4.10
         w = ws.iloc[order]
         if col == 0:
             ax.scatter(w["pc1"], w["pc2"], s=POINT_S,

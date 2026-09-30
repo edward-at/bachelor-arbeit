@@ -1,5 +1,5 @@
 """
-pca_scatter_labeled_3D.py  —  Section 4.6.5 figure (3-D companion view)
+pca_scatter_labeled_3D.py  —  Section 4.7.6 figure (3-D companion view)
 ────────────────────────────────────────────────────────────────────────────
 The SAME single PCA as the 2-D scatter, shown with three components instead of
 two. This is NOT a separate pipeline stage and the 2-D plot is NOT a projection
@@ -15,10 +15,11 @@ the colours are clear (legend handles otherwise inherit the faint, tiny scatter
 markers). A fixed-seed subsample is drawn for rendering only.
 
 Thin reader of dataset/regime_data/cluster_assignments.parquet (needs the pc3
-column — re-run clustering.py after the 3-component edit). No model file.
+column written by clustering.py). No model file.
 ────────────────────────────────────────────────────────────────────────────
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -28,9 +29,10 @@ from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers the 3d projection)
 from regime_style import regime_label, regime_color
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "pca"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "pca"
 
 N_PLOT                = 30000      # subsample for rendering only (clustering uses all windows)
 SEED                  = 42

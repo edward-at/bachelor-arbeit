@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""curation_evasive_check.py — the D24 held-out metric, finally reported.
+"""This script reports the evasive held-out metric of the curation protocol.
 
-Register entry D24 defines an evasive-maneuver retention under the
-implied-lateral rule (peak |yaw| >= 0.75 g of lateral acceleration at the
-window's mean speed) and promises it is reported for every method, the
-winner included, while being optimized by nothing. The supply was counted
-in the audit (expected 2,279 windows, 0.57 percent of the frame), but the
-retention itself was never computed anywhere, because the Chapter 12
-harness's metric set is frozen. This script closes that gap.
+The curation protocol (thesis 4.11) defines an evasive-maneuver retention
+under the implied-lateral rule (peak |yaw| >= 0.75 g of lateral acceleration
+at the window's mean speed) and states that it is reported for every method,
+the winner included, while being optimized by nothing. The supply is counted
+in the audit (2,294 windows, 0.57 percent of the frame). The retention is
+computed here because the evaluation harness's metric set is frozen.
 
 For every budget-tier artifact: retention = (evasive share in the subset)
 divided by (evasive share in the frame), the same ratio grammar as the
@@ -21,7 +20,7 @@ Read-only. No selection consequence is possible: the winner was declared,
 replicated, and revealed before this number existed, which is precisely
 what makes it evidence.
 
-Usage:  python curation_evasive_check.py
+Usage:  python curation_evassive_check.py
 """
 
 from __future__ import annotations
@@ -32,8 +31,8 @@ import run_sampling as rs
 import curation_common as cc
 
 from curation_common import N_EVENT_RESERVE, EXPECTED_EVASIVE
-# single definition: curation_common derives both via canonical; deriving them
-# again here was a third copy of numbers that must agree
+# single definition: curation_common derives both via canonical. Deriving
+# them again here would create a third copy of numbers that must agree.
 
 
 def main() -> None:

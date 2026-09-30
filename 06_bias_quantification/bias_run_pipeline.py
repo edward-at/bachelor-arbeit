@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-run_pipeline.py — ordered re-run of the Chapter 10 bias-quantification pipeline.
+bias_run_pipeline.py: ordered re-run of the bias-quantification pipeline
+(thesis Section 4.8, results 5.5).
 
 The stages below are a DEPENDENCY ORDER, not a preference: every stage reads
 artifacts written by an earlier one, so running them out of order silently
@@ -35,27 +36,23 @@ missing column). That is the exact failure this runner exists to prevent.
                                                   run strictly last.
 
 bias_tier2_common.py, regime_style.py, and tum_colors.py are shared MODULES,
-never entry points — they are imported by the stages above and are never
+never entry points. They are imported by the stages above and are never
 listed as a runnable step here.
 
-DC15 note: bias_regime_supply.py and the retired bias_pca_map.py are kept as
-TOOLING (their parquet/console output feeds the RQ3 supplier table and the
-rejected-methods ledger respectively) but neither PNG is a thesis figure.
-bias_regime_supply.py still runs in stage 2 because bias_regime_supply.parquet
-is a real RQ3 input; bias_pca_map.py is not listed at all — it was removed
-from the project directory under DC15 and is not expected to exist.
+bias_regime_supply.py runs in stage 2 because bias_regime_supply.parquet is
+an input to the RQ3 supplier table. Its PNG is a supporting figure.
 
 USAGE
-    python run_pipeline.py                    # stages 0-3
-    python run_pipeline.py --dry-run          # print the plan, run nothing
-    python run_pipeline.py --from tier2       # resume at a stage
-    python run_pipeline.py --only tier1_figs  # one stage
-    python run_pipeline.py --skip tier2       # drop a stage
-    python run_pipeline.py --keep-going       # do not stop at the first failure
+    python bias_run_pipeline.py                    # stages 0-3
+    python bias_run_pipeline.py --dry-run          # print the plan, run nothing
+    python bias_run_pipeline.py --from tier2       # resume at a stage
+    python bias_run_pipeline.py --only tier1_figs  # one stage
+    python bias_run_pipeline.py --skip tier2       # drop a stage
+    python bias_run_pipeline.py --keep-going       # do not stop at the first failure
 
 Fail-fast is the default: a stage that fails leaves every later stage unrun,
 because a downstream artifact built on a failed upstream one is worse than a
-missing one — consistent with "no cosmetic fix to unproven data".
+missing one.
 """
 
 from __future__ import annotations
@@ -70,9 +67,10 @@ from pathlib import Path
 # canonical constants
 # ---------------------------------------------------------------------------
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-FIG_ROOT = PROJECT_ROOT / "bachelor-arbeit" / "06_bias_quantification" / "figures"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
+FIG_ROOT = REPO_ROOT / "06_bias_quantification" / "figures"
 
 TIER1_FIGURES = [
     "bias_stacked_bar.py",

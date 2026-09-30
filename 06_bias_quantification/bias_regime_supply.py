@@ -1,11 +1,11 @@
 """
-bias_regime_supply.py  —  regime provenance map (Chapter 10, §4.7 / RQ3 bridge).
+bias_regime_supply.py  —  regime provenance map (Section 4.8 / RQ3 bridge).
 
 The share heatmap answers "what does each DATASET look like?" (rows sum to
 100 %). This figure answers the transposed question RQ3 actually needs:
 "who SUPPLIES each REGIME's windows?" — columns sum to 100 %. Same count
-matrix, opposite normalisation (disclosed explicitly so no examiner can call
-it a duplicate: one is dataset composition, the other is corpus provenance).
+matrix, opposite normalisation: one is dataset composition, the other is
+corpus provenance.
 
 Why it matters for RQ3: a regime can look healthy in the pooled corpus while
 being supplied almost entirely by one dataset — that regime's diversity is
@@ -13,7 +13,7 @@ an illusion of volume. This is the literal shopping map for the curated
 subset: for every under-represented regime, read down the column to see who
 has stock.
 
-Honest caveats:
+Caveats:
   * Supply shares are volume-driven BY CONSTRUCTION — NVIDIA dominating
     every column is the volume-bias finding restated at regime granularity,
     not a bug. The interesting cells are where domination BREAKS.
@@ -22,7 +22,8 @@ Honest caveats:
 
 Reads : ARTIFACT_DIR/cluster_assignments.parquet   (canonical)
 Writes: ARTIFACT_DIR/bias_regime_supply.parquet
-Output: figures/bias_regime_supply.png
+Output: 06_bias_quantification/figures/bias_regime_supply.png
+        (supporting figure, not part of the thesis body)
 
 Strict matplotlib: pure defaults, dpi=300. Single small in-cell font size —
 the documented heatmap exception.

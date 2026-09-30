@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Density grid — every method gets the density plot, one panel each.
 
-Per-method dossier form (D18) of the density comparison: one panel per
+Per-method dossier form of the density comparison: one panel per
 method, the method's dynamic-score KDE in the thesis blue against the
 frame's density as a grey ghost. The 3-5-line OVERLAY version remains the
-12.3 finalist spotlight. Change CHANNEL for per-channel grids.
+Section 4.10 finalist spotlight. Change CHANNEL for per-channel grids.
 Reads ONLY the eval cache. Output: figures/subset_eval/subset_density_grid.png
 """
 

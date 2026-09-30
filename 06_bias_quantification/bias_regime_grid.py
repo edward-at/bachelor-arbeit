@@ -1,9 +1,9 @@
 """
-bias_regime_grid.py  —  Chapter 10 proposal-literal figure
+bias_regime_grid.py  —  Section 4.8 per-dataset regime bar charts
 ════════════════════════════════════════════════════════════════════════════
 The thesis proposal specifies: "the distribution of clips across dynamic
 regimes is counted per dataset and visualized as bar charts." This is that
-figure, verbatim (at window grain per DC3): 14 small-multiple panels, one per
+figure, at window grain: 14 small-multiple panels, one per
 dataset, five regime bars each in the canonical regime colours. The stacked
 headline shows the ranking story; this grid shows each dataset's PROFILE SHAPE,
 which stacked segments make hard to compare.
@@ -13,9 +13,10 @@ balance reference (a methodological convention, §6.6), so over/under-filled
 regimes are readable per panel.
 
 Reads : ARTIFACT_DIR/bias_per_dataset.parquet
-Output: figures/bias_regime_grid.png
+Output: 06_bias_quantification/figures/bias_regime_grid.png
 ════════════════════════════════════════════════════════════════════════════
 """
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -26,11 +27,12 @@ from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_ACCENT, TUM_EXT
 from regime_style import N_REGIMES, regime_label, regime_color
 from bias_quant import CONFOUNDED_ACCEL
 
-# ── canonical constants block ────────────────────────────────────────────────
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-# Chapter 10 code + figures live under bachelor-arbeit/06_bias_quantification/
-OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "06_bias_quantification" / "figures"
+# ── paths and constants ──────────────────────────────────────────────────────
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
+# bias-quantification code + figures live under 06_bias_quantification/
+OUT_DIR      = REPO_ROOT / "06_bias_quantification" / "figures"
 
 DISPLAY_NAMES = {
     "boreas_rt": "Boreas", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",
@@ -46,8 +48,8 @@ UNIFORM_PCT = 100.0 / N_REGIMES  # entropy's balance reference (20%)
 
 
 def _ylim_top(per):
-    """Dynamic ceiling: largest share + 5pp headroom, rounded up to 5.
-    (A hardcoded 70 clipped A2D2's real 79% Calm bar — never again.)"""
+    """Dynamic ceiling: largest share + 5pp headroom, rounded up to 5,
+    so no bar is clipped by a fixed limit."""
     m = float(per[SHARE_COLS].values.max()) * 100.0
     return min(100.0, np.ceil((m + 5.0) / 5.0) * 5.0)
 

@@ -1,11 +1,12 @@
 """
-state_timeline.py  —  Section 4.6.9 figure
+state_timeline.py  —  Section 4.7.11 figure
 Reads hmm_states.parquet → the decoded most-likely regime sequence along each
 example drive, the succession of regimes made legible as a trace through time.
 One stacked panel per example clip; the y-axis spans all regimes so panels are
 comparable. Thin reader (k read from hmm_transitions.parquet for the y-axis).
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -14,12 +15,13 @@ import matplotlib.pyplot as plt
 from tum_colors import TUM_SECONDARY
 from regime_style import regime_label, regime_color
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "hmm"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "hmm"
 
 KEY        = ["dataset", "clip_id"]
-# short names of Section 4.2.3 for the panel labels (block 5D); folder keys otherwise
+# short dataset names for the panel labels; folder keys otherwise
 DISPLAY_NAMES = {"4seasons": "4Seasons", "a2d2": "A2D2", "boreas_rt": "Boreas", "durlar": "DurLAR",
                  "ford": "Ford", "hdd": "HDD", "kitscenes": "KITScenes", "kitti": "KITTI",
                  "kitti360": "KITTI-360", "nuscene": "nuScenes", "nvidia": "NVIDIA",
@@ -45,7 +47,7 @@ def main():
         g = tl[(tl["dataset"] == ds) & (tl["clip_id"] == cid)].sort_values("window_start_s")
         t = (g["window_start_s"] - g["window_start_s"].min()) / 60.0   # minutes
         # break the connecting line where sub-windows were dropped (4.7.11 validity
-        # rule), so a gap is not drawn as a run of the regime on either side (block 5D)
+        # rule), so a gap is not drawn as a run of the regime on either side
         y = g["regime"].to_numpy(float)
         gaps = np.flatnonzero(np.diff(g["window_start_s"].to_numpy()) > GAP_S)
         t_line, y_line = t.to_numpy(float), y.copy()

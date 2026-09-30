@@ -4,25 +4,26 @@
 One streaming pass over inertial_data/<dataset>/clip_*.parquet that tags every
 frame with its non-overlapping 20 s window (win_start = floor(t_rel/20)*20,
 key = "ds|clip|round(start*10)" — identical to the harness 'start' key) and,
-per membership group (Frame + M01..M10 budget subsets, an 11-bit mask),
+per membership group (Frame + the discovered budget subsets, one bit per
+group, 13 groups once C01 exists),
 accumulates in a single read:
 
   1. fine per-signal histograms + moment sums  -> per-method frame histograms
-     (the Chapter 8 distributional grammar, Section 8.1)
-  2. the two phase-portrait 2D histograms      -> Section 8.5 grammar
+     (the Section 4.6.2 distributional grammar)
+  2. the two phase-portrait 2D histograms      -> Section 4.6.6 grammar
   3. raw sequences for a seeded FAN_N-per-method window sample (+ sigma_speed
      from std_data and exemplar flags)          -> fan / time-series figures
 
-After this pass the frame layer is never touched again (Section 9.6
-compute-once; the first excursion was the Section 11.4 summary pass).
+After this pass the frame layer is never touched again (compute-once,
+the first excursion was the Section 4.9.4 summary pass).
 Re-run when curation subsets (C0x) exist — the mask simply grows.
 
 Outputs (dataset/subset_data/eval/):
   frame_hist_fine.parquet, frame_stats.parquet, frame_portraits.npz,
   fan_frames.parquet, fan_index.parquet, frame_pass_meta.json
 
-Runtime honesty: reads every clip file once (~371k files; NVIDIA's ~300k
-small files dominate wall time). Expect 10-40 min. One-time.
+Runtime: about 10 to 40 minutes. Reads every clip file once (~371k files,
+NVIDIA's ~300k small files dominate wall time). One-time.
 """
 
 from __future__ import annotations
@@ -46,17 +47,18 @@ except ImportError:
         return it
 
 # ---------------------------------------------------------------------------
-PROJECT_ROOT = Path(os.environ.get("THESIS_ROOT", "/Users/edward/Downloads"))
-INERTIAL_ROOT = PROJECT_ROOT / "dataset" / "inertial_data"
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-REGIME_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-SUBSET_DIR = PROJECT_ROOT / "dataset" / "subset_data"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+INERTIAL_ROOT = DATA_ROOT / "inertial_data"
+STD_DATA_DIR = DATA_ROOT / "std_data"
+REGIME_DIR = DATA_ROOT / "regime_data"
+SUBSET_DIR = DATA_ROOT / "subset_data"
 from canonical import C
 BUDGET_DIR = C.budget_dir          # tier_n<budget_n>, derived
 EVAL_DIR = SUBSET_DIR / "eval"
 
 WINDOW_S = 20.0
-FAN_N = 5000            # windows sampled per group (Chapter 8 convention)
+FAN_N = 5000            # windows sampled per group (Section 4.6 convention)
 EX_N = 3                # exemplar windows per group (time-series figure)
 FAN_SEED = 777
 FINE_BINS = 1000        # fine accumulation grid per signal (rebinned at render)
@@ -64,7 +66,7 @@ N_WORKERS = 12
 TASK_CLIPS = 200        # clip files per worker task
 
 # The slate is DISCOVERED from the budget directory at run time (M01..M11
-# today, C-rows at 13.2) — never hardcoded, so the mask grows with the files.
+# plus any C-rows), never hardcoded, so the mask grows with the files.
 METHODS: list = []            # filled by discover_methods() in main()
 GROUPS: list = []             # ["R0_frame"] + METHODS
 N_GROUPS = 0
@@ -389,7 +391,7 @@ def main():
         EVAL_DIR / "fan_frames.parquet", index=False)
     fan_idx.to_parquet(EVAL_DIR / "fan_index.parquet", index=False)
 
-    got_frame = int(fan_idx.shape[0] and 0)  # placeholder keeps lint quiet
+    got_frame = int(fan_idx.shape[0] and 0)
     kids_seen = set(fan["key_id"].unique().tolist())
     cover = len(kids_seen) / max(1, len(fan_idx))
     meta = {"groups": GROUPS, "fan_n": FAN_N, "ex_n": EX_N,

@@ -1,5 +1,5 @@
 """
-resample_stability.py  —  Section 4.6.6 resampling-stability control
+resample_stability.py  —  Section 4.7.7 resampling-stability control
 ────────────────────────────────────────────────────────────────────────────
 Extends the single resampling check of the clustering (one redraw of the
 stratified fit population, compared to the reference partition) to a
@@ -48,9 +48,9 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score
 import matplotlib.pyplot as plt
 
-# shared steps — single source of truth (same imports the other §4.6.6 scripts use)
+# shared steps — single source of truth (same imports the other §4.7.7 scripts use)
 from clustering import (_discover, _load, _build_fit, _order_regimes,
-                        FEATURES, N_INIT, SEED, CAP, ARTIFACT_DIR, PROJECT_ROOT)
+                        FEATURES, N_INIT, SEED, CAP, ARTIFACT_DIR, DATA_ROOT, REPO_ROOT)
 from tum_colors import TUM_PRIMARY, TUM_SECONDARY
 
 warnings.filterwarnings("ignore")
@@ -69,7 +69,7 @@ N_RESAMPLES = 20          # number of independent stratified redraws
 RESEED_BASE = SEED + 200  # redraw seeds: RESEED_BASE + 0 .. N_RESAMPLES-1
                           # (offset well clear of the clustering's SEED+100 single redraw)
 REUSE_SAVED = True        # replot from the saved parquet if it exists (no refitting)
-OUT_DIR     = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "cap_sensitivity"
+OUT_DIR     = REPO_ROOT / "05_regime_discovery" / "figures" / "cap_sensitivity"
 DPI         = 300
 
 

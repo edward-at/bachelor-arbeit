@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""F9 — the method fingerprint scorecard (budget tier).
+"""The method fingerprint scorecard (budget tier).
 
 Layout mechanics mirror bias_fingerprint.py exactly: imshow Blues, per-column
 min-max shading, real values printed with per-column formats, facet-group
 separators, the group-label band INSIDE the axes above row 0 (ylim headroom +
 framing hlines — the construction that prevents the title/label collision),
-and a slim colorbar. One deliberate difference from Chapter 10, stated:
+and a slim colorbar. One deliberate difference from Section 4.8, stated:
 shading here is UNORIENTED (no darker-equals-worse) because orienting columns
-before the decision rule exists (D4) would pre-judge it; the printed value
+before the decision rule exists would pre-judge it; the printed value
 and the tautology mark carry the truth. No composite index, deliberately.
 Rows: Frame and guard-cost context rows above a rule, then the fixed slate.
 Marks: small triangle = construction-determined, small circle = influenced, blank =
@@ -36,7 +36,7 @@ CELL_FS = 7    # documented heatmap exception: in-cell + group-label font
 
 # key, on-figure label, facet group, format
 COLUMNS = [
-    ("low_dyn_share",   "Calm",          "Regime balance", "%.3f"),  # block 5F: calm share (Section 4.10.6)
+    ("low_dyn_share",   "Calm",          "Regime balance", "%.3f"),  # calm share (Section 4.10.6)
     ("entropy_norm",    "H (norm)",      "Regime balance", "%.3f"),
     ("d2_regimes",      "$D_2$ reg",     "Regime balance", "%.2f"),
     ("js_to_frame",     "JS frame",      "Regime balance", "%.4f"),

@@ -1,5 +1,5 @@
 """
-gmm.py  —  Section 4.6.8, probabilistic regime model (Gaussian mixture)
+gmm.py  —  Section 4.7.10, probabilistic regime model (Gaussian mixture)
 ────────────────────────────────────────────────────────────────────────────
 Cross-checks the k-means partition with a Gaussian mixture, which relaxes the
 three k-means assumptions (hard membership, spherical regimes, equal spread) and
@@ -19,7 +19,7 @@ are ordered by the same intensity ordering as the k-means regimes.
 
 BOUNDARY: this characterises the POOLED corpus (where regimes overlap). Which
 DATASETS concentrate in the ambiguous boundary regions is a per-dataset
-measurement and belongs to Section 4.7, not here.
+measurement and belongs to Section 4.8, not here.
 
 k is read from the saved k-sweep curve (argmax silhouette); no model file.
 

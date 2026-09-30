@@ -1,5 +1,5 @@
 """
-pca_scatter_preclustering_3d.py  —  Section 4.6.3 figure (3-D companion view)
+pca_scatter_preclustering_3D.py  —  Sections 4.7.3–4.7.4 figure (3-D companion view)
 ────────────────────────────────────────────────────────────────────────────
 The windows in the 3-D PCA space BEFORE any labels are imposed — the same
 unlabelled structure as the 2-D pre-clustering scatter, shown with three
@@ -8,7 +8,7 @@ are identical whether two or three components are kept; the third axis only adds
 the next slice of variance, in which structure that overlaps in the plane is
 resolved.
 
-Pairs with pca_scatter_3d.py (the labelled 3-D view of Section 4.6.5): same
+Pairs with pca_scatter_labeled_3D.py (the labelled 3-D view of Section 4.7.6): same
 subsample seed, same crop, same camera angle, so the before/after pair is drawn
 on identical points from an identical viewpoint and only the colouring differs.
 The 2-D view remains the printed figure (a printed 3-D scatter fixes a single
@@ -21,6 +21,7 @@ point in the chapter. No model file.
 ────────────────────────────────────────────────────────────────────────────
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -29,9 +30,10 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401  (registers the 3d projection)
 from tum_colors import TUM_SECONDARY
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "pca"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "pca"
 
 N_PLOT                = 30000      # subsample for rendering only (clustering uses all windows)
 SEED                  = 42         # same subsample as the labelled 3-D view

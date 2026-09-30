@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""F6 — source composition per sampling method (budget tier).
+"""Source composition per sampling method (budget tier).
 
 The second bias axis: did the method fix supplier concentration or just
 reshuffle regimes inside NVIDIA? Stacked source shares in the thesis-wide

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""compile_5F_dossier.py — Appendix F, block 5F: the per-method dossier as five family grids.
+"""compile_grids.py: the per-method dossier of thesis Appendix F as five family grids
+(Figures F.15 to F.19).
 
 Tiles the existing per-method dossier PNGs of the sampling-method evaluation
 UNCHANGED (no number is redrawn, every tile keeps its native pixels) into one
@@ -12,13 +13,15 @@ M11 in slate order:
   dossier_portraits_speed_yaw.png   {frame,M01..M11}_speed_yaw.png         4 rows x 3 columns
   dossier_exemplar_traces.png       timeseries_{frame,M01..M11}.png        6 rows x 2 columns
 
-The C01 singles in the same folders are surplus (their canonical dossier is the
-winner family under figures/curation/, Section 5.8) and are never tiled here.
+The C01 singles in the same folders are not tiled here (their dossier is the
+winner family under 07_subset_curation/figures/curation/, Section 5.8).
 
-Paths: everything lies under Downloads/bachelor-arbeit/ (Edward, 2026-09-26).
-Tiles are read from subset_curation/figures/subset_eval/{fans,phase,timeseries}/
-and written to compiled_figures/. THESIS_ROOT overrides the Downloads folder;
-DOSSIER_SRC overrides the tile folder (flat folders are searched as well).
+Paths: tiles are read from the per-method singles in
+07_subset_curation/figures/subset_eval/{fans,phase,timeseries}/ and written to
+08_reporting/compiled_figures/. DOSSIER_SRC overrides the tile folder (flat
+folders are searched as well) and DOSSIER_OUT overrides the output folder.
+DATA_ROOT comes from thesis_paths.py and the environment variable
+THESIS_DATA_ROOT.
 """
 from __future__ import annotations
 
@@ -28,8 +31,9 @@ from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path(os.environ.get("THESIS_ROOT", "/Users/edward/Downloads"))
-BA = ROOT / "bachelor-arbeit"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+BA = REPO_ROOT
 SRC = Path(os.environ.get("DOSSIER_SRC", BA / "07_subset_curation" / "figures" / "subset_eval"))
 OUT = Path(os.environ.get("DOSSIER_OUT", BA / "08_reporting" / "compiled_figures"))
 SUBDIRS = ["fans", "phase", "timeseries", "hist", ""]

@@ -1,5 +1,5 @@
 """
-regime_profile_heatmap.py  —  Section 4.6.5 figure (the RQ2 interpretability evidence)
+regime_heatmap.py  —  Section 4.7.6 figure (the RQ2 interpretability evidence)
 ────────────────────────────────────────────────────────────────────────────
 Renders the regime-by-feature profile grid: which behaviour each recovered
 regime represents, read straight off its feature centroid. Colour encodes each
@@ -12,10 +12,11 @@ Row labels come from regime_style.py (the single source of truth) so this figure
 names regime 0 identically to every other figure in the chapter — never "Regime 0".
 
 Thin reader of dataset/regime_data/cluster_profile.parquet — no recomputation,
-no model JSON. Same arrangement as the Section 4.5 figures over std_data.
+no model JSON. Same arrangement as the exploratory heatmaps over std_data.
 ────────────────────────────────────────────────────────────────────────────
 """
 
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -23,9 +24,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from regime_style import regime_label            # ← single source of truth for labels
 
-PROJECT_ROOT    = Path("/Users/edward/Downloads")
-REGIME_DATA_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR         = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "regime_profile"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+REGIME_DATA_DIR = DATA_ROOT / "regime_data"
+OUT_DIR         = REPO_ROOT / "05_regime_discovery" / "figures" / "regime_profile"
 DPI             = 300
 
 LABELS = {"mean_speed_kmh": "mean speed (km/h)", "std_speed_kmh": "σ speed (km/h)",
@@ -33,9 +35,9 @@ LABELS = {"mean_speed_kmh": "mean speed (km/h)", "std_speed_kmh": "σ speed (km/
           "mean_abs_a_lat": "|a_lat| (m/s²)", "mean_abs_yaw_rate": "|yaw rate| (°/s)",
           "mean_abs_jerk": "|jerk| (m/s³)"}
 
-# display convention of Section 4.6.1: yaw rate is stored in rad/s and shown in °/s.
+# display convention of Section 4.7.1: yaw rate is stored in rad/s and shown in °/s.
 # The conversion is applied to the printed cell only; the standardization across
-# regimes that drives the color is scale-invariant, so no color changes (block 5D).
+# regimes that drives the color is scale-invariant, so no color changes.
 DISPLAY_SCALE = {"mean_abs_yaw_rate": 180.0 / np.pi}
 # one fixed precision per feature so a column reads uniformly
 CELL_FMT = {"mean_speed_kmh": "{:.1f}", "std_speed_kmh": "{:.1f}",
@@ -53,7 +55,7 @@ def main():
     df = pd.read_parquet(REGIME_DATA_DIR / "cluster_profile.parquet").sort_values("regime")
     feats = [c for c in df.columns if c not in ("regime", "n_windows", "share_pct")]
 
-    for f, k in DISPLAY_SCALE.items():                  # display units only (block 5D)
+    for f, k in DISPLAY_SCALE.items():                  # display units only
         if f in df.columns:
             df[f] = df[f] * k
     M = df[feats].to_numpy(float)                       # regimes × features, physical units

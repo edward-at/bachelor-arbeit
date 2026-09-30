@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-"""Per-method trajectory & speed-change fans (Section 8.4 grammar).
+"""Per-method trajectory & speed-change fans (Section 4.6.5 grammar).
 
 Two figures per group (X-Y trajectory fan, speed-change fan) reconstructed
 from the seeded FAN_N-per-method window sequences cached by
-subset_frame_pass.py — the mixed-source adaptation the plan called the one
-real coding task. Dead-reckoning, colouring, ordering, robust framing, shared
+subset_frame_pass.py, adapted to mixed-source groups. Dead-reckoning, colouring, ordering, robust framing, shared
 norms and shared extents are verbatim from the per-dataset originals; the only
 change is the unit of grouping (sampling method, not dataset), so every fan
-page is directly comparable across methods and, at Section 12.3, against the
-curation rows.
+page is directly comparable across methods and, in the Section 4.10 figures, against
+the curation rows.
 Reads ONLY the fan caches. Outputs: figures/subset_eval/fans/…
 """
 

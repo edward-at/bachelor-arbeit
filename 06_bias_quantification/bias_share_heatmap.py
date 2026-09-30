@@ -1,11 +1,11 @@
 """
-bias_share_heatmap.py  —  Section 10.3 figure (the share matrix, exact values)
+bias_share_heatmap.py  —  Section 4.8 figure (the share matrix, exact values)
 ════════════════════════════════════════════════════════════════════════════
 The per-dataset regime-share matrix printed cell by cell: rows are the
 datasets, ordered by the RQ1 headline metric (low-dynamic share, descending),
 columns are the five regimes, and every cell carries the exact percentage.
 
-Role among the three Section 10.3 views of the ONE share matrix:
+Role among the three Section 4.8 views of the ONE share matrix:
   * bias_stacked_bar.py  — the ranking and the pooled/equal-weight gap
   * bias_regime_grid.py  — each dataset's profile SHAPE against the uniform 20 %
   * this figure          — the exact per-cell percentages, which stacked
@@ -17,12 +17,13 @@ confused: one is a row-normalised composition, the other a column-normalised
 provenance.
 
 Reads : ARTIFACT_DIR/bias_per_dataset.parquet
-Output: figures/bias_share_heatmap.png
+Output: 06_bias_quantification/figures/bias_share_heatmap.png
 
 Strict matplotlib: pure defaults, dpi=300. Single small in-cell font size —
 the documented heatmap exception.
 ════════════════════════════════════════════════════════════════════════════
 """
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -32,11 +33,12 @@ import matplotlib.pyplot as plt
 from regime_style import N_REGIMES, regime_label
 from bias_quant import CONFOUNDED_ACCEL
 
-# ── canonical constants block ────────────────────────────────────────────────
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-# Chapter 10 code + figures live under bachelor-arbeit/06_bias_quantification/
-OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "06_bias_quantification" / "figures"
+# ── paths and constants ──────────────────────────────────────────────────────
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
+# bias-quantification code + figures live under 06_bias_quantification/
+OUT_DIR      = REPO_ROOT / "06_bias_quantification" / "figures"
 
 DISPLAY_NAMES = {
     "boreas_rt": "Boreas", "durlar": "DurLAR", "ford": "Ford", "kitti": "KITTI",

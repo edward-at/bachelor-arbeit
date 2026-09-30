@@ -1,44 +1,40 @@
 """
-phase_potrait.py — v2
+phase_potrait.py
 ────────────────────────────────────────────────────────────────────────────
-A10 — Per-dataset kinematic state-space occupancy. For each dataset, TWO
-figures: speed × longitudinal acceleration, and speed × yaw rate
+Per-dataset kinematic state-space occupancy (thesis Section 4.6.6). For each
+dataset, TWO figures: speed × longitudinal acceleration, and speed × yaw rate
 (14 datasets × 2 = 28 figures). Supports RQ1 (calm-biased datasets concentrate
 near low speed / near-zero accel|yaw) and RQ2 (dense regions ~ dynamic regimes).
 
-v2 changes (each fixes a diagnosed defect of v1):
+Design:
   1  OCCUPANCY FLOOR: bins holding fewer than MIN_FRAMES_PER_BIN frames are
      masked. Under LogNorm's clipped vmin, a 1-frame bin (0.1 s of driving)
-     rendered with the same saturated colour as a 30-frame bin, so ~half the
-     drawn bins carried ~1% of the data ("confetti"). The floor is a physical
-     evidence threshold — "at least 0.5 s of cumulative driving" — disclosed
-     per figure in the title and printed for the caption.
-     ORDER OF OPERATIONS MATTERS: this floor is cosmetic triage and was only
-     applied AFTER the frame data itself was proven clean (pipeline v4.3
-     validity gates); a floor applied earlier would have buried six real
-     defects. Never reverse that order.
-     v2.2 (2026-09-25): the disclosure moved from the second title line to
-     phase_portrait_disclosure.csv (one row per figure) so the figures carry a
-     one-line title and the numbers keep an artifact for the captions, and one
-     comparison grid per view (phase_portrait_grid_<view>.png) tiles all 14
-     datasets as small multiples on the shared axes and colour scale.
-  2  HONEST DENOMINATOR: v1 normalised by in-panel frames only, silently
-     inflating every colour for datasets with mass outside the axes. v2
-     normalises by ALL valid frames and discloses the outside-panel share in
-     the title.
-  3  The white zero-line is gone (it sliced through the densest bin and read
-     as a scratch; the y-tick at 0 already marks the axis).
+     would render with the same saturated colour as a 30-frame bin, so many
+     drawn bins would carry almost none of the data ("confetti"). The floor is
+     a physical evidence threshold, "at least 0.5 s of cumulative driving".
+     The floor is cosmetic and is applied only to frame data that already
+     passed the standardization validity gates, so it cannot hide data defects.
+     The masked share is written to phase_portrait_disclosure.csv (one row per
+     figure), so the figures carry a one-line title and the numbers keep an
+     artifact for the captions. One comparison grid per view
+     (phase_portrait_grid_<view>.png) tiles all 14 datasets as small
+     multiples on the shared axes and colour scale.
+  2  DENOMINATOR: fractions are normalised by ALL valid frames, not only the
+     in-panel frames, so datasets with mass outside the axes are not inflated.
+     The outside-panel share is disclosed in the same CSV.
+  3  No zero-line is drawn (the y-tick at 0 already marks the axis).
   4  tqdm degrades to a no-op if missing.
 
-Unchanged: shared bins, shared cross-dataset LogNorm colour scale (the 28
-figures stay directly comparable), viridis (documented in §8.5 for occupancy),
+Also: shared bins, shared cross-dataset LogNorm colour scale (the 28
+figures stay directly comparable), viridis for occupancy (Section 4.6.6),
 threaded batched reads, single-threaded rendering, pure default style, dpi=300,
 RQ2 centroid overlay wired but disabled.
 
-Frame data is v4.3-gated upstream, so physical-validity bounds are already
+Frame data is validity-gated upstream, so physical-validity bounds are already
 enforced; the fixed bin ranges act as the display window only.
 """
 
+import sys
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 
@@ -67,9 +63,10 @@ from tum_colors import TUM_PRIMARY, TUM_SECONDARY, TUM_EXT
 # PATHS  (data and code live in separate folders)
 # ─────────────────────────────────────────────────────────────────────────────
 
-PROJECT_ROOT      = Path("/Users/edward/Downloads")
-INERTIAL_DATA_DIR = PROJECT_ROOT / "dataset" / "inertial_data"
-OUT_DIR           = PROJECT_ROOT / "bachelor-arbeit" / "04_exploratory_analysis" / "figures" / "phase_portrait"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+INERTIAL_DATA_DIR = DATA_ROOT / "inertial_data"
+OUT_DIR           = REPO_ROOT / "04_exploratory_analysis" / "figures" / "phase_portrait"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # PARAMETERS  (all tunables here — never hardcoded inside functions)
@@ -86,9 +83,9 @@ SHARED_COLOR_SCALE = True  # one cross-dataset log scale (False = per-plot autos
 VMIN_RATIO   = 1.0e4
 DPI = 300
 
-# v2 — occupancy floor: a bin must hold at least this many frames to be drawn.
+# Occupancy floor: a bin must hold at least this many frames to be drawn.
 # At the 10 Hz grid, 5 frames = 0.5 s of cumulative driving. Masked bins and
-# their frame share are disclosed in each figure title and printed per dataset.
+# their frame share are written to the disclosure CSV and printed per dataset.
 MIN_FRAMES_PER_BIN = 5
 
 GRID_COLS       = 4        # 14 panels on a 4 x 4 grid, two cells empty
@@ -215,8 +212,8 @@ def render(folder, view, counts, n_valid, norm, log, disclosure):
                    marker=CENTROID_MARKER, linewidths=CENTROID_LW)
     ax.set_xlabel("speed [m/s]")
     ax.set_ylabel(view["y_label"])
-    # Self-disclosing title: the floor and the outside-panel share travel with
-    # the figure, so no reader can mistake masking for absence of data.
+    # One-line title. The floor and the outside-panel share are recorded in the
+    # disclosure CSV, so masking cannot be mistaken for absence of data.
     ax.set_title(f"{view['title']} ({DISPLAY_NAMES.get(folder, folder)})")
     cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     cbar.set_label("fraction of valid frames (log)")
@@ -239,7 +236,7 @@ def render(folder, view, counts, n_valid, norm, log, disclosure):
 
 
 def render_grid(view, hists, norm, disclosure_rows):
-    """v2.2 — one comparison figure per view: all 14 datasets as small multiples on
+    """One comparison figure per view: all 14 datasets as small multiples on
     shared axes and the shared colour scale, one colourbar, panels in alphabetical order.
     The per-dataset floor and denominator are the same as in render()."""
     folders = sorted([f for f in DATASET_ORDER if f in hists and hists[f][view["tag"]]["n_valid"] > 0],
@@ -328,8 +325,8 @@ def main():
             continue
         for view in VIEWS:
             h = hists[folder][view["tag"]]
-            # v2.1 — a measurement-limited dataset (4Seasons: speed excluded)
-            # has no valid frames for a speed-based view. A fully blank figure
+            # A dataset whose speed channel is measurement-limited (excluded in
+            # the standardization) has no valid frames for a speed-based view. A fully blank figure
             # discloses nothing a prose sentence cannot; skip and log instead.
             if h["n_valid"] == 0:
                 log.append(f"  {DISPLAY_NAMES.get(folder, folder):<10} "
@@ -348,7 +345,7 @@ def main():
     print("\n[A10] disclosure summary (paste-ready for captions):")
     for line in log:
         print(line)
-    # v2.2 — comparison grids, one per view, on the same shared scale as the singles
+    # Comparison grids, one per view, on the same shared scale as the singles
     for view in VIEWS:
         norm = shared_norm[view["tag"]] if SHARED_COLOR_SCALE else None
         if norm is None:

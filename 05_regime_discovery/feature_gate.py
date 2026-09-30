@@ -1,8 +1,8 @@
 """
-feature_gate.py  —  Section 4.6.2, the feature redundancy screen
+feature_gate.py  —  Section 4.7.2, the feature redundancy screen
 ────────────────────────────────────────────────────────────────────────────
 Locks the clustering feature vector before any k-means is run. Reads the
-per-window feature table (std_data, non-overlapping since 2026-08-29), keeps the windows of
+per-window feature table (std_data, non-overlapping), keeps the windows of
 all fourteen qualified datasets, screens the candidate features for redundancy
 (Pearson + Spearman + VIF), prunes the redundant ones, and persists the locked
 vector together with the screen statistics — all as parquet, no JSON.
@@ -16,7 +16,7 @@ Candidate set (six): mean speed, speed variability, the positive and negative
 parts of longitudinal acceleration, lateral acceleration intensity, and yaw-rate
 intensity. Jerk is NOT a candidate — excluded a priori on signal-quality grounds
 (a twice-differentiated GPS position, noise-dominated even in the mean for the
-position-derived datasets; see Section 4.6.1).
+position-derived datasets; see Section 4.7.1).
 
 Decision rule: a pair is redundant when |Pearson| or |Spearman| exceeds
 CORR_THRESHOLD, or a feature is multicollinear when its VIF exceeds
@@ -26,7 +26,7 @@ interpretability, retaining the directly-sensed feature (TIEBREAK_KEEP) over a
 partner derived by differentiation. This resolves the a_lat / yaw-rate coupling
 (a_lat = v·ω) toward yaw rate.
 
-Grain: clustering uses NON-OVERLAPPING 20 s windows. Since 2026-08-29 the
+Grain: clustering uses NON-OVERLAPPING 20 s windows. The
 std_data layer is itself non-overlapping (STEP_S == WINDOW_S), so the
 start-time filter below passes every window and is retained only as a cheap
 grid-alignment invariant. Correlations
@@ -35,14 +35,15 @@ and VIF are scale-invariant, so no standardisation is applied here.
 Outputs (all parquet):
   dataset/regime_data/feature_gate_vector.parquet   — the locked vector (ordered)
   dataset/regime_data/feature_gate_stats.parquet    — per-feature VIF (before/after) + decision
-  dataset/regime_data/feature_gate_correlations.parquet — the 15 pairwise Pearson/Spearman coefficients (block 5D)
+  dataset/regime_data/feature_gate_correlations.parquet — the 15 pairwise Pearson/Spearman coefficients
   dataset/regime_data/feature_gate_population.parquet   — per dataset: layer windows, six-feature windows,
-                                                          share, a_lat–yaw Pearson (block 5D)
+                                                          share, a_lat–yaw Pearson
   figures/feature_gate/feature_correlation_gate.png — Pearson | Spearman (annotated)
 ────────────────────────────────────────────────────────────────────────────
 """
 
 import warnings
+import sys
 from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -64,10 +65,11 @@ except Exception:
 # PARAMETERS  (edit here only)
 # ─────────────────────────────────────────────────────────────────────────────
 
-PROJECT_ROOT = Path("/Users/edward/Downloads")
-STD_DATA_DIR = PROJECT_ROOT / "dataset" / "std_data"
-ARTIFACT_DIR = PROJECT_ROOT / "dataset" / "regime_data"
-OUT_DIR      = PROJECT_ROOT / "bachelor-arbeit" / "05_regime_discovery" / "figures" / "feature_gate"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+STD_DATA_DIR = DATA_ROOT / "std_data"
+ARTIFACT_DIR = DATA_ROOT / "regime_data"
+OUT_DIR      = REPO_ROOT / "05_regime_discovery" / "figures" / "feature_gate"
 
 WINDOW_S = 20.0
 DPI      = 300
@@ -99,7 +101,7 @@ def _discover() -> list[str]:
 def _load_population(name: str) -> pd.DataFrame | None:
     """Read one dataset; keep grid-aligned windows.
 
-    Under the non-overlapping layer (2026-08-29) the filter is an identity
+    Under the non-overlapping layer the filter is an identity
     and acts as an alignment invariant, not a selection."""
     fp = STD_DATA_DIR / f"{name}.parquet"
     if not fp.exists():
@@ -221,7 +223,7 @@ def main():
 
     full = pd.concat(frames, ignore_index=True)
     n_raw = len(full)
-    n_layer_per = full.groupby("dataset").size()          # per-dataset layer windows (block 5D)
+    n_layer_per = full.groupby("dataset").size()          # per-dataset layer windows
     full = full.dropna(subset=FEATURES).reset_index(drop=True)
     n_cc  = len(full)
 
@@ -282,10 +284,9 @@ def main():
         "drop_reason": [drop_reason.get(f, "") for f in FEATURES],
     }).to_parquet(ARTIFACT_DIR / "feature_gate_stats.parquet", index=False)
 
-    # ── persisted for Chapter 5 (appended 2026-09-26, block 5D): the two matrices
-    #    the figure annotates, and the per-dataset control the console printed.
-    #    Both computed on the six-feature complete-case population above; no
-    #    existing output changes.
+    # ── persisted for Chapter 5: the two matrices the figure annotates, and the
+    #    per-dataset control the console printed. Both computed on the
+    #    six-feature complete-case population above.
     pairs = []
     for i in range(len(FEATURES)):
         for j in range(i + 1, len(FEATURES)):

@@ -3,11 +3,9 @@
 
 WHY THIS EXISTS
 ---------------
-Canonical counts were previously written as literals in at least nine files.
-Two generations already disagree in the tree: subset_eval_harness.py says the
-frame is 402,975 while subset_eval_common.py says 402,421, and curation_eval.py
-carries re-anchoring logic written to work around the clash. Re-anchoring hides
-drift; it does not remove it.
+Canonical counts restated as literals in several files drift apart silently
+whenever the corpus is regenerated. Re-anchoring a stale literal hides the
+drift but does not remove it.
 
 Every quantity below is DERIVED from the artifacts on disk at import time.
 Nothing here is typed by hand. Downstream scripts import from this module
@@ -17,16 +15,16 @@ stale literal cannot survive anywhere.
 REPLACING THE CANARIES
 ----------------------
 A canary that asserts a literal breaks on every legitimate re-run, which
-trains you to pass --force, which defeats the canary. Instead:
+invites passing --force, which defeats the canary. Instead:
 
-    python canonical.py --freeze     # after a run you accept, writes a dated
-                                     # snapshot next to the artifacts
+    python canonical.py --freeze     # after an accepted run, writes a
+                                     # snapshot (with its date) next to
+                                     # the artifacts
     python canonical.py --check      # compares live values to the snapshot,
                                      # prints every drift old -> new, exits 1
 
-So the guard now answers "did anything change since I last accepted the
-corpus", which is the question worth asking, rather than "does the corpus match
-a number I typed in July".
+So the guard answers "did anything change since the corpus was last
+accepted" rather than "does the corpus match a hand-typed number".
 
 USAGE
 -----
@@ -56,7 +54,7 @@ import pandas as pd
 # module discovery
 # ---------------------------------------------------------------------------
 # The pipeline modules this file reads its constants from live in sibling
-# directories (subset_curation, bias_quantification, and so on), so a single
+# directories (07_subset_curation, 06_bias_quantification, and so on), so a single
 # path entry cannot cover them. Search this file's directory and its immediate
 # subtrees for the modules by name and add wherever they are found. An explicit
 # CANONICAL_MODULE_DIR (colon-separated) always wins.
@@ -107,8 +105,9 @@ for _d in dict.fromkeys(_module_dirs):          # de-dup, preserve order
 # ---------------------------------------------------------------------------
 # paths — same convention and env override as subset_eval_common.py
 # ---------------------------------------------------------------------------
-PROJECT_ROOT = Path(os.environ.get("THESIS_ROOT", "/Users/edward/Downloads"))
-DATASET_DIR = PROJECT_ROOT / "dataset"
+sys.path.append(str(Path(__file__).resolve().parents[1]))
+from thesis_paths import DATA_ROOT, REPO_ROOT  # noqa: E402
+DATASET_DIR = DATA_ROOT
 REGIME_DIR = DATASET_DIR / "regime_data"
 SUBSET_DIR = DATASET_DIR / "subset_data"
 STD_DATA_DIR = DATASET_DIR / "std_data"
@@ -134,7 +133,7 @@ except ImportError:                                    # pragma: no cover
 # exists to prevent. Resolving them inside functions keeps the graph acyclic.
 
 def _confounded():
-    """The Chapter 10 fidelity flag, from its owning module."""
+    """The fidelity flag (thesis 4.4.5, 4.8.2), from its owning module."""
     try:
         from bias_quant import CONFOUNDED_ACCEL
         return set(CONFOUNDED_ACCEL), "bias_quant.CONFOUNDED_ACCEL"
@@ -162,7 +161,7 @@ def _trigger():
 
 
 def _evasive_consts():
-    """D24 constants from curation_common, which owns the evasive rule.
+    """Evasive-rule constants from curation_common, which owns the rule.
 
     Note the g it returns is curation_common's 9.80665, NOT run_sampling's
     9.81. Each constant is taken from the module that defines the rule using
@@ -533,7 +532,7 @@ class Canonical:
 
     @cached_property
     def event_reserve_n(self) -> int | None:
-        """Guarded windows reaching the longitudinal trigger. The D22 census."""
+        """Guarded windows reaching the longitudinal trigger. The event-reserve census (thesis 4.11)."""
         j = self._joined
         if j is None or "max_decel_ms2" not in j.columns:
             return None
@@ -548,7 +547,7 @@ class Canonical:
 
     @cached_property
     def evasive_n(self) -> int | None:
-        """D24 held-out population under the implied-lateral rule."""
+        """Evasive held-out population under the implied-lateral rule."""
         j = self._joined
         if j is None:
             return None
