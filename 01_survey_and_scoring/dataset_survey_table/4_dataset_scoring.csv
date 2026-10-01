@@ -1,0 +1,35 @@
+No.,Dataset Name,Year,Paper Title,Paper Link,Qs,Ds,Ps,Inertial Score,Acquisition outcome
+5,HDD (HRI Driving Dataset),2018,Toward Driving Scene Understanding: A Dataset for Learning Driver Behavior and Causal Reasoning,https://arxiv.org/abs/1811.02307,1.00,0.40,1.00,0.850,
+13,A2D2 (Audi Autonomous Driving Dataset),2020,A2D2: Audi Autonomous Driving Dataset,https://arxiv.org/abs/2004.06320,0.88,0.60,1.00,0.828,
+15,CADC (Canadian Adverse Driving Conditions),2020,Canadian Adverse Driving Conditions Dataset,https://arxiv.org/pdf/2001.10117,0.88,0.30,1.00,0.753,Excluded at acquisition: download server error
+10,nuScenes,2019,nuScenes: A multimodal dataset for autonomous driving,https://arxiv.org/abs/1903.11027,0.75,0.60,1.00,0.750,
+16,Ford Multi-AV Seasonal Dataset,2020,Ford Multi-AV Seasonal Dataset,https://arxiv.org/abs/2003.07969,1.00,0.60,0.00,0.750,
+12,4Seasons,2020,4Seasons: A Cross-Season Dataset for Multi-Weather SLAM in Autonomous Driving,https://arxiv.org/abs/2009.06364,0.88,0.80,0.00,0.728,
+1,KITTI,2012,Vision meets Robotics: The KITTI Dataset,https://www.cvlibs.net/publications/Geiger2013IJRR.pdf,1.00,0.50,0.00,0.725,
+11,Woodscape,2019,"WoodScape: A multi-task, multi-camera fisheye dataset for autonomous driving",https://arxiv.org/abs/1905.01489,0.75,0.50,1.00,0.725,"Excluded at acquisition: IMU data not public, camera data only"
+20,KITTI-360,2021,KITTI-360: A Novel Dataset and Benchmarks for Urban Scene Understanding in 2D and 3D,https://arxiv.org/abs/2109.13410,1.00,0.50,0.00,0.725,
+32,NVIDIA Physical AI Autonomous Vehicles,2025,N/A,-,1.00,0.50,0.00,0.725,
+3,Oxford RobotCar,2017,"1 Year, 1000km: The Oxford RobotCar Dataset",https://robotcar-dataset.robots.ox.ac.uk/images/robotcar_ijrr.pdf,1.00,0.40,0.00,0.700,
+19,DurLAR,2021,DurLAR: A High-Fidelity 128-Channel LiDAR Dataset with Panoramic Ambient and Reflectivity Imagery for Multi-Modal Autonomous Driving Applications,https://arxiv.org/abs/2406.10068,1.00,0.40,0.00,0.700,
+26,Boreas,2023,Boreas: A Multi-Season Autonomous Driving Dataset,https://arxiv.org/abs/2203.10168,1.00,0.40,0.00,0.700,"Excluded at acquisition: no raw IMU, only GNSS and velocity"
+30,OmniHD-Scenes,2024,OmniHD-Scenes: A Next-Generation Multimodal Dataset for Autonomous Driving,https://arxiv.org/abs/2412.10734,1.00,0.40,0.00,0.700,Excluded at acquisition: no answer to the access request
+34,KITScenes Multimodal,2026,The Road Ahead in Autonomous Driving: The KITScenes Multimodal Dataset,https://arxiv.org/abs/2606.02956,1.00,0.40,0.00,0.700,
+33,Boreas Road Trip,2026,Boreas Road Trip: A Multi-Sensor Autonomous Driving Dataset on Challenging Roads,https://arxiv.org/abs/2602.16870,0.88,0.60,0.00,0.678,
+4,ApolloScape,2018,The ApolloScape Open Dataset for Autonomous Driving and its Application,https://arxiv.org/abs/1803.06184,1.00,0.30,0.00,0.675,"Excluded at acquisition: trajectory recorded at 2 Hz, rate too low"
+17,Oxford Radar RobotCar,2020,The Oxford Radar RobotCar Dataset: A Radar Extension to the Oxford RobotCar Dataset,https://arxiv.org/pdf/1909.01300,1.00,0.30,0.00,0.675,"Excluded at acquisition: same area as Oxford RobotCar, download page failed"
+23,Waymo Open Motion Dataset,2021,Large Scale Interactive Motion Forecasting for Autonomous Driving : The WAYMO OPEN MOTION DATASET,https://arxiv.org/pdf/2104.10133,1.00,0.30,0.00,0.675,
+28,ZOD (Zenseact Open Dataset),2023,Zenseact Open Dataset: A large-scale and diverse multimodal dataset for autonomous driving,https://arxiv.org/abs/2305.02008,1.00,0.30,0.00,0.675,
+24,Ithaca365,2022,Ithaca365: Dataset and Driving Perception under Repeated and Challenging Weather Conditions,https://arxiv.org/pdf/2208.01166,0.75,0.80,0.00,0.650,
+31,HeRCULES,2025,HeRCULES: Heterogeneous Radar Dataset in Complex Urban Environment for Multi-session Radar SLAM,https://arxiv.org/abs/2502.01946,0.75,0.70,0.00,0.625,
+21,nuPlan,2021,Towards learning-based planning: The nuPlan benchmark for real-world autonomous driving,https://arxiv.org/abs/2403.04133,0.88,0.30,0.00,0.603,
+6,Brno Urban Dataset,2019,Brno Urban Dataset - The New Data for Self-Driving Agents and Mapping Tasks,https://ieeexplore.ieee.org/document/9197277,0.75,0.50,0.00,0.575,
+8,EU Long-term (UTBM),2019,EU Long-term Dataset with Multiple Sensors for Autonomous Driving,https://arxiv.org/pdf/1909.03330,0.75,0.50,0.00,0.575,
+29,HeLiPR,2024,HeLiPR: Heterogeneous LiDAR Dataset for inter-LiDAR Place Recognition under Spatiotemporal Variations,https://arxiv.org/abs/2309.14590,0.75,0.50,0.00,0.575,
+22,PandaSet,2021,PandaSet: Advanced Sensor Suite Dataset for Autonomous Driving,https://arxiv.org/pdf/2112.12610,0.75,0.40,0.00,0.550,
+27,UrbanNav,2023,Hong Kong UrbanNav: An Open-Source Multisensory Dataset for Benchmarking Urban Navigation Algorithms,https://www.researchgate.net/publication/372155742_Hong_Kong_UrbanNav_An_Open-Source_Multisensory_Dataset_for_Benchmarking_Urban_Navigation_Algorithms,0.75,0.30,0.00,0.525,
+9,KAIST Complex Urban Dataset,2019,Complex Urban LiDAR Data Set,https://ieeexplore.ieee.org/document/8460834,0.62,0.30,0.00,0.447,
+25,View-of-Delft,2022,Multi-Class Road User Detection With 3+1D Radar in the View-of-Delft Dataset,https://ieeexplore.ieee.org/document/9699098,0.62,0.30,0.00,0.447,
+2,Comma.ai,2016,Learning a Driving Simulator,https://arxiv.org/abs/1608.01230,0.12,0.30,1.00,0.297,
+7,Comma2k19,2019,A Commute in Data: The comma2k19 Dataset,https://arxiv.org/pdf/1812.05752,0.12,0.30,1.00,0.297,
+18,UrbanLoco,2020,UrbanLoco: A Full Sensor Suite Dataset for Mapping and Localization in Urban Scenes,https://arxiv.org/abs/1912.09513,0.25,0.40,0.00,0.250,
+14,BDD100K (Berkley Deep Drive 100k),2020,BDD100K: A Diverse Driving Dataset for Heterogeneous Multitask Learning,https://arxiv.org/abs/1805.04687,0.12,0.60,0.00,0.222,
