@@ -314,14 +314,10 @@ singles in `figures/subset_eval/{hist,fans,phase,timeseries}/`) stay in the figu
 
 These are documented and left unchanged, because every change would alter a thesis output.
 
-- **Evaluation cache without the curation rows.** The caches in `DATA_ROOT/subset_data/eval/`
-  were last written by a standalone run of `subset_eval_harness.py`, which evaluates M01 to M11
-  only. `curation_gates.py` and `curation_winner_dossier.py` stop with an error until
-  `curation_eval.py` (or `curation_run_pipeline.py --from eval`) rewrites the caches with
-  C01 to C03.
-- **`general_info.txt` is older than the last HMM and evaluation runs.** Its HMM state order and
-  the curation rows of the master table differ from the current artifacts. Re-run
-  `08_reporting/general_info.py` after the caches are rebuilt.
+- **Evaluation caches.** A standalone run of `subset_eval_harness.py` evaluates M01 to M11 only
+  and writes caches without C01 to C03, after which `curation_gates.py` and
+  `curation_winner_dossier.py` stop with an error. Always build the caches with
+  `curation_eval.py` (or `curation_run_pipeline.py --from eval`).
 - **Tiled appendix figures without a script.** Fig. A.15 to A.18, C.18, C.19, D.3 and D.10 are
   tiles of existing single figures that were assembled outside this code base. The tiles are kept
   in `08_reporting/compiled_figures/`, the singles they contain are listed in the figure table.

@@ -5,7 +5,7 @@ GENERAL INFO — thesis numeric ground truth (derived from artifacts)
 ==============================================================================
 [0  provenance — snapshot, paths, timestamp]
 ==============================================================================
-generated: 2026-09-09 11:24
+generated: 2026-10-01 19:47
 project root: /Users/edward/Downloads
 
 canonical_snapshot.json (2026-09-07):
@@ -384,19 +384,19 @@ full blocks for the five S7.3 case studies:
 8  10 146243.5881 144503.6035  -72042.8017         0.3165           5              10
 --- hmm transition matrix
        0      1      2      3      4
-0 0.9447 0.0475 0.0063 0.0000 0.0015
-1 0.0179 0.8478 0.0808 0.0324 0.0210
-2 0.0008 0.0845 0.7475 0.1045 0.0626
-3 0.0000 0.1017 0.1063 0.7814 0.0106
-4 0.0008 0.0368 0.1386 0.0348 0.7890
-  self-transitions: [0.945, 0.848, 0.748, 0.781, 0.789]
+0 0.9447 0.0475 0.0063 0.0015 0.0000
+1 0.0179 0.8478 0.0808 0.0210 0.0324
+2 0.0008 0.0845 0.7475 0.0626 0.1045
+3 0.0008 0.0368 0.1386 0.7890 0.0348
+4 0.0000 0.1017 0.1063 0.0106 0.7814
+  self-transitions: [0.945, 0.848, 0.748, 0.789, 0.781]
 --- hmm dwell durations (s)
    regime  n_runs  mean_s  median_s  p25_s   p75_s   p90_s    max_s
 0       0    2323 13.2000    7.0000 3.0000 16.0000 25.0000 811.0000
 1       1   14192  6.1000    3.0000 2.0000  7.0000 12.0000 643.0000
 2       2   16761  3.9000    3.0000 1.0000  5.0000  8.0000  57.0000
-3       3   11321  4.3000    3.0000 2.0000  6.0000  9.0000  36.0000
-4       4    6404  4.7000    3.0000 2.0000  6.0000  9.0000 137.0000
+3       3    6404  4.7000    3.0000 2.0000  6.0000  9.0000 137.0000
+4       4   11321  4.3000    3.0000 2.0000  6.0000  9.0000  36.0000
 
 ==============================================================================
 [10  bias tier 1 — per-dataset shares, profiles, corpus scalars]
@@ -1216,6 +1216,13 @@ value 1082.0499 -0.0210  0.0386  4.9530
   "peak_yaw": "max_abs_yaw_degs",
   "peak_acc_mag": "max_acc_mag"
  },
+ "decel_hypothesis_counts": {
+  "g_units": 316485,
+  "ms2_units": 1088,
+  "expected": 1088,
+  "chosen": "m/s^2"
+ },
+ "median_start_spacing_s": 20.0,
  "unit_decisions": {
   "std_yaw_rate": "rad/s (contract) -> std_yaw_deg = x180/pi",
   "peak_yaw": "median 3.57 -> already deg/s",
@@ -1228,8 +1235,47 @@ value 1082.0499 -0.0210  0.0386  4.9530
   "std_yaw_rate": 0.05447252956876539
  },
  "score_p99_guarded": 8.172950860447429,
+ "canaries": {
+  "frame_n": 402421,
+  "guarded_n": 401230,
+  "trigger_guarded": 1088,
+  "predicate_union_harness": 145961,
+  "predicate_union_expected": 145962,
+  "predicate_counts_frame": {
+   "p_hard_decel": 1088,
+   "p_high_yaw": 24563,
+   "p_high_speed": 19897,
+   "p_stop_go": 88966,
+   "p_near_stat": 19270,
+   "p_top_score": 4012
+  },
+  "score_p99_guarded": 8.172950860447429,
+  "frame_top_source": "nvidia",
+  "frame_top_source_share": 0.7413256266447328,
+  "per_regime_top_supplier": {
+   "0": "nvidia",
+   "1": "nvidia",
+   "2": "nvidia",
+   "3": "nvidia",
+   "4": "nvidia"
+  },
+  "per_regime_top_supplier_share": {
+   "0": 0.5757660478640125,
+   "1": 0.888568587358518,
+   "2": 0.8186301230936958,
+   "3": 0.7171339223531661,
+   "4": 0.7035018910211515
+  },
+  "regime_supplies": {
+   "0": 89420,
+   "1": 89499,
+   "2": 78883,
+   "3": 73229,
+   "4": 71390
+  }
+ },
  "metric_version": "12.1.2",
- "timestamp": "2026-08-30 01:03:10",
+ "timestamp": "2026-10-01 19:46:58",
  "k_envelope": 100,
  "pc_grid_bins": 60,
  "sealed_metrics": [
